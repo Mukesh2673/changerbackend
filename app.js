@@ -9,7 +9,7 @@ var logger = require('morgan');
 
 
 var app = express();
-const port = 3001;
+const PORT = process.env.PORT || 3001
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -37,9 +37,11 @@ database.on('error', (error) => {
 })
 
 database.once('connected', () => {
-  app.listen(port, () => {
-    console.log(`Server started on ${port}`);
-  });
+  console.log('Database Connected');
+});
+
+app.listen(PORT, () => {
+  console.log(`Server started on ${PORT}`);
 });
 
 
