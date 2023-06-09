@@ -208,3 +208,8 @@ $RECYCLE.BIN/
 #Editor
 .vscode
 .idea*
+
+
+# local env files
+.env
+.env.local
