@@ -27,6 +27,10 @@ const userSchema = new Schema({
     type: Date,
     required: true
   },
+  profile_url: {
+    type: String,
+    required: false
+  },
 });
 
 
