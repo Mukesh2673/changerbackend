@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const app = express();
 
 const userSeeder = require('./userSeeder');
+const campaignSeeder = require("./campaignSeeder");
 
 const mongoString = process.env.DATABASE_URL
 
@@ -25,6 +26,7 @@ mongoose.connect(mongoString)
 
 const seedDB = async () => {
     await userSeeder.run();
+    await campaignSeeder.run();
 };
 
 module.exports = app;
