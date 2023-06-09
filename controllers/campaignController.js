@@ -18,7 +18,7 @@ exports.index = async (req, res, next) => {
 
 exports.show = async (req, res, next) => {
     try {
-        const campaign = await Campaign.findById(req.params.id);
+        const campaign = await Campaign.findById(req.params.id).populate('user');
 
         if (!!campaign) {
             return res.json(campaign);
