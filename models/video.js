@@ -6,11 +6,13 @@ const Schema = mongoose.Schema;
 const campaignSchema = new Schema({
   user: {
     type: Schema.Types.ObjectId,
-    ref: "User"
+    ref: "User",
+    autopopulate: true,
   },
   campaign: {
     type: Schema.Types.ObjectId,
     ref: "Campaign",
+    autopopulate: true,
     required: false
   },
   description: {
@@ -30,7 +32,7 @@ const campaignSchema = new Schema({
     required: true
   },
   video_id: {
-    type: Number,
+    type: String,
     required: false
   },
 }, {
@@ -38,5 +40,6 @@ const campaignSchema = new Schema({
 });
 
 campaignSchema.plugin(mongoosePaginate);
+campaignSchema.plugin(require('mongoose-autopopulate'));
 
 module.exports = mongoose.model('Video', campaignSchema);

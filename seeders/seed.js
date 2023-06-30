@@ -6,7 +6,7 @@ const app = express();
 
 const userSeeder = require('./userSeeder');
 const campaignSeeder = require("./campaignSeeder");
-const videoSeeder = require("./userSeeder");
+const videoSeeder = require("./videoSeeder");
 
 const mongoString = process.env.DATABASE_URL
 
@@ -26,8 +26,9 @@ mongoose.connect(mongoString)
 
 
 const seedDB = async () => {
-    await userSeeder.run();
-    await campaignSeeder.run();
+    console.log('Seeding database.')
+    //await userSeeder.run();
+    //await campaignSeeder.run();
     await videoSeeder.run();
 };
 

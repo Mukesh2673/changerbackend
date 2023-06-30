@@ -6,7 +6,8 @@ const Schema = mongoose.Schema;
 const campaignSchema = new Schema({
   user: {
     type: Schema.Types.ObjectId,
-    ref: "User"
+    ref: "User",
+    autopopulate: true
   },
   cause: {
     type: String,
@@ -37,5 +38,6 @@ const campaignSchema = new Schema({
 });
 
 campaignSchema.plugin(mongoosePaginate);
+campaignSchema.plugin(require('mongoose-autopopulate'));
 
 module.exports = mongoose.model('Campaign', campaignSchema);

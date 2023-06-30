@@ -6,8 +6,7 @@ exports.index = async (req, res, next) => {
 
         const result = await Campaign.paginate({ }, {
             page,
-            sort: { createdAt: 'desc' },
-            populate: 'user',
+            sort: { createdAt: 'desc' }
         });
 
         return res.json(result);
@@ -18,7 +17,7 @@ exports.index = async (req, res, next) => {
 
 exports.show = async (req, res, next) => {
     try {
-        const campaign = await Campaign.findById(req.params.id).populate('user');
+        const campaign = await Campaign.findById(req.params.id);
 
         if (!!campaign) {
             return res.json(campaign);

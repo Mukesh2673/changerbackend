@@ -4,6 +4,7 @@ const utils = require("../libs/utils");
 
 exports.run = async () => {
 
+    console.log('Running: User Seeder');
     const count = await User.countDocuments({}).exec();
 
     if (count === 0) {

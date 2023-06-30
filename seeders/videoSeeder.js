@@ -5,11 +5,12 @@ const {getFrom} = require("../libs/utils");
 
 exports.run = async () => {
 
-    const count = await Campaign.countDocuments({}).exec();
+    console.log('Running: Video Seeder');
+    const count = await Video.countDocuments({}).exec();
 
     if (count === 0) {
         const users = await User.find().limit(10).exec();
-        const campaigns = await Campaign.find().limit(10).exec();
+        const campaigns = await Campaign.find().limit(20).exec();
 
         const video_id = getFrom(Array.from(Array(5).keys()).map((index) => index + 1));
 

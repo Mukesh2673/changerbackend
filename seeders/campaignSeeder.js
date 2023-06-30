@@ -5,6 +5,7 @@ const {CAUSES} = require("../constants");
 
 exports.run = async () => {
 
+    console.log('Running: Campaign Seeder');
     const count = await Campaign.countDocuments({}).exec();
 
     if (count === 0) {

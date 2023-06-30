@@ -1,13 +1,12 @@
-const { Campaign } = require('../models');
+const { Video } = require('../models');
 
 exports.index = async (req, res, next) => {
     try {
         const { page = 1 } = req.query;
 
-        const result = await Campaign.paginate({ }, {
+        const result = await Video.paginate({ }, {
             page,
             sort: { createdAt: 'desc' },
-            populate: 'user',
         });
 
         return res.json(result);
@@ -18,13 +17,13 @@ exports.index = async (req, res, next) => {
 
 exports.show = async (req, res, next) => {
     try {
-        const campaign = await Campaign.findById(req.params.id).populate('user');
+        const video = await Video.findById(req.params.id);
 
-        if (!!campaign) {
-            return res.json(campaign);
+        if (!!video) {
+            return res.json(video);
         }
 
-        return res.status(404).json({message: "Campaign not found."});
+        return res.status(404).json({message: "Video not found."});
     } catch (error) {
         return res.status(500).json({message: error.message})
     }
