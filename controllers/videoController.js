@@ -46,7 +46,7 @@ exports.store = async (req, res, next) => {
         description: req.body.description,
         likes: 0,
         video_url: req.body.video_url,
-        video_id: req.body.video_url,
+        video_id: req.body.video_id,
     });
 
     try {
