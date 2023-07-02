@@ -5,15 +5,17 @@ class FirebaseAuthMiddleware {
     async decodeToken(req, res, next) {
 
         if (!req.user) {
-            const token = req.headers.authorization.split(' ')[1];
+            if (!!req.headers.authorization) {
+                const token = req.headers.authorization.split(' ')[1];
 
-            if (!!token) {
-                try {
-                    const firebaseUser = await admin.auth().verifyIdToken(token);
-                    if (firebaseUser) {
-                        req.user = await User.findOne({uid: firebaseUser.uid});
-                    }
-                } catch (e) { }
+                if (!!token) {
+                    try {
+                        const firebaseUser = await admin.auth().verifyIdToken(token);
+                        if (firebaseUser) {
+                            req.user = await User.findOne({uid: firebaseUser.uid});
+                        }
+                    } catch (e) { }
+                }
             }
         }
 
