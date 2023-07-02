@@ -29,7 +29,7 @@ exports.createUser = async (req, res, next) => {
     })
 
     try {
-        const savedUser = user.save();
+        const savedUser = await user.save();
         return res.status(200).json(savedUser);
     } catch (error) {
         return res.status(500).json({message: error.message})

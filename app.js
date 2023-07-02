@@ -25,6 +25,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors({origin: "*"}))
 
+app.use(require('./middleware/firebaseAuth').decodeToken);
 app.use('/api', apiRoutes);
 
 const mongoString = process.env.DATABASE_URL

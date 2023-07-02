@@ -213,3 +213,5 @@ $RECYCLE.BIN/
 # local env files
 .env
 .env.local
+
+config/ServiceAccount.json

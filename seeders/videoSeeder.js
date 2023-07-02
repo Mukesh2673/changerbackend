@@ -10,11 +10,11 @@ exports.run = async () => {
 
     if (count === 0) {
         const users = await User.find().limit(10).exec();
-        const campaigns = await Campaign.find().limit(20).exec();
+        const campaigns = await Campaign.find().limit(5).exec();
 
-        const video_id = getFrom(Array.from(Array(5).keys()).map((index) => index + 1));
+        const videos = Array.from(Array(200).keys()).map((index) => {
+            const video_id = getFrom(Array.from(Array(5).keys()).map((index) => index + 1));
 
-        const videos = Array.from(Array(50).keys()).map((index) => {
             return new Video({
                 user: utils.getFrom(users),
                 campaign: utils.getFrom(campaigns),

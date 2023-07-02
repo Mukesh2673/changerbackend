@@ -1,10 +1,18 @@
-const { Video } = require('../models');
+const { Video, User} = require('../models');
+const utils = require("../libs/utils");
+const {faker} = require("@faker-js/faker");
 
 exports.index = async (req, res, next) => {
     try {
-        const { page = 1 } = req.query;
+        const { page = 1, campaign } = req.query;
 
-        const result = await Video.paginate({ }, {
+        const query = {};
+
+        if (!!campaign) {
+            query['campaign'] = campaign
+        }
+
+        const result = await Video.paginate(query, {
             page,
             sort: { createdAt: 'desc' },
         });
@@ -29,7 +37,24 @@ exports.show = async (req, res, next) => {
     }
 }
 
-exports.create = async (req, res, next) => {
+exports.store = async (req, res, next) => {
+    const user = req.user;
+
+    const video = new Video({
+        user: user._id,
+        campaign: req.body.campaign,
+        description: req.body.description,
+        likes: 0,
+        video_url: req.body.video_url,
+        video_id: req.body.video_url,
+    });
+
+    try {
+        const savedVideo = await video.save();
+        return res.status(200).json(savedVideo);
+    } catch (error) {
+        return res.status(500).json({message: error.message})
+    }
 
 }
 
