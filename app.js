@@ -24,16 +24,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-const corsOptions = {
-  origin: process.env.CORS_ORIGIN || '*',
-  credentials: true,
-  preflightContinue: true,
-  allowedHeaders: "Content-Type,Authorization",
-};
-
-app.use(cors({origin:'*'}));
-//app.options('*', cors(corsOptions));
+app.use(cors());
+app.options('*', cors());
 
 app.use(require('./middleware/firebaseAuth').decodeToken);
 

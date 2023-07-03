@@ -214,4 +214,4 @@ $RECYCLE.BIN/
 .env
 .env.local
 
-config/ServiceAccount.json
+google-credentials.json
