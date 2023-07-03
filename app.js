@@ -23,13 +23,20 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(cors())
-app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  next();
-});
+
+
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || '*',
+  credentials: true,
+  preflightContinue: true,
+  allowedHeaders: "Content-Type,Authorization",
+};
+
+app.use(cors({origin:'*'}));
+//app.options('*', cors(corsOptions));
 
 app.use(require('./middleware/firebaseAuth').decodeToken);
+
 app.use('/api', apiRoutes);
 
 const mongoString = process.env.DATABASE_URL
