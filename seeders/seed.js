@@ -27,8 +27,8 @@ mongoose.connect(mongoString)
 
 const seedDB = async () => {
     console.log('Seeding database.')
-    //await userSeeder.run();
-    //await campaignSeeder.run();
+    await userSeeder.run();
+    await campaignSeeder.run();
     await videoSeeder.run();
 };
 
