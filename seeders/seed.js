@@ -27,7 +27,8 @@ mongoose.connect(mongoString)
 
 const seedDB = async () => {
     console.log('Seeding database.')
-    await userSeeder.run();
+    await userSeeder.run(); // create normal users
+    await userSeeder.run(true); // create premium users
     await campaignSeeder.run();
     await videoSeeder.run();
 };

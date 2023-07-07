@@ -5,6 +5,8 @@ const {CAUSES} = require("../constants");
 
 exports.run = async () => {
 
+    await Campaign.deleteMany({}).exec();
+
     console.log('Running: Campaign Seeder');
     const count = await Campaign.countDocuments({}).exec();
 
