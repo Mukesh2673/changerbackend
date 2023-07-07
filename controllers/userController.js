@@ -2,6 +2,15 @@ const { User } = require('../models');
 
 exports.getUser = async (req, res, next) => {
     try {
+        const user = await User.findById(req.params.id);
+        return res.json(user);
+    } catch (error) {
+        return res.status(500).json({message: error.message})
+    }
+}
+
+exports.getUserByUID = async (req, res, next) => {
+    try {
         const user = await User.findOne({uid: req.params.uid});
         return res.json(user);
     } catch (error) {

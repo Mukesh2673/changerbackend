@@ -9,7 +9,8 @@ const videoController = require('../controllers/videoController');
 
 
 // USER ROUTES
-router.get('/users/:uid', userController.getUser);
+router.get('/users/:id', userController.getUser);
+router.get('/users/uid/:uid', userController.getUserByUID);
 router.post('/users', userController.createUser);
 
 // CAMPAIGN ROUTES
