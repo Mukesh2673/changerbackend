@@ -9,7 +9,7 @@ exports.run = async () => {
     const count = await Campaign.countDocuments({}).exec();
 
     if (count === 0) {
-        const users = await User.find().limit(10).exec();
+        const users = await User.find({premium: true}).limit(10).exec();
         const causes = CAUSES;
 
         const campaigns = Array.from(Array(100).keys()).map((index) => {

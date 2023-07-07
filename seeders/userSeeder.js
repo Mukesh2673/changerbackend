@@ -20,6 +20,7 @@ exports.run = async () => {
                     height: 200,
                     width: 200,
                 }),
+                premium: utils.getFrom([true, false])
             });
         });
 

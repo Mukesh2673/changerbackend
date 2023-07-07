@@ -1,15 +1,17 @@
-const { Video, User} = require('../models');
-const utils = require("../libs/utils");
-const {faker} = require("@faker-js/faker");
+const { Video } = require('../models');
 
 exports.index = async (req, res, next) => {
     try {
-        const { page = 1, campaign } = req.query;
+        const { page = 1, campaign, user } = req.query;
 
         const query = {};
 
         if (!!campaign) {
             query['campaign'] = campaign
+        }
+
+        if (!!user) {
+            query['user'] = user
         }
 
         const result = await Video.paginate(query, {

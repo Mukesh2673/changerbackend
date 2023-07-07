@@ -31,6 +31,10 @@ const userSchema = new Schema({
     type: String,
     required: false
   },
+  premium: {
+    type: Boolean,
+    required: false
+  },
 }, {
   timestamps: true
 });
