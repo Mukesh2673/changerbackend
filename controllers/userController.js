@@ -82,3 +82,15 @@ exports.unFollowUser = async (req, res) => {
     return res.status(404).json({ error: e.message });
   }
 };
+
+exports.editProfile = async (req, res) => {
+  const { id: _id } = req.params;
+  console.log("this is the request's body", req.body);
+  try {
+    const updateUser = await User.findOneAndUpdate({ _id }, req.body);
+    const user = await User.findById(_id);
+    return res.status(200).json(user);
+  } catch (e) {
+    return res.status(404).json({ error: e.message });
+  }
+};
