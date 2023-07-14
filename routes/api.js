@@ -24,5 +24,6 @@ router.get("/videos/:id", videoController.show);
 router.get("/videos", videoController.index);
 router.post("/videos", auth, videoController.store);
 router.post("/videos/like/:vid/:uid", videoController.likeVideo);
+router.post("/hook/encoding-complete/:id?", videoController.encodingFinishedHook);
 
 module.exports = router;

@@ -80,3 +80,23 @@ exports.likeVideo = async (req, res) => {
 exports.update = async (req, res, next) => {};
 
 exports.delete = async (req, res, next) => {};
+
+exports.encodingFinishedHook = (req, res, next) => {
+    const encodingId = req.body?.encoding?.id;
+
+    if (encodingId) {
+        try {
+            const query = {
+                encoding_id: encodingId,
+                encoding_status: 'CREATED'
+            };
+
+            Video.updateMany(query, {encoding_status: 'FINISHED'}).exec();
+
+        } catch (error) {
+            return res.json([]);
+        }
+    }
+
+    return res.json([]);
+}

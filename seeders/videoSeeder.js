@@ -6,6 +6,14 @@ const {getFrom} = require("../libs/utils");
 const storageAccountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
 const container = process.env.AZURE_VIDEO_CONTAINER;
 
+const encodingIds = [
+    '1c9428e7-5552-4266-aa98-ce6d57986120',
+    '13d5ccd5-5566-4d72-86b0-de6febc52186',
+    '4d0e36ca-dfa7-4f54-aea4-727d6dffe950',
+    '31b71686-7e84-4d50-8c7e-f8b73e83bda2',
+    '99803eca-70eb-41a9-81ba-4641cf13b25d',
+]
+
 exports.run = async () => {
 
     console.log('Running: Video Seeder');
@@ -27,6 +35,8 @@ exports.run = async () => {
                 likes: faker.finance.amount({ min: 100, max: 1000000}),
                 video_url: video_url,
                 video_id: video_id,
+                encoding_id: getFrom(encodingIds),
+                encoding_status: 'FINISHED'
             });
         });
 
