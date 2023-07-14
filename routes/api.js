@@ -19,8 +19,9 @@ router.get("/campaigns/:id", campaignController.show);
 router.get("/campaigns", campaignController.index);
 
 // VIDEO ROUTES
-router.get("/videos/:id", videoController.show);
-router.get("/videos", videoController.index);
-router.post("/videos", auth, videoController.store);
+router.get('/videos/:id', videoController.show);
+router.get('/videos', videoController.index);
+router.post('/videos', auth, videoController.store);
+router.post("/hook/encoding-complete/:id?", videoController.encodingFinishedHook);
 
 module.exports = router;
