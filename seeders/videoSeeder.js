@@ -32,7 +32,7 @@ exports.run = async () => {
                 user: utils.getFrom(users),
                 campaign: utils.getFrom(campaigns),
                 description: faker.lorem.paragraphs({min: 1, max: 3}),
-                likes: faker.finance.amount({ min: 100, max: 1000000}),
+                likes: [],
                 video_url: video_url,
                 video_id: video_id,
                 encoding_id: getFrom(encodingIds),

@@ -4,7 +4,9 @@ exports.index = async (req, res, next) => {
   try {
     const { page = 1, campaign, user } = req.query;
 
-    const query = {};
+    const query = {
+      encoding_status: 'FINISHED'
+  };
 
     if (!!campaign) {
       query["campaign"] = campaign;
