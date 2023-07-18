@@ -51,6 +51,8 @@ exports.store = async (req, res, next) => {
     likes: [],
     video_url: req.body.video_url,
     video_id: req.body.video_id,
+    encoding_id: req.body.encoding_id,
+    encoding_status: req.body.encoding_status,
   });
 
   try {
