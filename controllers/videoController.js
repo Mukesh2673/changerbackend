@@ -66,17 +66,47 @@ exports.store = async (req, res, next) => {
 exports.likeVideo = async (req, res) => {
   const { vid, uid } = req.params;
   try {
-    let video = await Video.findById({ _id: vid });
-    console.log("Video", video);
+    const video = await Video.findById({ _id: vid });
+    let hasLiked = false;
 
     if (video.likes.includes(uid)) {
       // remove like
-      video = await Video.updateOne({ _id: vid }, { $pull: { likes: uid } });
-    } else {
-      video = await Video.updateOne({ _id: vid }, { $push: { likes: uid } });
-    }
+      await Video.updateOne({ _id: vid }, { $pull: { likes: uid } });
+      hasLiked = false;
+      const updatedVideo = await Video.findById({ _id: vid });
+      const likes = updatedVideo.likes.length;
 
-    return res.status(200).json({ likes: video.likes });
+      return res.status(200).json({ likedVideo: hasLiked, likes });
+    } else {
+      await Video.updateOne({ _id: vid }, { $push: { likes: uid } });
+      hasLiked = true;
+      const updatedVideo = await Video.findById({ _id: vid });
+      const likes = updatedVideo.likes.length;
+
+      return res.status(200).json({ likedVideo: hasLiked, likes });
+    }
+  } catch (e) {
+    return res.status(404).json({ error: e.message });
+  }
+};
+
+exports.getVideoLikes = async (req, res) => {
+  const { vid, uid } = req.params;
+  try {
+    const video = await Video.findById({ _id: vid });
+    let hasLiked = false;
+
+    const likes = video.likes.length;
+
+    if (video.likes.includes(uid)) {
+      hasLiked = true;
+
+      return res.status(200).json({ likedVideo: hasLiked, likes });
+    } else {
+      hasLiked = false;
+
+      return res.status(200).json({ likedVideo: hasLiked, likes });
+    }
   } catch (e) {
     return res.status(404).json({ error: e.message });
   }
