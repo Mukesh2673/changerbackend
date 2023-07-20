@@ -5,8 +5,8 @@ exports.index = async (req, res, next) => {
     const { page = 1, campaign, user } = req.query;
 
     const query = {
-      encoding_status: 'FINISHED'
-  };
+      encoding_status: "FINISHED",
+    };
 
     if (!!campaign) {
       query["campaign"] = campaign;
@@ -66,13 +66,14 @@ exports.store = async (req, res, next) => {
 exports.likeVideo = async (req, res) => {
   const { vid, uid } = req.params;
   try {
-    const video = await Video.findById({ _id: vid });
+    let video = await Video.findById({ _id: vid });
+    console.log("Video", video);
 
     if (video.likes.includes(uid)) {
       // remove like
-      await Video.updateOne({ _id: vid }, { $pull: { likes: uid } });
+      video = await Video.updateOne({ _id: vid }, { $pull: { likes: uid } });
     } else {
-      await Video.updateOne({ _id: vid }, { $push: { likes: uid } });
+      video = await Video.updateOne({ _id: vid }, { $push: { likes: uid } });
     }
 
     return res.status(200).json({ likes: video.likes });
@@ -86,21 +87,20 @@ exports.update = async (req, res, next) => {};
 exports.delete = async (req, res, next) => {};
 
 exports.encodingFinishedHook = (req, res, next) => {
-    const encodingId = req.body?.encoding?.id;
+  const encodingId = req.body?.encoding?.id;
 
-    if (encodingId) {
-        try {
-            const query = {
-                encoding_id: encodingId,
-                encoding_status: 'CREATED'
-            };
+  if (encodingId) {
+    try {
+      const query = {
+        encoding_id: encodingId,
+        encoding_status: "CREATED",
+      };
 
-            Video.updateMany(query, {encoding_status: 'FINISHED'}).exec();
-
-        } catch (error) {
-            return res.json([]);
-        }
+      Video.updateMany(query, { encoding_status: "FINISHED" }).exec();
+    } catch (error) {
+      return res.json([]);
     }
+  }
 
-    return res.json([]);
-}
+  return res.json([]);
+};
