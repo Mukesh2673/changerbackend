@@ -90,6 +90,26 @@ exports.likeVideo = async (req, res) => {
   }
 };
 
+exports.getFollowingVideos = async (req, res) => {
+  const { uid } = req.params;
+
+  try {
+    const appVideos = await Video.find({});
+    const followingVideos = [];
+
+    for (let i = 0; i < appVideos.length; i++) {
+      const video = appVideos[i];
+      if (video.user?._id === uid) {
+        followingVideos.push(video);
+      }
+    }
+
+    return res.status(200).json({ followingVideos });
+  } catch (e) {
+    return res.status(404).json({ error: e.message });
+  }
+};
+
 exports.getVideoLikes = async (req, res) => {
   const { vid, uid } = req.params;
   try {
@@ -107,6 +127,47 @@ exports.getVideoLikes = async (req, res) => {
 
       return res.status(200).json({ likedVideo: hasLiked, likes });
     }
+  } catch (e) {
+    return res.status(404).json({ error: e.message });
+  }
+};
+
+exports.getCampaignImpactVideos = async (req, res) => {
+  const { cid } = req.params;
+  try {
+    const appVideos = await Video.find({});
+    const impactVideos = [];
+
+    for (let i = 0; i < appVideos.length; i++) {
+      const video = appVideos[i];
+
+      if (video.campaign?._id === cid) {
+        console.log("This one matches");
+        impactVideos.push(video);
+      }
+      1;
+    }
+
+    return res.status(200).json({ impactVideos });
+  } catch (e) {
+    return res.status(404).json({ error: e.message });
+  }
+};
+
+exports.getUserImpactVideos = async (req, res) => {
+  const { uid } = req.params;
+  try {
+    const appVideos = await Video.find({});
+    const impactVideos = [];
+
+    for (let i = 0; i < appVideos.length; i++) {
+      const video = appVideos[i];
+      if (video.user?._id === uid) {
+        impactVideos.push(video);
+      }
+    }
+
+    return res.status(200).json({ impactVideos });
   } catch (e) {
     return res.status(404).json({ error: e.message });
   }

@@ -23,6 +23,15 @@ router.get("/campaigns", campaignController.index);
 router.get("/videos/:id", videoController.show);
 router.get("/videos", videoController.index);
 router.get("/videos/likes/:vid/:uid", videoController.getVideoLikes);
+router.get(
+  "/videos/impact-videos/:cid",
+  videoController.getCampaignImpactVideos
+);
+router.get(
+  "/videos/user-impact-videos/:uid",
+  videoController.getUserImpactVideos
+);
+router.get("/videos/following/:uid", videoController.getFollowingVideos);
 router.post("/videos", auth, videoController.store);
 router.post("/videos/like/:vid/:uid", videoController.likeVideo);
 router.post(
