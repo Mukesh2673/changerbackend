@@ -1,8 +1,9 @@
+const { VideoType } = require("../constants");
 const { Video } = require("../models");
 
 exports.index = async (req, res, next) => {
   try {
-    const { page = 1, campaign, user } = req.query;
+    const { page = 1, campaign, user, type = VideoType.IMPACT } = req.query;
 
     const query = {
       encoding_status: "FINISHED",
@@ -14,6 +15,10 @@ exports.index = async (req, res, next) => {
 
     if (!!user) {
       query["user"] = user;
+    }
+
+    if (!!type) {
+      query["type"] = type;
     }
 
     const result = await Video.paginate(query, {
@@ -85,6 +90,26 @@ exports.likeVideo = async (req, res) => {
 
       return res.status(200).json({ likedVideo: hasLiked, likes });
     }
+  } catch (e) {
+    return res.status(404).json({ error: e.message });
+  }
+};
+
+exports.getFollowingVideos = async (req, res) => {
+  const { uid } = req.params;
+
+  try {
+    const appVideos = await Video.find({});
+    const followingVideos = [];
+
+    for (let i = 0; i < appVideos.length; i++) {
+      const video = appVideos[i];
+      if (video.user?._id === uid) {
+        followingVideos.push(video);
+      }
+    }
+
+    return res.status(200).json({ followingVideos });
   } catch (e) {
     return res.status(404).json({ error: e.message });
   }

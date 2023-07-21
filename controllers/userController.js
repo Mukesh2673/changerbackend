@@ -19,6 +19,7 @@ exports.getUserByUID = async (req, res, next) => {
 };
 
 exports.createUser = async (req, res, next) => {
+  console.log("This is me right here: ", req.body);
   try {
     const existingUser = await User.findOne({ username: req.body.username });
     if (existingUser) {
@@ -35,13 +36,18 @@ exports.createUser = async (req, res, next) => {
     dob: req.body.dob,
     uid: req.body.uid,
     email: req.body.email,
+    followers: [],
+    follower: [],
+    description: "",
   });
 
   try {
     const savedUser = await user.save();
+    console.log("this is: ", savedUser);
     return res.status(200).json(savedUser);
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    console.log(error);
+    return res.status(400).json({ message: error.message });
   }
 };
 

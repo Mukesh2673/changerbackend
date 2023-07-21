@@ -37,13 +37,17 @@ const campaignSchema = new Schema(
       type: String,
       required: false,
     },
+    type: {
+      type: String,
+      required: false,
+    },
     encoding_id: {
       type: String,
-      required: false
+      required: false,
     },
     encoding_status: {
       type: String,
-      required: false
+      required: false,
     },
   },
   {

@@ -39,17 +39,17 @@ const userSchema = new Schema(
     following: {
       type: [String],
       default: [],
-      required: true,
+      required: false,
     },
     followers: {
       type: [String],
       default: [],
-      required: true,
+      required: false,
     },
     description: {
       type: String,
       default: "",
-      required: true,
+      required: false,
     },
   },
   {

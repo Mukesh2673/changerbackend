@@ -23,6 +23,8 @@ router.get("/campaigns", campaignController.index);
 router.get("/videos/:id", videoController.show);
 router.get("/videos", videoController.index);
 router.get("/videos/likes/:vid/:uid", videoController.getVideoLikes);
+
+router.get("/videos/following/:uid", videoController.getFollowingVideos);
 router.post("/videos", auth, videoController.store);
 router.post("/videos/like/:vid/:uid", videoController.likeVideo);
 router.post(
