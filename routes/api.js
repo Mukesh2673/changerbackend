@@ -10,6 +10,7 @@ const videoController = require("../controllers/videoController");
 // USER ROUTES
 router.get("/users/:id", userController.getUser);
 router.get("/users/uid/:uid", userController.getUserByUID);
+router.get("/users/following/:cuid/:fuid", userController.getFollowingVideos);
 router.post("/users", userController.createUser);
 router.post("/users/follow/:cuid/:fuid", userController.followUser);
 router.post("/users/unfollow/:cuid/:fuid", userController.unFollowUser);
@@ -24,7 +25,6 @@ router.get("/videos/:id", videoController.show);
 router.get("/videos", videoController.index);
 router.get("/videos/likes/:vid/:uid", videoController.getVideoLikes);
 
-router.get("/videos/following/:uid", videoController.getFollowingVideos);
 router.post("/videos", auth, videoController.store);
 router.post("/videos/like/:vid/:uid", videoController.likeVideo);
 router.post(

@@ -95,26 +95,6 @@ exports.likeVideo = async (req, res) => {
   }
 };
 
-exports.getFollowingVideos = async (req, res) => {
-  const { uid } = req.params;
-
-  try {
-    const appVideos = await Video.find({});
-    const followingVideos = [];
-
-    for (let i = 0; i < appVideos.length; i++) {
-      const video = appVideos[i];
-      if (video.user?._id === uid) {
-        followingVideos.push(video);
-      }
-    }
-
-    return res.status(200).json({ followingVideos });
-  } catch (e) {
-    return res.status(404).json({ error: e.message });
-  }
-};
-
 exports.getVideoLikes = async (req, res) => {
   const { vid, uid } = req.params;
   try {

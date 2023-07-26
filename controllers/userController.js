@@ -100,3 +100,25 @@ exports.editProfile = async (req, res) => {
     return res.status(404).json({ error: e.message });
   }
 };
+
+exports.getFollowingVideos = async (req, res) => {
+  const { cuid, fuid } = req.params;
+  try {
+    const user = await User.findById({ _id: cuid });
+    let hasfollowed = false;
+
+    //  const followers = user.followers.length;
+
+    if (user.followers.includes(fuid)) {
+      hasfollowed = true;
+
+      return res.status(200).json({ followedUser: hasfollowed });
+    } else {
+      hasfollowed = false;
+
+      return res.status(200).json({ followedUser: hasfollowed });
+    }
+  } catch (e) {
+    return res.status(404).json({ error: e.message });
+  }
+};
