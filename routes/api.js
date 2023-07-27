@@ -22,6 +22,7 @@ router.get("/campaigns", campaignController.index);
 
 // VIDEO ROUTES
 router.get("/videos/:id", videoController.show);
+router.delete("/videos/:id", videoController.delete);
 router.get("/videos", videoController.index);
 router.get("/videos/likes/:vid/:uid", videoController.getVideoLikes);
 

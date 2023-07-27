@@ -58,6 +58,7 @@ exports.store = async (req, res, next) => {
     video_id: req.body.video_id,
     encoding_id: req.body.encoding_id,
     encoding_status: req.body.encoding_status,
+    type: req.body.type
   });
 
   try {
@@ -119,7 +120,19 @@ exports.getVideoLikes = async (req, res) => {
 
 exports.update = async (req, res, next) => {};
 
-exports.delete = async (req, res, next) => {};
+exports.delete = async (req, res, next) => {
+  try {
+
+    // TODO: delete video from AZURE
+    // TODO: delete video encoding from BITMOVIN
+
+    await Video.deleteOne({ _id: req.params.id });
+
+    return res.json({success: 'Video deleted'});
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
 
 exports.encodingFinishedHook = (req, res, next) => {
   const encodingId = req.body?.encoding?.id;
