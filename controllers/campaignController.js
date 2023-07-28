@@ -2,12 +2,16 @@ const { Campaign } = require('../models');
 
 exports.index = async (req, res, next) => {
     try {
-        const { page = 1, user } = req.query;
+        const { page = 1, user, cause } = req.query;
 
         const query = {};
 
         if (!!user) {
             query['user'] = user
+        }
+
+        if (!!cause) {
+            query['cause'] = cause
         }
 
         const result = await Campaign.paginate(query, {
