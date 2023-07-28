@@ -33,4 +33,6 @@ router.post(
   videoController.encodingFinishedHook
 );
 
+router.post("/campaign/:id/donate/", campaignController.donate);
+
 module.exports = router;
