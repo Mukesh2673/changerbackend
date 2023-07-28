@@ -1,9 +1,11 @@
+const { ObjectId } = require('mongodb');
+
 const { VideoType } = require("../constants");
 const { Video } = require("../models");
 
 exports.index = async (req, res, next) => {
   try {
-    const { page = 1, campaign, user, type = VideoType.IMPACT } = req.query;
+    const { page = 1, campaign, user, type = VideoType.IMPACT, tab } = req.query;
 
     const query = {
       encoding_status: "FINISHED",
@@ -19,6 +21,12 @@ exports.index = async (req, res, next) => {
 
     if (!!type) {
       query["type"] = type;
+    }
+
+    if (tab === 'following' && req.user) {
+      const following = req.user.following.map(_id => new ObjectId(_id));
+
+      query["user"] = { $in: following };
     }
 
     const result = await Video.paginate(query, {
