@@ -1,5 +1,6 @@
 const { Campaign } = require('../models');
-const {stripe} = require("stripe")(process.env.STRIPE_SECRET_KEY);
+require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 exports.index = async (req, res, next) => {
     try {
@@ -54,7 +55,6 @@ exports.delete = async (req, res, next) => {
 
 exports.donate = async (req, res) => {
     const campaign = await Campaign.findById(req.params.id);
-
     var stripeToken = req.body.token;
     var charge = stripe.charges.create({
         amount: req.body.amount*100, // amount in cents, again
@@ -65,6 +65,7 @@ exports.donate = async (req, res) => {
         if (err && err.type === 'StripeCardError') {
             return res.status(401).json({message: "Card error"});
         }
+        //TODO : Store purchase in DB for future reference
         return res.status(200).json({message: "Success"});
     });
 }
