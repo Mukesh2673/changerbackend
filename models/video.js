@@ -9,6 +9,7 @@ const campaignSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
       autopopulate: true,
+      required: false,
     },
     campaign: {
       type: Schema.Types.ObjectId,

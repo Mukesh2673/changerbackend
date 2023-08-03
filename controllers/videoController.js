@@ -58,7 +58,7 @@ exports.store = async (req, res, next) => {
   const user = req.user;
 
   const video = new Video({
-    user: user._id,
+    user: user?._id,
     campaign: req.body.campaign,
     description: req.body.description,
     likes: [],

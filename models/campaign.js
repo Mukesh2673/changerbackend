@@ -25,6 +25,10 @@ const campaignSchema = new Schema({
     type: String,
     required: true
   },
+  call_message: {
+    type: String,
+    required: false
+  },
   support_amount: {
     type: Number,
     required: false

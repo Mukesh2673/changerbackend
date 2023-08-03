@@ -5,8 +5,6 @@ const {CAUSES} = require("../constants");
 
 exports.run = async () => {
 
-    await Campaign.deleteMany({}).exec();
-
     console.log('Running: Campaign Seeder');
     const count = await Campaign.countDocuments({}).exec();
 
@@ -22,6 +20,7 @@ exports.run = async () => {
                 slug: faker.lorem.slug(),
                 description: faker.lorem.paragraphs({min: 1, max: 3}),
                 support_amount: faker.finance.amount({ min: 10000, max: 100000}),
+                call_message: 'Join us today for '+faker.lorem.paragraphs({min: 1, max: 3}),
                 support_volunteers: 100 * faker.number.int({ min: 1, max: 5 })
             });
         });

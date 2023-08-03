@@ -26,7 +26,7 @@ router.delete("/videos/:id", videoController.delete);
 router.get("/videos", videoController.index);
 router.get("/videos/likes/:vid/:uid", videoController.getVideoLikes);
 
-router.post("/videos", auth, videoController.store);
+router.post("/videos", videoController.store);
 router.post("/videos/like/:vid/:uid", videoController.likeVideo);
 router.post(
   "/hook/encoding-complete/:id?",
