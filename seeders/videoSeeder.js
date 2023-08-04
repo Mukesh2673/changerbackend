@@ -25,10 +25,15 @@ exports.run = async () => {
 
     const videos = Array.from(Array(100).keys()).map((index) => {
       const video_id = `video${getFrom(
-        Array.from(Array(6).keys()).map((index) => index + 1)
+          Array.from(Array(6).keys()).map((index) => index + 1)
       )}.mp4`;
 
+      const thumbnail_id = `preview${getFrom(
+          Array.from(Array(4).keys()).map((index) => index + 1)
+      )}.png`;
+
       const video_url = `https://${storageAccountName}.blob.core.windows.net/${container}/${video_id}`;
+      const thumbnail_url = `https://${storageAccountName}.blob.core.windows.net/${container}/${thumbnail_id}`;
 
       return new Video({
         user: utils.getFrom(users),
@@ -37,6 +42,7 @@ exports.run = async () => {
         likes: [],
         video_url: video_url,
         video_id: video_id,
+        thumbnail_url: thumbnail_url,
         encoding_id: getFrom(encodingIds),
         encoding_status: "FINISHED",
         type: VideoType.IMPACT,

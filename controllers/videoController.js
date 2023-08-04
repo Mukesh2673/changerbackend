@@ -66,6 +66,7 @@ exports.store = async (req, res, next) => {
     video_id: req.body.video_id,
     encoding_id: req.body.encoding_id,
     encoding_status: req.body.encoding_status,
+    thumbnail_url: req.body.thumbnail_url,
     type: req.body.type
   });
 

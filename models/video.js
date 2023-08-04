@@ -46,10 +46,14 @@ const campaignSchema = new Schema(
       type: String,
       required: false,
     },
-    encoding_status: {
-      type: String,
-      required: false,
-    },
+      encoding_status: {
+          type: String,
+          required: false,
+      },
+      thumbnail_url: {
+          type: String,
+          required: false,
+      },
   },
   {
     timestamps: true,
