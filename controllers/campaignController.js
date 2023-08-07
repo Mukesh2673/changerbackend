@@ -1,10 +1,12 @@
-const { Campaign } = require('../models');
+const { Campaign, CampaignParticipant, User} = require('../models');
+const {endorseCampaign} = require("../libs/campaign");
+const {ObjectId} = require("mongodb");
 require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 exports.index = async (req, res, next) => {
     try {
-        const { page = 1, user, cause } = req.query;
+        const { page = 1, user, cause, endorsedBy } = req.query;
 
         const query = {};
 
@@ -14,6 +16,13 @@ exports.index = async (req, res, next) => {
 
         if (!!cause) {
             query['cause'] = cause
+        }
+
+        if (!!endorsedBy) {
+            const endorsingUser = await User.findById(endorsedBy).exec();
+            if (endorsingUser && endorsingUser.endorsed_campaigns) {
+                query["_id"] = { $in: endorsingUser.endorsed_campaigns };
+            }
         }
 
         const result = await Campaign.paginate(query, {
@@ -68,4 +77,31 @@ exports.donate = async (req, res) => {
         //TODO : Store purchase in DB for future reference
         return res.status(200).json({message: "Success"});
     });
+}
+
+exports.participant = async (req, res) => {
+    try {
+        const user = req.user;
+        const campaign = await Campaign.findById(req.params.id);
+
+        if (!campaign) {
+            return res.status(404).json({message: "Campaign not found."});
+        }
+
+        let participation = await CampaignParticipant.findOne({campaign: campaign._id, user: user._id}).exec();
+        if (participation) {
+            return res.status(422).json({message: "You are already participating in this campaign."});
+        }
+
+        participation = new CampaignParticipant({
+            user, campaign
+        });
+
+        const saved = await participation.save();
+        await endorseCampaign(user, campaign._id);
+
+        return res.status(200).json(saved);
+    } catch (error) {
+        return res.status(500).json({message: error.message})
+    }
 }

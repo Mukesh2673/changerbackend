@@ -17,8 +17,10 @@ router.post("/users/unfollow/:cuid/:fuid", userController.unFollowUser);
 router.post("/users/update/:id", userController.editProfile);
 
 // CAMPAIGN ROUTES
-router.get("/campaigns/:id", campaignController.show);
 router.get("/campaigns", campaignController.index);
+router.get("/campaigns/:id", campaignController.show);
+router.post("/campaign/:id/donate/", campaignController.donate);
+router.post("/campaign/:id/participate/", campaignController.participant);
 
 // VIDEO ROUTES
 router.get("/videos/:id", videoController.show);
@@ -32,7 +34,5 @@ router.post(
   "/hook/encoding-complete/:id?",
   videoController.encodingFinishedHook
 );
-
-router.post("/campaign/:id/donate/", campaignController.donate);
 
 module.exports = router;

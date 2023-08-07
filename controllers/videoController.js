@@ -2,6 +2,7 @@ const { ObjectId } = require('mongodb');
 
 const { VideoType } = require("../constants");
 const { Video } = require("../models");
+const {endorseCampaign} = require("../libs/campaign");
 
 exports.index = async (req, res, next) => {
   try {
@@ -72,6 +73,11 @@ exports.store = async (req, res, next) => {
 
   try {
     const savedVideo = await video.save();
+
+    if (req.body.campaign) {
+      await endorseCampaign(user, req.body.campaign);
+    }
+
     return res.status(200).json(savedVideo);
   } catch (error) {
     return res.status(500).json({ message: error.message });
