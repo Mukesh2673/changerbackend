@@ -8,11 +8,11 @@ const storageAccountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
 const container = process.env.AZURE_VIDEO_CONTAINER;
 
 const encodingIds = [
-  "1c9428e7-5552-4266-aa98-ce6d57986120",
-  "13d5ccd5-5566-4d72-86b0-de6febc52186",
-  "4d0e36ca-dfa7-4f54-aea4-727d6dffe950",
-  "31b71686-7e84-4d50-8c7e-f8b73e83bda2",
-  "99803eca-70eb-41a9-81ba-4641cf13b25d",
+  "74bc169d-70bb-4166-a95e-031c39a590d1",
+  "c12b82b0-f9f8-414b-8421-42cdc852c214",
+  "cc60ebaa-7674-40cb-b9e4-5790138c5a95",
+  "513f7829-51c3-449e-8952-559d22973a5a",
+  "94fb8b04-42ea-4876-ba59-43316d1da734",
 ];
 
 exports.run = async () => {
