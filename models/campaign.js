@@ -36,7 +36,17 @@ const campaignSchema = new Schema({
   support_volunteers: {
     type: Number,
     required: false
-  }
+  },
+  donated_amount: {
+    type: Number,
+    required: false,
+    default: 0
+  },
+  volunteers: {
+    type: Number,
+    required: false,
+    default: 0
+  },
 }, {
   timestamps: true
 });

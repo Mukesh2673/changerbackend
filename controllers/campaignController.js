@@ -1,4 +1,4 @@
-const { Campaign, CampaignParticipant, User} = require('../models');
+const { Campaign, CampaignParticipant, User, Video} = require('../models');
 const {endorseCampaign} = require("../libs/campaign");
 const {ObjectId} = require("mongodb");
 require('dotenv').config();
@@ -64,17 +64,26 @@ exports.delete = async (req, res, next) => {
 
 exports.donate = async (req, res) => {
     const campaign = await Campaign.findById(req.params.id);
+
     var stripeToken = req.body.token;
     var charge = stripe.charges.create({
-        amount: parseFloat(req.body.amount) * 100, // amount in cents, again
+        amount: parseInt(req.body.amount * 100),
         currency: "usd",
         card: stripeToken,
         description: req.body.description
-    }, function(err, charge) {
+    }, async function (err, charge) {
         if (err && err.type === 'StripeCardError') {
             return res.status(401).json({message: "Card error"});
         }
         //TODO : Store purchase in DB for future reference
+
+        if (campaign) {
+            await Campaign.updateOne({_id: campaign._id}, {
+                donated_amount: campaign.donated_amount + req.body.amount
+            });
+            await endorseCampaign(req.user, campaign._id);
+        }
+
         return res.status(200).json({message: "Success"});
     });
 }
@@ -96,6 +105,10 @@ exports.participant = async (req, res) => {
         participation = new CampaignParticipant({
             user, campaign
         });
+
+        await Campaign.updateOne({_id: campaign._id}, {
+            volunteers: campaign.volunteers + 1
+        }).exec();
 
         const saved = await participation.save();
         await endorseCampaign(user, campaign._id);
