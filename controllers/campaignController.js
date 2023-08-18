@@ -66,7 +66,7 @@ exports.donate = async (req, res) => {
     const campaign = await Campaign.findById(req.params.id);
     var stripeToken = req.body.token;
     var charge = stripe.charges.create({
-        amount: req.body.amount*100, // amount in cents, again
+        amount: parseFloat(req.body.amount) * 100, // amount in cents, again
         currency: "usd",
         card: stripeToken,
         description: req.body.description
