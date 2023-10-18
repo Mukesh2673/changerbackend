@@ -1,12 +1,22 @@
-const { ObjectId } = require('mongodb');
-
+const { ObjectId } = require("mongodb");
+const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
+const ffmpeg = require("fluent-ffmpeg");
+ffmpeg.setFfmpegPath(ffmpegPath);
 const { VideoType } = require("../constants");
+const Buffer = require("buffer/").Buffer;
+const fs = require("fs");
 const { Video } = require("../models");
-const {endorseCampaign} = require("../libs/campaign");
-
+const { endorseCampaign } = require("../libs/campaign");
+const { deleteFile } = require("../libs/utils");
 exports.index = async (req, res, next) => {
   try {
-    const { page = 1, campaign, user, type = VideoType.IMPACT, tab } = req.query;
+    const {
+      page = 1,
+      campaign,
+      user,
+      type = VideoType.IMPACT,
+      tab,
+    } = req.query;
 
     const query = {
       encoding_status: "FINISHED",
@@ -24,8 +34,8 @@ exports.index = async (req, res, next) => {
       query["type"] = type;
     }
 
-    if (tab === 'following' && req.user) {
-      const following = req.user.following.map(_id => new ObjectId(_id));
+    if (tab === "following" && req.user) {
+      const following = req.user.following.map((_id) => new ObjectId(_id));
 
       query["user"] = { $in: following };
     }
@@ -68,7 +78,7 @@ exports.store = async (req, res, next) => {
     encoding_id: req.body.encoding_id,
     encoding_status: req.body.encoding_status,
     thumbnail_url: req.body.thumbnail_url,
-    type: req.body.type
+    type: req.body.type,
   });
 
   try {
@@ -137,13 +147,12 @@ exports.update = async (req, res, next) => {};
 
 exports.delete = async (req, res, next) => {
   try {
-
     // TODO: delete video from AZURE
     // TODO: delete video encoding from BITMOVIN
 
     await Video.deleteOne({ _id: req.params.id });
 
-    return res.json({success: 'Video deleted'});
+    return res.json({ success: "Video deleted" });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -167,3 +176,35 @@ exports.encodingFinishedHook = (req, res, next) => {
 
   return res.json([]);
 };
+
+exports.thumbnail = async (req, res, next) => {
+  try {
+    const source = `uploads/${req.file.filename}`;
+
+    let data = await new ffmpeg({ source: source, nolog: true })
+      .takeScreenshots(
+        { timemarks: ["00:00:01.000"], size: "1150x1400" },
+        "thumbnail/"
+      )
+      .on("end", async function () {
+        const imageFiles = fs.readdirSync("thumbnail/");
+        const imageData = fs.readFileSync("thumbnail/" + imageFiles[0]);
+        const base64 = Buffer.from(imageData).toString("base64");
+        deleteFile("uploads/");
+        deleteFile("thumbnail");
+        return res.json({
+          success: "Video thumbnail generated",
+          base64: base64,
+          status: 200,
+        });
+      })
+      .on("error", function () {
+        deleteFile("uploads/");
+        deleteFile("thumbnail");
+        return res.json({ error: error, status: 400 });
+      });
+  } catch (error) {
+    return res.status(500).json({ message: error.message, status: 500 });
+  }
+};
+

@@ -1,6 +1,15 @@
 var express = require("express");
 var router = express.Router();
-
+const multer = require("multer");
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  },
+});
+const upload = multer({ storage: storage });
 const auth = require("../middleware/firebaseAuth").authCheck;
 
 const userController = require("../controllers/userController");
@@ -26,6 +35,7 @@ router.post("/campaign/:id/participate/", campaignController.participant);
 router.get("/videos/:id", videoController.show);
 router.delete("/videos/:id", videoController.delete);
 router.get("/videos", videoController.index);
+router.post("/thumbnail", upload.single("video"), videoController.thumbnail);
 router.get("/videos/likes/:vid/:uid", videoController.getVideoLikes);
 
 router.post("/videos", videoController.store);
