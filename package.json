@@ -30,7 +30,7 @@
     "stripe": "^12.16.0"
   },
   "engines": {
-    "node": ">=18.10.0"
+    "node": "18.10.0"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.22"
