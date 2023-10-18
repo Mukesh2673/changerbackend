@@ -29,6 +29,9 @@
     "nodemon": "^2.0.22",
     "stripe": "^12.16.0"
   },
+  "engines": {
+    "node": ">=18.10.0"
+  },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.22"
   }
