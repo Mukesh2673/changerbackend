@@ -7,7 +7,8 @@ const Buffer = require("buffer/").Buffer;
 const fs = require("fs");
 const { Video } = require("../models");
 const { endorseCampaign } = require("../libs/campaign");
-const { deleteFile } = require("../libs/utils");
+const { deleteFile ,thumbnailFile} = require("../libs/utils");
+const {upload,uploadVideoThumbnail} =require("../libs/fileUpload")
 exports.index = async (req, res, next) => {
   try {
     const {
@@ -42,9 +43,10 @@ exports.index = async (req, res, next) => {
 
     const result = await Video.paginate(query, {
       page,
+      limit:2,
       sort: { createdAt: "desc" },
     });
-
+    console.log("result is",result)
     return res.json(result);
   } catch (error) {
     return res.json([]);
@@ -180,7 +182,7 @@ exports.encodingFinishedHook = (req, res, next) => {
 exports.thumbnail = async (req, res, next) => {
   try {
     const source = `uploads/${req.file.filename}`;
-
+    //await upload(req.file);
     let data = await new ffmpeg({ source: source, nolog: true })
       .takeScreenshots(
         { timemarks: ["00:00:01.000"], size: "1150x1400" },
@@ -208,3 +210,13 @@ exports.thumbnail = async (req, res, next) => {
   }
 };
 
+exports.upload = async (req, res, next) => {
+  try {
+    const thumbnail= await uploadVideoThumbnail(req.file)
+    const uploadStatus =await upload(req.file);
+    uploadStatus.thumbnailKey=thumbnail.key
+    return res.status(200).json(uploadStatus);
+  } catch (error) {
+    return res.status(500).json({ message: error.message, status: 500 });
+  }
+};
