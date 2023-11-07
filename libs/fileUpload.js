@@ -41,7 +41,6 @@ exports.upload = async (file) => {
     let data = await s3.upload(s3Params).promise();
     if (data) {
       const outputKey = Date.now();
-
       //automated abr
       // const params = {
       //   UserMetadata: {},
@@ -266,51 +265,20 @@ exports.upload = async (file) => {
                   "AntiAlias": "ENABLED",
                   "Sharpness": 50,
                   "CodecSettings": {
-                    "Codec": "H_264",
-                    "H264Settings": {
-                      "InterlaceMode": "PROGRESSIVE",
-                      "NumberReferenceFrames": 3,
-                      "Syntax": "DEFAULT",
-                      "Softness": 0,
-                      "GopClosedCadence": 1,
-                      "GopSize": 48,
-                      "Slices": 1,
-                      "GopBReference": "DISABLED",
-                      "SlowPal": "DISABLED",
-                      "SpatialAdaptiveQuantization": "ENABLED",
-                      "TemporalAdaptiveQuantization": "ENABLED",
-                      "FlickerAdaptiveQuantization": "DISABLED",
-                      "EntropyEncoding": "CABAC",
-                      "Bitrate": 45000,
-                      "FramerateControl": "SPECIFIED",
-                      "RateControlMode": "CBR",
-                      "CodecProfile": "HIGH",
-                      "Telecine": "NONE",
-                      "MinIInterval": 0,
-                      "AdaptiveQuantization": "HIGH",
-                      "CodecLevel": "LEVEL_4_1",
-                      "FieldEncoding": "PAFF",
-                      "SceneChangeDetect": "ENABLED",
-                      "QualityTuningLevel": "SINGLE_PASS_HQ",
-                      "FramerateConversionAlgorithm": "DUPLICATE_DROP",
-                      "UnregisteredSeiTimecode": "DISABLED",
-                      "GopSizeUnits": "FRAMES",
-                      "ParControl": "INITIALIZE_FROM_SOURCE",
-                      "NumberBFramesBetweenReferenceFrames": 3,
-                      "RepeatPps": "DISABLED",
-                      "HrdBufferSize": 9000000,
-                      "HrdBufferInitialFillPercentage": 90,
-                      "FramerateNumerator": 24000,
-                      "FramerateDenominator": 1001
-                    }
+                      "Codec": "H_264",
+                      "H264Settings": {
+                          "InterlaceMode": "PROGRESSIVE",
+                          "NumberReferenceFrames": 3,
+                          "Bitrate": 2500000
+                      }
                   },
                   "AfdSignaling": "NONE",
                   "DropFrameTimecode": "ENABLED",
                   "RespondToAfd": "NONE",
                   "ColorMetadata": "INSERT",
-                  "Width": 1920,
-                  "Height": 1080
-                },
+                  // "Width": 1920,
+                  // "Height": 1080
+              },
                 "AudioDescriptions": [
                   {
                     "AudioTypeControl": "FOLLOW_INPUT",
@@ -366,7 +334,10 @@ exports.upload = async (file) => {
               }
             },
             "VideoSelector": {
-              "ColorSpace": "FOLLOW"
+              "ColorSpace": "FOLLOW",
+              "Rotate": "DEGREE_0",
+               "AlphaBehavior": "DISCARD",
+
             },
             "FilterEnable": "AUTO",
             "PsiControl": "USE_PSI",
