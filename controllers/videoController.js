@@ -43,7 +43,7 @@ exports.index = async (req, res, next) => {
 
     const result = await Video.paginate(query, {
       page,
-      limit:1,
+      limit:2,
       sort: { createdAt: "desc" },
     });
     return res.json(result);
