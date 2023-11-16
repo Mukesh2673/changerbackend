@@ -28,11 +28,11 @@ exports.upload = async (file) => {
     const source = `uploads/${file.filename}`;
     new ffmpeg(source)
       .videoCodec("libx265")
-      .videoCodec('libx264')
   .videoBitrate(1000)
+  //   .videoFilters('scale=1280:720')
   .outputOptions([
-    '-minrate 200k',
-    '-maxrate 1500k'
+    '-minrate 5000',
+    '-maxrate 1000'
   ])
       .on("end", async function () {
         AWS.config.update(options);
@@ -219,7 +219,7 @@ exports.upload = async (file) => {
                     AutomatedEncodingSettings: {
                       AbrSettings: {
                         MaxRenditions: 6,
-                        MaxAbrBitrate: 5000000,
+                        MaxAbrBitrate: 50000000,
                         MinAbrBitrate: 100000,
                       },
                     },
