@@ -218,8 +218,8 @@ exports.upload = async (file) => {
                     },
                     AutomatedEncodingSettings: {
                       AbrSettings: {
-                        MaxRenditions: 6,
-                        MaxAbrBitrate: 50000000,
+                        MaxRenditions: 5,
+                        MaxAbrBitrate: 5000000,
                         MinAbrBitrate: 100000,
                       },
                     },
