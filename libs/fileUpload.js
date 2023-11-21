@@ -219,10 +219,10 @@ exports.upload = async (file) => {
                     AutomatedEncodingSettings: {
                       AbrSettings: {
                         MaxRenditions: 5,
-                        MaxAbrBitrate: 5000000,
+                        MaxAbrBitrate: 500000,
                         MinAbrBitrate: 100000,
                       },
-                    },
+                    },    
                   },
                 ],
                 AdAvailOffset: 0,
@@ -301,12 +301,12 @@ exports.uploadVideoThumbnail = async (file) => {
         const s3 = new AWS.S3({
           s3ForcePathStyle: true,
         });
-        let newName = Date.now() + ".mp4";
-        const imageFiles = fs.readdirSync("thumbnail/");
+        let newName = Date.now() + ".png";
+        const fileContent = fs.readFileSync('thumbnail/tn.png');
         let s3Params = {
-          ContentType: "video/mp4",
+          ContentType: "image/png",
           Bucket: "thumbnail",
-          Body: fs.createReadStream(`thumbnail/${imageFiles[0]}`),
+          Body: fileContent,
           Key: `${newName}`,
         };
         try {
