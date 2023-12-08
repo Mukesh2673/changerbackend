@@ -9,35 +9,24 @@ const campaignSchema = new Schema({
     ref: "User",
     autopopulate: true
   },
-  cause: {
+  name: {
     type: String,
     required: false
   },
+  amount: {
+    type: String,
+    required: false
+  },
+  description:{
+    type: String,
+    required: false
+  },
+  karmaPoint: {
+    type: String,
+    required: false
+  },
+
   
-  title: {
-    type: String,
-    required: false
-  },
-  phase: {
-    type: Schema.Types.ObjectId,
-    ref: "phase",
-    autopopulate: true
-  },
-
-  story:{
-    type: String,
-    required: false
-  },
-  image:{
-    type:String,
-    required:false
-  },
-  videos: {
-    type: Schema.Types.ObjectId,
-    ref: "Video",
-    autopopulate: true
-  }
-
 }, {
   timestamps: true
 });

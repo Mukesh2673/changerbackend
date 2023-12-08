@@ -34,6 +34,9 @@ router.get("/campaigns", campaignController.index);
 router.get("/campaigns/:id", campaignController.show);
 router.post("/campaign/:id/donate/", campaignController.donate);
 router.post("/campaign/:id/participate/", campaignController.participant);
+router.post("/campaigns",campaignController.create)
+
+
 
 // VIDEO ROUTES
 router.get("/videos/:id", videoController.show);

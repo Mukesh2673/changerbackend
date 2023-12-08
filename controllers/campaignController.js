@@ -51,7 +51,26 @@ exports.show = async (req, res, next) => {
 }
 
 exports.create = async (req, res, next) => {
+try{
+    let phase={
+        
 
+
+
+    }
+
+
+
+
+
+
+    console.log("hiiii",req.body.phase[0].action)
+    return res.json([]);
+}
+catch(err){
+    console.log("hiiii")
+
+}
 }
 
 exports.update = async (req, res, next) => {
