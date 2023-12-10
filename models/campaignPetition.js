@@ -32,7 +32,4 @@ const petitionsSchema = new Schema(
   }
 );
 
-petitionsSchema.plugin(mongoosePaginate);
-petitionsSchema.plugin(require("mongoose-autopopulate"));
-
-module.exports = mongoose.model("petitions", petitionsSchema);
+module.exports = mongoose.model("petition", petitionsSchema);

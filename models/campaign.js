@@ -20,7 +20,7 @@ const campaignSchema = new Schema({
   },
   phase:[{
     type: Schema.Types.ObjectId,
-    ref: "campaignPhases",
+    ref: "phase",
    }], 
 
   story:{
@@ -44,4 +44,4 @@ const campaignSchema = new Schema({
 campaignSchema.plugin(mongoosePaginate);
 campaignSchema.plugin(require('mongoose-autopopulate'));
 
-module.exports = mongoose.model('Campaign', campaignSchema);
+module.exports = mongoose.model('campaign', campaignSchema);

@@ -63,7 +63,7 @@ const campaignParticipantSchema = new Schema(
     },
     phase: {
   type: mongoose.Schema.Types.ObjectId,
-     ref: "campaignActionSchema",
+     ref: "campaignPhases",
     },
   },
   {
@@ -74,6 +74,6 @@ campaignParticipantSchema.plugin(mongoosePaginate);
 campaignParticipantSchema.plugin(require("mongoose-autopopulate"));
 
 module.exports = mongoose.model(
-  "CampaignParticipant",
+  "participant",
   campaignParticipantSchema
 );

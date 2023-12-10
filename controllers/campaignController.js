@@ -144,15 +144,77 @@ const campaignData=await Campaign.findByIdAndUpdate({_id: campaignsId},{
     //     //   },
     //     // },
     //   ]
-  const agg=await Campaign.aggregate([{
+//   const agg=await campaignPhases.aggregate([{
+//     $lookup: {
+//         from: 'donations',
+//         localField: 'donation',
+//         foreignField: '_id',
+//         as: "donation"
+//       },
+
+
+// },
+// {
+// $lookup: {
+//     from: 'petitions',
+//     localField: 'petition',
+//     foreignField: '_id',
+//     as: "petition"
+//   }
+// },
+// {
+//     $lookup: {
+//         from: 'participants',
+//         localField: 'participation',
+//         foreignField: '_id',
+//         as: "participation"
+//       }
+// }
+
+
+// ]);
+
+const agg=await Campaign.aggregate([{
     $lookup: {
-        from: 'campaignPhases ',
+        from: 'phases',
         localField: 'phase',
         foreignField: '_id',
-        as: "phase"
-      }
+        pipeline:[
+            {
+                $lookup: {
+                  from: "donations",
+                  localField: "donation",
+                  foreignField: "_id",
+                  as: "donation",
+                },
+            },
+            {
+                $lookup: {
+                  from: "petitions",
+                  localField: "petition",
+                  foreignField: "_id",
+                  as: "petition",
+                },
+            },
+            {
+                $lookup: {
+                    from: 'participants',
+                    localField: 'participation',
+                    foreignField: '_id',
+                    as: "participation"
+                  }
+            }
+            
+        ],
+        as: "phases"
+      },
+},
 
-}]);
+
+
+]);
+
+
 return res.json(agg)
 console.log('aggg is',agg)
 for await (const doc of await agg) {

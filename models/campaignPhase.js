@@ -7,7 +7,7 @@ title:{
       },
 donation:{
   type: mongoose.Schema.Types.ObjectId,
-   ref: "campaignActionSchema",
+   ref: "donation",
    default: () => new mongoose.Types.ObjectId(), 
   },
   petition:{
@@ -17,16 +17,16 @@ donation:{
   },
   participation:[{
     type:mongoose.Schema.Types.ObjectId,
-    ref:"participation",
+    ref:"participant",
   }],
   campaign:{
      type: mongoose.Schema.Types.ObjectId,
-     ref: "campaignActionSchema",
+     ref: "Campaign",
+    }
     
-  }
 }, {
   timestamps: true
 });
 
 
-module.exports = mongoose.model('campaignPhases', phaseSchema);
+module.exports = mongoose.model('phase', phaseSchema);

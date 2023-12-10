@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const mongoosePaginate = require('mongoose-paginate-v2');
 
 const Schema = mongoose.Schema;
 
@@ -29,8 +28,12 @@ const donationSchema = new Schema({
 }, {
   timestamps: true
 });
+donationSchema.set("toJSON", {
+  virtuals: false,
+  transform: (doc, ret, Options) => {
+    delete ret.__v;
+  },
+});
 
-donationSchema.plugin(mongoosePaginate);
-donationSchema.plugin(require('mongoose-autopopulate'));
 
 module.exports = mongoose.model('donation', donationSchema);
