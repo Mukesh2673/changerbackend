@@ -1,0 +1,94 @@
+{
+    "title": "",
+    "campaignType": "animal",
+    "phase": [
+      {
+        "title": "",
+        "action": [
+           {
+              "name":"donation",
+              "amount": 0,
+              "description": "",
+              "karmaPoint": ""
+            },
+            {
+              "name":"petition",
+              "signature": "",
+              "description": "",
+              "karmaPoint": ""
+            },
+            {
+                "name":"participation",
+                "participant": 0,
+                "roleTitle": "",
+                "description": "",
+                "workplaceType": "",
+                "location": "",
+                "address": {
+                  "googleAddress": "",
+                  "location": {
+                    "coordinates": ["Number"]
+                  }
+                },
+                "startdate": "",
+                "numberofDays": 0,
+                "Time": { "partTime": true, "fullTime": false },
+                "responsibilities": [
+                  {
+                    "description1": ""
+                  },
+                  {
+                    "description2": ""
+                  },
+                  {
+                    "description(n)": ""
+                  }
+                ],
+                "skills": [
+                  {
+                    "name1": ""
+                  },
+                  {
+                    "name2": ""
+                  },
+                  {
+                    "name(n)": ""
+                  }
+                ],
+                "requirements": [
+                  {
+                    "description1": ""
+                  },
+                  {
+                    "description2": ""
+                  },
+                  {
+                    "description(n)": ""
+                  }
+                ],
+                "provides": [
+                  {
+                    "description1": ""
+                  },
+                  {
+                    "description2": ""
+                  },
+                  {
+                    "description3": ""
+                  }
+                ],
+                "karmaPoint": 0
+            }
+            
+          
+        ]
+      }
+    ],
+    "campaignStory":"",
+    "image":"file",
+    "videos":{
+      "video":"file",
+      "type":"actionVideo"
+    }
+  
+  }

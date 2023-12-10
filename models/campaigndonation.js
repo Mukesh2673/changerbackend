@@ -3,12 +3,8 @@ const mongoosePaginate = require('mongoose-paginate-v2');
 
 const Schema = mongoose.Schema;
 
-const campaignSchema = new Schema({
-  user: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-    autopopulate: true
-  },
+const donationSchema = new Schema({
+  
   name: {
     type: String,
     required: false
@@ -25,13 +21,16 @@ const campaignSchema = new Schema({
     type: String,
     required: false
   },
-
+  phase: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "campaignPhases",  
+  }
   
 }, {
   timestamps: true
 });
 
-campaignSchema.plugin(mongoosePaginate);
-campaignSchema.plugin(require('mongoose-autopopulate'));
+donationSchema.plugin(mongoosePaginate);
+donationSchema.plugin(require('mongoose-autopopulate'));
 
-module.exports = mongoose.model('Campaign', campaignSchema);
+module.exports = mongoose.model('donation', donationSchema);

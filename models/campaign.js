@@ -18,11 +18,10 @@ const campaignSchema = new Schema({
     type: String,
     required: false
   },
-  phase: {
+  phase:[{
     type: Schema.Types.ObjectId,
-    ref: "phase",
-    autopopulate: true
-  },
+    ref: "campaignPhases",
+   }], 
 
   story:{
     type: String,
@@ -35,7 +34,7 @@ const campaignSchema = new Schema({
   videos: {
     type: Schema.Types.ObjectId,
     ref: "Video",
-    autopopulate: true
+    //autopopulate: true
   }
 
 }, {
