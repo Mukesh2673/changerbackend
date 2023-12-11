@@ -266,15 +266,15 @@ exports.upload = async (file) => {
                 status: encodedResult.Job.Status,
                 status: 200,
               };
-              deleteFile("media/");
-              deleteFile("uploads/");
+              //deleteFile("media/");
+              //deleteFile("uploads/");
               resolve(response);
             }
           }
           resolve(data);
         } catch (err) {
-          deleteFile("uploads/");
-          deleteFile("media/");
+          //deleteFile("uploads/");
+          //deleteFile("media/");
           console.log(`Error uploading file to S3. Details: ${err}`);
           reject(err);
         }
@@ -328,3 +328,31 @@ exports.uploadVideoThumbnail = async (file) => {
       });
   });
 };
+exports.uploadImage=async(file)=>{
+  return new Promise((resolve, reject) => {
+    const source = `uploads/${file.filename}`;
+    const fileContent = fs.readFileSync(source);
+    AWS.config.update(options);
+        const s3 = new AWS.S3({
+          s3ForcePathStyle: true,
+        });
+    let newName = Date.now() + ".png";
+    let s3Params = {
+      ContentType: "image/png",
+      Bucket: "thumbnail",
+      Body: fileContent,
+      Key: `${newName}`,
+    };
+    try {
+      let data = s3.upload(s3Params).promise();
+      if (data) {
+        deleteFile("uploads/");
+      }
+      resolve(data);
+    } catch (err) {
+      deleteFile("uploads/");
+      console.log("erroris", err);
+    }
+
+  })
+}

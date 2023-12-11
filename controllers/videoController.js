@@ -8,7 +8,7 @@ const fs = require("fs");
 const { Video } = require("../models");
 const { endorseCampaign } = require("../libs/campaign");
 const { deleteFile ,thumbnailFile} = require("../libs/utils");
-const {upload,uploadVideoThumbnail} =require("../libs/fileUpload")
+const {upload,uploadVideoThumbnail,uploadImage} =require("../libs/fileUpload")
 exports.index = async (req, res, next) => {
   try {
     const {
@@ -208,12 +208,22 @@ exports.thumbnail = async (req, res, next) => {
   }
 };
 
-exports.upload = async (req, res, next) => {
+exports.upload = async (req, res, next) =>{
   try {
     const thumbnail= await uploadVideoThumbnail(req.file)
     const uploadStatus =await upload(req.file);
     uploadStatus.thumbnailKey=thumbnail.key
     return res.status(200).json(uploadStatus);
+  } catch (error) {
+    return res.status(500).json({ message: error.message, status: 500 });
+  }
+};
+
+exports.uploadImages=async(req,res)=>{
+  try {
+    const thumbnail= await uploadImage(req.file)
+    let data=`${thumbnail.Bucket}/${thumbnail.key}`
+    return res.status(200).json({message:'uploaded',image:data});
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }
