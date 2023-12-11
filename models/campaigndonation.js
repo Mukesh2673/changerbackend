@@ -20,7 +20,7 @@ const donationSchema = new Schema({
     type: String,
     required: false
   },
-  phase: {
+  phaseId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "campaignPhases",  
   }

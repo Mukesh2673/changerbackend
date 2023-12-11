@@ -61,8 +61,8 @@ const campaignParticipantSchema = new Schema(
       type: String,
       default: "",
     },
-    phase: {
-  type: mongoose.Schema.Types.ObjectId,
+    phaseId: {
+    type: mongoose.Schema.Types.ObjectId,
      ref: "campaignPhases",
     },
   },

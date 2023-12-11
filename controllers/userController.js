@@ -13,7 +13,7 @@ exports.getUserByUID = async (req, res, next) => {
   try {
     const user = await User.findOne({ uid: req.params.uid });
     return res.json(user);
-  } catch (error) {
+  } catch (error){
     return res.status(500).json({ message: error.message });
   }
 };

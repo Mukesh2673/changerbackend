@@ -26,6 +26,10 @@ const petitionsSchema = new Schema(
       type: String,
       required: false,
     },
+    phaseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "campaignPhases",  
+    }
   },
   {
     timestamps: true,

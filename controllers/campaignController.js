@@ -82,108 +82,84 @@ exports.create = async (req, res, next) => {
     });
     const savedVideo = await videos.save();
     const videoId = savedVideo._id;
- 
+    const phaseArr=data.phase
+    const savePhaseId=[]
+    for(let i=0;i<phaseArr.length;i++)
+    {
+        const phaseItem = new campaignPhases({
+            title: phaseArr[i].title,
+            campaign: campaignsId,
+        });
+        const savePhaseItem = await phaseItem.save();
+        savePhaseId[i] = savePhaseItem._id;
+        const Action = req.body.phase[i].action;
+        const donationCount = Action.filter((item) => item?.name == "donation");
+        if (donationCount.length>1)
+        {return res.json({"status":400,"message":"duplicate donation not allow"});
+        }
 
-    const phaseItem = new campaignPhases({
-      title: "mks",
-      campaign: campaignsId,
-    });
-    const savePhaseItem = await phaseItem.save();
-    const savePhaseId = savePhaseItem._id;
-
-    const Action = req.body.phase[0].action;
-    const donationCount = Action.filter((item) => item?.name == "donation");
-    donationCount[0].phase = savePhaseId;
-    const petitionData = Action.filter((item) => item?.name == "petition");
-    petitionData[0].phase = savePhaseItem._id;
-    const participation = Action.filter(
-      (item) => item?.name == "participation"
-    );
-    participation[0].phase = savePhaseItem._id;
-    const participant = new CampaignParticipant(participation[0]);
-    const savedParticipant = await participant.save();
-    const donations = new donation(donationCount[0]);
-    const savedDonation = await donations.save();
-    const petition = new petitions(petitionData[0]);
-    const savedPetitions = await petition.save();
-    const participationId = savedParticipant._id;
-    const DonationId = savedDonation._id;
-    const petitionId = savedPetitions._id;
-
-    const phaseData = await campaignPhases.findByIdAndUpdate(
-      { _id: savePhaseId },
-      {
-        $set: {
-          donation: DonationId,
-          petition: petitionId,
-          participation: participationId,
-        },
-      },
-      { new: true }
-    );
-    const campaignData = await Campaign.findByIdAndUpdate(
-      { _id: campaignsId },
-      {
-        $set: {
-          phase: [phaseData._id],
-          videos: videoId,
-        },
-      }
-    );
-
-    let result = [];
-
-    // const agg = await Campaign.aggregate([
-    //   {
-    //     $lookup: {
-    //       from: "phases",
-    //       localField: "phase",
-    //       foreignField: "_id",
-    //       pipeline: [
-    //         {
-    //           $lookup: {
-    //             from: "donations",
-    //             localField: "donation",
-    //             foreignField: "_id",
-    //             as: "donation",
-    //           },
-    //         },
-    //         {
-    //           $lookup: {
-    //             from: "petitions",
-    //             localField: "petition",
-    //             foreignField: "_id",
-    //             as: "petition",
-    //           },
-    //         },
-    //         {
-    //           $lookup: {
-    //             from: "participants",
-    //             localField: "participation",
-    //             foreignField: "_id",
-    //             as: "participation",
-    //           },
-    //         },
-    //       ],
-    //       as: "phases",
-    //     },
-    //   },
-    // ]);
-
-    return res.json("hi");
-    console.log("aggg is", agg);
-    for await (const doc of await agg) {
-      result.push(doc);
+        donationCount[0].phaseId = savePhaseId[i];
+        const petitionData = Action.filter((item) => item?.name == "petition");
+        if (petitionData.length>1)
+        {return res.json({"status":400,"message":"duplicate petition not allow"});
+        }
+        
+        petitionData[0].phaseId =  savePhaseId[i];
+        const participation = Action.filter(
+          (item) => item?.name == "participation"
+        );
+        const participantionsId=[]
+        for(let j=0;j<participation.length;j++)
+        {
+            participation[j].phaseId=savePhaseId[i];
+            const participant = new CampaignParticipant(participation[j]);
+            const savedParticipant = await participant.save();
+            let id = savedParticipant._id;
+            participantionsId.push(id)
+        }
+        const donations = new donation(donationCount[0]);
+        const savedDonation = await donations.save();
+        const DonationId = savedDonation._id;
+        const petition = new petitions(petitionData[0]);
+        const savedPetitions = await petition.save();
+        const petitionId = savedPetitions._id;
+        await campaignPhases.findByIdAndUpdate(
+            { _id: savePhaseId[i] },
+            {
+              $set: {
+                donation: DonationId,
+                petition: petitionId,
+                participation: participantionsId,
+              },
+            },
+            { new: true }
+          )
+          await Campaign.findByIdAndUpdate(
+            { _id: campaignsId },
+            {
+              $set: {
+                phase: savePhaseId,
+                videos: videoId,
+              },
+            }
+          )
     }
-    console.log("result is", result);
+    {
+        return res.json({"status":200,"message":"campaign added successfully",success:true});
+    
+}
 
-    //https://stackoverflow.com/questions/36019713/mongodb-nested-lookup-with-3-levels
-    //https://stackoverflow.com/questions/66254263/mongodb-how-to-populate-the-nested-object-with-lookup-query
 
-    return res.json(result);
+
+
+
+
+
+
+
   } catch (err) {
-    console.log("hiiii", err);
-  }
+    return res.json({"status":400,"message":err,success:false});
+}
 };
 
 exports.update = async (req, res, next) => {};
