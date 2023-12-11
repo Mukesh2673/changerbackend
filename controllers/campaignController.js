@@ -7,6 +7,7 @@ const {
   petitions,
   campaignPhases,
 } = require("../models");
+const mongoose = require("mongoose");
 const { endorseCampaign } = require("../libs/campaign");
 const { ObjectId } = require("mongodb");
 require("dotenv").config();
@@ -60,16 +61,28 @@ exports.show = async (req, res, next) => {
 
 exports.create = async (req, res, next) => {
   try {
+    const data=req.body    
     const campaign = new Campaign({
       user: "65745ba4c123378e6da6c07c",
-      cause: "dog",
-      title: "abc",
-      phase: [],
-      story: "",
-      image: "",
+      cause: data.cause,
+      title: data.title,
+      story: data.story,
+      image: data.image,
     });
     const campaigns = await campaign.save();
     const campaignsId = campaigns._id;
+    const videos = new Video({
+      user: req.body.user,
+      campaign: campaignsId,
+      description: req.body.campaignStory,
+      title: req.body.title,
+      video_url: req.body.video.videoUrl,
+      type: req.body.video.type,
+      thumbnail_url: req.body.thumbnailUrl,
+    });
+    const savedVideo = await videos.save();
+    const videoId = savedVideo._id;
+ 
 
     const phaseItem = new campaignPhases({
       title: "mks",
@@ -113,111 +126,51 @@ exports.create = async (req, res, next) => {
       {
         $set: {
           phase: [phaseData._id],
+          videos: videoId,
         },
       }
     );
 
     let result = [];
-    // let aggregatinArr = [
-    //     {
-    //       $match: { $and: query },
-    //     },
-    //     {
-    //       $lookup: {
-    //         from: "profiles",
-    //         localField: "postedBy",
-    //         foreignField: "_id",
-    //         as: "profileInfo",
-    //       },
-    //     },
-    //     // {
-    //     //   $project: {
-    //     //     _id: 1,
-    //     //     image: 1,
-    //     //     title: 1,
-    //     //     price: 1,
-    //     //     description: 1,
-    //     //     phone: 1,
-    //     //     status: 1,
-    //     //     color: 1,
-    //     //     isDeleted: 1,
-    //     //     postedBy: 1,
-    //     //     createdAt: 1,
-    //     //     updatedAt: 1,
-    //     //     "profileInfo._id": 1,
-    //     //     "profileInfo.title": 1,
-    //     //     "profileInfo.image": 1,
-    //     //     "profileInfo.subscription": 1,
-    //     //     "profileInfo.availableTime": 1,
-    //     //   },
-    //     // },
-    //   ]
-    //   const agg=await campaignPhases.aggregate([{
-    //     $lookup: {
-    //         from: 'donations',
-    //         localField: 'donation',
-    //         foreignField: '_id',
-    //         as: "donation"
-    //       },
 
-    // },
-    // {
-    // $lookup: {
-    //     from: 'petitions',
-    //     localField: 'petition',
-    //     foreignField: '_id',
-    //     as: "petition"
-    //   }
-    // },
-    // {
+    // const agg = await Campaign.aggregate([
+    //   {
     //     $lookup: {
-    //         from: 'participants',
-    //         localField: 'participation',
-    //         foreignField: '_id',
-    //         as: "participation"
-    //       }
-    // }
-
+    //       from: "phases",
+    //       localField: "phase",
+    //       foreignField: "_id",
+    //       pipeline: [
+    //         {
+    //           $lookup: {
+    //             from: "donations",
+    //             localField: "donation",
+    //             foreignField: "_id",
+    //             as: "donation",
+    //           },
+    //         },
+    //         {
+    //           $lookup: {
+    //             from: "petitions",
+    //             localField: "petition",
+    //             foreignField: "_id",
+    //             as: "petition",
+    //           },
+    //         },
+    //         {
+    //           $lookup: {
+    //             from: "participants",
+    //             localField: "participation",
+    //             foreignField: "_id",
+    //             as: "participation",
+    //           },
+    //         },
+    //       ],
+    //       as: "phases",
+    //     },
+    //   },
     // ]);
 
-    const agg = await Campaign.aggregate([
-      {
-        $lookup: {
-          from: "phases",
-          localField: "phase",
-          foreignField: "_id",
-          pipeline: [
-            {
-              $lookup: {
-                from: "donations",
-                localField: "donation",
-                foreignField: "_id",
-                as: "donation",
-              },
-            },
-            {
-              $lookup: {
-                from: "petitions",
-                localField: "petition",
-                foreignField: "_id",
-                as: "petition",
-              },
-            },
-            {
-              $lookup: {
-                from: "participants",
-                localField: "participation",
-                foreignField: "_id",
-                as: "participation",
-              },
-            },
-          ],
-          as: "phases",
-        },
-      },
-    ]);
-
-    return res.json(agg);
+    return res.json("hi");
     console.log("aggg is", agg);
     for await (const doc of await agg) {
       result.push(doc);

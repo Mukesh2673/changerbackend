@@ -14,7 +14,6 @@ const campaignSchema = new Schema(
         campaign: {
             type: Schema.Types.ObjectId,
             ref: "Campaign",
-            autopopulate: true,
             required: false,
         },
         description: {
