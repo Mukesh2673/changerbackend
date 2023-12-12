@@ -15,52 +15,50 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 exports.index = async (req, res, next) => {
   try {
-
-    // const agg = await Campaign.aggregate([
-    //   {
-    //     $lookup: {
-    //       from: "phases",
-    //       localField: "phases",
-    //       foreignField: "_id",
-    //       as: "phases",
-    //     },
-    //   },
-    //   {
-    //     $unwind: {
-    //       path: "$phases",
-    //       preserveNullAndEmptyArrays: true,
-    //     },
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: "donations",
-    //       localField: "phases.donation",
-    //       foreignField: "_id",
-    //       as: "donations",
-    //     },
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: "petitions",
-    //       localField: "phases.petition",
-    //       foreignField: "_id",
-    //       as: "petitions",
-    //     },
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: "participants",
-    //       localField: "phases.participation",
-    //       foreignField: "_id",
-    //       as: "participants",
-    //     },
-    //   },
-    // ]);
-    console.log("agg is=>>>>>>>>>>>>>>>>>", agg);
-    return res.json(agg);
+    const agg = await Campaign.aggregate([
+      {
+        $lookup: {
+          from: "phases",
+          localField: "phases",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $lookup: {
+                from: "donations",
+                localField: "donation",
+                foreignField: "_id",
+                as: "donation",
+              },
+            },
+            {
+              $lookup: {
+                from: "petitions",
+                localField: "petition",
+                foreignField: "_id",
+                as: "petition",
+              },
+            },
+            {
+              $lookup: {
+                from: "participants",
+                localField: "participation",
+                foreignField: "_id",
+                as: "participation",
+              },
+            },
+          ],
+          as: "phases",
+        },
+      },
+    ]);
+    return res.json({
+      status: 200,
+      data: agg,
+      success: true,
+    });
   } catch (error) {
     console.log("err irs", error);
-    return res.json([]);
+    return res.json({ status: 400, data: [], success: false, message: error });
   }
 };
 
@@ -179,9 +177,9 @@ exports.create = async (req, res, next) => {
   }
 };
 
-exports.update = async (req, res, next) => { };
+exports.update = async (req, res, next) => {};
 
-exports.delete = async (req, res, next) => { };
+exports.delete = async (req, res, next) => {};
 
 exports.donate = async (req, res) => {
   const campaign = await Campaign.findById(req.params.id);
