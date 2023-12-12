@@ -4,10 +4,10 @@ const mongoosePaginate = require('mongoose-paginate-v2');
 const Schema = mongoose.Schema;
 
 const campaignSchema = new Schema({
-  user: {
+  user:{
     type: Schema.Types.ObjectId,
     ref: "User",
-    autopopulate: true
+    // autopopulate: true
   },
   cause: {
     type: String,
@@ -18,7 +18,7 @@ const campaignSchema = new Schema({
     type: String,
     required: false
   },
-  phase:[{
+  phases:[{
     type: Schema.Types.ObjectId,
     ref: "phase",
    }], 
@@ -40,8 +40,5 @@ const campaignSchema = new Schema({
 }, {
   timestamps: true
 });
-
-campaignSchema.plugin(mongoosePaginate);
-campaignSchema.plugin(require('mongoose-autopopulate'));
 
 module.exports = mongoose.model('campaign', campaignSchema);

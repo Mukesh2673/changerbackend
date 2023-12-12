@@ -15,32 +15,36 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 exports.index = async (req, res, next) => {
   try {
-    const { page = 1, user, cause, endorsedBy } = req.query;
+    const agg=await Campaign.aggregate([
+        {
+        $lookup: {
+          from: "phases",
+          localField: "phases",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $lookup: {
+                from: 'donations',
+                localField: 'donation',
+                foreignField: '_id',
+                as: 'donation',
+              },
+            },
+          ],
 
-    const query = {};
 
-    if (!!user) {
-      query["user"] = user;
-    }
 
-    if (!!cause) {
-      query["cause"] = cause;
-    }
 
-    if (!!endorsedBy) {
-      const endorsingUser = await User.findById(endorsedBy).exec();
-      if (endorsingUser && endorsingUser.endorsed_campaigns) {
-        query["_id"] = { $in: endorsingUser.endorsed_campaigns };
+ 
+          as: "phases",
+        },
       }
-    }
 
-    const result = await Campaign.paginate(query, {
-      page,
-      sort: { createdAt: "desc" },
-    });
-
-    return res.json(result);
+   ]);
+   console.log("agg is=>>>>>>>>>>>>>>>>>",agg)
+return res.json(agg);
   } catch (error) {
+    console.log('err irs',error)
     return res.json([]);
   }
 };
@@ -138,7 +142,7 @@ exports.create = async (req, res, next) => {
             { _id: campaignsId },
             {
               $set: {
-                phase: savePhaseId,
+                phases: savePhaseId,
                 videos: videoId,
               },
             }
