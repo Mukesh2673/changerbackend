@@ -15,36 +15,51 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 exports.index = async (req, res, next) => {
   try {
-    const agg=await Campaign.aggregate([
-        {
-        $lookup: {
-          from: "phases",
-          localField: "phases",
-          foreignField: "_id",
-          pipeline: [
-            {
-              $lookup: {
-                from: 'donations',
-                localField: 'donation',
-                foreignField: '_id',
-                as: 'donation',
-              },
-            },
-          ],
 
-
-
-
- 
-          as: "phases",
-        },
-      }
-
-   ]);
-   console.log("agg is=>>>>>>>>>>>>>>>>>",agg)
-return res.json(agg);
+    // const agg = await Campaign.aggregate([
+    //   {
+    //     $lookup: {
+    //       from: "phases",
+    //       localField: "phases",
+    //       foreignField: "_id",
+    //       as: "phases",
+    //     },
+    //   },
+    //   {
+    //     $unwind: {
+    //       path: "$phases",
+    //       preserveNullAndEmptyArrays: true,
+    //     },
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "donations",
+    //       localField: "phases.donation",
+    //       foreignField: "_id",
+    //       as: "donations",
+    //     },
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "petitions",
+    //       localField: "phases.petition",
+    //       foreignField: "_id",
+    //       as: "petitions",
+    //     },
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "participants",
+    //       localField: "phases.participation",
+    //       foreignField: "_id",
+    //       as: "participants",
+    //     },
+    //   },
+    // ]);
+    console.log("agg is=>>>>>>>>>>>>>>>>>", agg);
+    return res.json(agg);
   } catch (error) {
-    console.log('err irs',error)
+    console.log("err irs", error);
     return res.json([]);
   }
 };
@@ -65,7 +80,7 @@ exports.show = async (req, res, next) => {
 
 exports.create = async (req, res, next) => {
   try {
-    const data=req.body    
+    const data = req.body;
     const campaign = new Campaign({
       user: "65745ba4c123378e6da6c07c",
       cause: data.cause,
@@ -86,89 +101,87 @@ exports.create = async (req, res, next) => {
     });
     const savedVideo = await videos.save();
     const videoId = savedVideo._id;
-    const phaseArr=data.phase
-    const savePhaseId=[]
-    for(let i=0;i<phaseArr.length;i++)
-    {
-        const phaseItem = new campaignPhases({
-            title: phaseArr[i].title,
-            campaign: campaignsId,
+    const phaseArr = data.phase;
+    const savePhaseId = [];
+    for (let i = 0; i < phaseArr.length; i++) {
+      const phaseItem = new campaignPhases({
+        title: phaseArr[i].title,
+        campaign: campaignsId,
+      });
+      const savePhaseItem = await phaseItem.save();
+      savePhaseId[i] = savePhaseItem._id;
+      const Action = req.body.phase[i].action;
+      const donationCount = Action.filter((item) => item?.name == "donation");
+      if (donationCount.length > 1) {
+        return res.json({
+          status: 400,
+          message: "duplicate donation not allow",
         });
-        const savePhaseItem = await phaseItem.save();
-        savePhaseId[i] = savePhaseItem._id;
-        const Action = req.body.phase[i].action;
-        const donationCount = Action.filter((item) => item?.name == "donation");
-        if (donationCount.length>1)
-        {return res.json({"status":400,"message":"duplicate donation not allow"});
-        }
+      }
 
-        donationCount[0].phaseId = savePhaseId[i];
-        const petitionData = Action.filter((item) => item?.name == "petition");
-        if (petitionData.length>1)
-        {return res.json({"status":400,"message":"duplicate petition not allow"});
-        }
-        
-        petitionData[0].phaseId =  savePhaseId[i];
-        const participation = Action.filter(
-          (item) => item?.name == "participation"
-        );
-        const participantionsId=[]
-        for(let j=0;j<participation.length;j++)
+      donationCount[0].phaseId = savePhaseId[i];
+      const petitionData = Action.filter((item) => item?.name == "petition");
+      if (petitionData.length > 1) {
+        return res.json({
+          status: 400,
+          message: "duplicate petition not allow",
+        });
+      }
+
+      petitionData[0].phaseId = savePhaseId[i];
+      const participation = Action.filter(
+        (item) => item?.name == "participation"
+      );
+      const participantionsId = [];
+      for (let j = 0; j < participation.length; j++) {
+        participation[j].phaseId = savePhaseId[i];
+        const participant = new CampaignParticipant(participation[j]);
+        const savedParticipant = await participant.save();
+        let id = savedParticipant._id;
+        participantionsId.push(id);
+      }
+      const donations = new donation(donationCount[0]);
+      const savedDonation = await donations.save();
+      const DonationId = savedDonation._id;
+      const petition = new petitions(petitionData[0]);
+      const savedPetitions = await petition.save();
+      const petitionId = savedPetitions._id;
+      await campaignPhases.findByIdAndUpdate(
+        { _id: savePhaseId[i] },
         {
-            participation[j].phaseId=savePhaseId[i];
-            const participant = new CampaignParticipant(participation[j]);
-            const savedParticipant = await participant.save();
-            let id = savedParticipant._id;
-            participantionsId.push(id)
+          $set: {
+            donation: DonationId,
+            petition: petitionId,
+            participation: participantionsId,
+          },
+        },
+        { new: true }
+      );
+      await Campaign.findByIdAndUpdate(
+        { _id: campaignsId },
+        {
+          $set: {
+            phases: savePhaseId,
+            videos: videoId,
+          },
         }
-        const donations = new donation(donationCount[0]);
-        const savedDonation = await donations.save();
-        const DonationId = savedDonation._id;
-        const petition = new petitions(petitionData[0]);
-        const savedPetitions = await petition.save();
-        const petitionId = savedPetitions._id;
-        await campaignPhases.findByIdAndUpdate(
-            { _id: savePhaseId[i] },
-            {
-              $set: {
-                donation: DonationId,
-                petition: petitionId,
-                participation: participantionsId,
-              },
-            },
-            { new: true }
-          )
-          await Campaign.findByIdAndUpdate(
-            { _id: campaignsId },
-            {
-              $set: {
-                phases: savePhaseId,
-                videos: videoId,
-              },
-            }
-          )
+      );
     }
     {
-        return res.json({"status":200,"message":"campaign added successfully",success:true});
-    
-}
-
-
-
-
-
-
-
-
-
+      return res.json({
+        status: 200,
+        message: "campaign added successfully",
+        success: true,
+      });
+    }
   } catch (err) {
-    return res.json({"status":400,"message":err,success:false});
-}
+    return res.json({ status: 400, message: err, success: false });
+  }
 };
 
-exports.update = async (req, res, next) => {};
+exports.update = async (req, res, next) => { };
 
-exports.delete = async (req, res, next) => {};
+exports.delete = async (req, res, next) => { };
 
 exports.donate = async (req, res) => {
   const campaign = await Campaign.findById(req.params.id);
