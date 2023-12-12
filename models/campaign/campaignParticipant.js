@@ -21,14 +21,18 @@ const campaignParticipantSchema = new Schema(
       type: String,
       default: "",
     },
+
     location: {
-      type: String,
-      default: "",
+      type: {
+        type: String,
+        default: "Point",
+        enum: "Point",
+      },
+      coordinates: {
+        type: [Number],
+        default: [0, 0],
+      },
     },
-    // address: {
-    //   type: String,
-    //   default: "",
-    // },
     startdate: {
       type: String,
       default: "",
@@ -62,18 +66,13 @@ const campaignParticipantSchema = new Schema(
       default: "",
     },
     phaseId: {
-    type: mongoose.Schema.Types.ObjectId,
-     ref: "campaignPhases",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "campaignPhases",
     },
   },
   {
     timestamps: true,
   }
 );
-campaignParticipantSchema.plugin(mongoosePaginate);
-campaignParticipantSchema.plugin(require("mongoose-autopopulate"));
-
-module.exports = mongoose.model(
-  "participant",
-  campaignParticipantSchema
-);
+campaignParticipantSchema.index({ coordinates: "2dsphere" });
+module.exports = mongoose.model("participant", campaignParticipantSchema);

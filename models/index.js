@@ -1,9 +1,10 @@
 module.exports = {
     User: require("./user"),
-    Campaign: require("./campaign"),
+    Issue:require("./issue/issue"),
+    Campaign: require("./campaign/campaign"),
     Video: require("./video"),
-    CampaignParticipant: require("./campaignParticipant"),
-    campaignPhases:require("./campaignPhase"),
-    donation:require("./campaigndonation"),
-    petitions:require("./campaignPetition")
+    CampaignParticipant: require("./campaign/campaignParticipant"),
+    campaignPhases:require("./campaign/campaignPhase"),
+    donation:require("./campaign/campaigndonation"),
+    petitions:require("./campaign/campaignPetition")
 }

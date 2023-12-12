@@ -16,6 +16,11 @@ const campaignSchema = new Schema(
             ref: "Campaign",
             required: false,
         },
+        issue:{
+            type: Schema.Types.ObjectId,
+            ref: "issue",
+            required: false,
+        },
         description: {
             type: String,
             required: false,

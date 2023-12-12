@@ -50,6 +50,14 @@ exports.index = async (req, res, next) => {
           as: "phases",
         },
       },
+      {
+        $lookup: {
+          from: "videos",
+          localField: "videos",
+          foreignField: "_id",
+          as: "videos",
+        },
+      },
     ]);
     return res.json({
       status: 200,
@@ -79,8 +87,23 @@ exports.show = async (req, res, next) => {
 exports.create = async (req, res, next) => {
   try {
     const data = req.body;
+    if (!mongoose.Types.ObjectId.isValid(data.user)) {
+      return res.status(400).json({
+        status: 400,
+        error: "Invalid User ID format",
+        success: false,
+      });
+    }
+    const auth = await User.findById({ _id: data.user });
+    if (!auth) {
+      return res.json({
+        status: 401,
+        message: "invalid User",
+        success: false,
+      });
+    }
     const campaign = new Campaign({
-      user: "65745ba4c123378e6da6c07c",
+      user: data.user,
       cause: data.cause,
       title: data.title,
       story: data.story,
@@ -134,6 +157,7 @@ exports.create = async (req, res, next) => {
       for (let j = 0; j < participation.length; j++) {
         participation[j].phaseId = savePhaseId[i];
         const participant = new CampaignParticipant(participation[j]);
+        console.log("pargsgd", participation[j]);
         const savedParticipant = await participant.save();
         let id = savedParticipant._id;
         participantionsId.push(id);
@@ -173,7 +197,7 @@ exports.create = async (req, res, next) => {
       });
     }
   } catch (err) {
-    return res.json({ status: 400, message: err, success: false });
+    return res.json({ status: 500, message: err, success: false });
   }
 };
 

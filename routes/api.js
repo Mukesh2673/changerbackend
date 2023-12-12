@@ -19,7 +19,7 @@ const auth = require("../middleware/firebaseAuth").authCheck;
 const userController = require("../controllers/userController");
 const campaignController = require("../controllers/campaignController");
 const videoController = require("../controllers/videoController");
-
+const issueControler = require("../controllers/issueController")
 // USER ROUTES
 router.get("/users/:id", userController.getUser);
 router.get("/users/uid/:uid", userController.getUserByUID);
@@ -54,5 +54,13 @@ router.post(
   "/hook/encoding-complete/:id?",
   videoController.encodingFinishedHook
 );
+
+
+
+//issue Routes
+router.post("/issue", issueControler.create);
+router.get("/issue", issueControler.index);
+
+
 
 module.exports = router;
