@@ -1,5 +1,4 @@
 require('dotenv').config();
-
 var createError = require('http-errors');
 var express = require('express');
 const mongoose = require('mongoose');
@@ -33,7 +32,9 @@ app.use('/api', apiRoutes);
 
 const mongoString = process.env.DATABASE_URL
 
-mongoose.connect(mongoString);
+mongoose.connect(mongoString,{
+  useUnifiedTopology: true,
+});
 const database = mongoose.connection;
 
 database.on('error', (error) => {

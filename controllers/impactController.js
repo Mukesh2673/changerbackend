@@ -1,25 +1,33 @@
-const { User, Video, Issue } = require("../models");
+const { User, Video, Issue,Impact, Campaign,campaignPhases,petitions,CampaignParticipant, donation } = require("../models");
 const mongoose = require("mongoose");
 require("dotenv").config();
+
 exports.index = async (req, res, next) => {
   try {
-    const agg = await Issue.aggregate([
-      {
-        $lookup: {
-          from: "videos",
-          localField: "videos",
-          foreignField: "_id",
-          as: "videos",
+    const impactData = await Impact.find().populate([{
+      path: "campaigns",
+      populate:[{
+        path:"phases",
+         populate:[
+            { path: "donation", model: donation },
+            { path: "petition", model: petitions },
+            { path: "participation", model: CampaignParticipant },
+          ],  
         },
-      },
+        {
+          path: "videos",
+          populate: { path: "videos", model: Video },
+        }
+      ]
+      }
     ]);
     return res.json({
       status: 200,
-      data: agg,
+      data: impactData,
       success: true,
     });
   } catch (error) {
-    console.log("err irs", error);
+    console.log("err", error);
     return res.json({ status: 400, data: [], success: false, message: error });
   }
 };
@@ -41,26 +49,24 @@ exports.create = async (req, res, next) => {
         success: false,
       });
     }
-    const issue = new Issue({
-      title: data.title,
-      user: data.user,
-      cause: data.cause,
-      location: data.location,
+    const impacts = new Impact({
+      user:data.user,
+      campaigns:data.campaigns,
+      description: data.description,
     });
-    const savedIssue = await issue.save();
-    const issueId = savedIssue._id;
+    const savedImpact = await impacts.save();
+    const impactId = savedImpact._id;
     const videos = new Video({
       user: req.body.user,
-      issue: issueId,
-      title: data.title,
+      impact: impactId,
       video_url: data.video.videoUrl,
       type: data.video.type,
       thumbnail_url: data.thumbnailUrl,
     });
     const savedVideo = await videos.save();
     const videoId = savedVideo._id;
-    await Issue.findByIdAndUpdate(
-      { _id: issueId },
+    await Impact.findByIdAndUpdate(
+      { _id: impactId },
       {
         $set: {
           videos: videoId,
@@ -69,10 +75,11 @@ exports.create = async (req, res, next) => {
     );
     return res.json({
       status: 200,
-      message: "issue added successfully",
+      message: "impact added successfully",
       success: true,
     });
   } catch (err) {
+    console.log('err is',err)
     return res.json({ status: 500, message: err, success: false });
   }
 };

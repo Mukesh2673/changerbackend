@@ -15,53 +15,23 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 exports.index = async (req, res, next) => {
   try {
-    const agg = await Campaign.aggregate([
+    let campaignData = await Campaign.find().populate([
       {
-        $lookup: {
-          from: "phases",
-          localField: "phases",
-          foreignField: "_id",
-          pipeline: [
-            {
-              $lookup: {
-                from: "donations",
-                localField: "donation",
-                foreignField: "_id",
-                as: "donation",
-              },
-            },
-            {
-              $lookup: {
-                from: "petitions",
-                localField: "petition",
-                foreignField: "_id",
-                as: "petition",
-              },
-            },
-            {
-              $lookup: {
-                from: "participants",
-                localField: "participation",
-                foreignField: "_id",
-                as: "participation",
-              },
-            },
-          ],
-          as: "phases",
-        },
+        path: "phases",
+        populate: [
+          { path: "donation", model: donation },
+          { path: "petition", model: petitions },
+          { path: "participation", model: CampaignParticipant },
+        ],
       },
       {
-        $lookup: {
-          from: "videos",
-          localField: "videos",
-          foreignField: "_id",
-          as: "videos",
-        },
+        path: "videos",
+        populate: { path: "videos", model: Video },
       },
     ]);
     return res.json({
       status: 200,
-      data: agg,
+      data: campaignData,
       success: true,
     });
   } catch (error) {
@@ -157,7 +127,6 @@ exports.create = async (req, res, next) => {
       for (let j = 0; j < participation.length; j++) {
         participation[j].phaseId = savePhaseId[i];
         const participant = new CampaignParticipant(participation[j]);
-        console.log("pargsgd", participation[j]);
         const savedParticipant = await participant.save();
         let id = savedParticipant._id;
         participantionsId.push(id);

@@ -5,7 +5,6 @@ const impactSchema = new Schema(
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      // autopopulate: true
     },
     campaigns: [
       {
@@ -27,4 +26,4 @@ const impactSchema = new Schema(
   }
 );
 
-module.exports = mongoose.model("campaign", impactSchema);
+module.exports = mongoose.model("impact", impactSchema);

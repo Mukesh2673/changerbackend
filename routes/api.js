@@ -19,7 +19,8 @@ const auth = require("../middleware/firebaseAuth").authCheck;
 const userController = require("../controllers/userController");
 const campaignController = require("../controllers/campaignController");
 const videoController = require("../controllers/videoController");
-const issueControler = require("../controllers/issueController")
+const issueController = require("../controllers/issueController")
+const impactController=require("../controllers/impactController")
 // USER ROUTES
 router.get("/users/:id", userController.getUser);
 router.get("/users/uid/:uid", userController.getUserByUID);
@@ -58,9 +59,11 @@ router.post(
 
 
 //issue Routes
-router.post("/issue", issueControler.create);
-router.get("/issue", issueControler.index);
-
+router.post("/issue", issueController.create);
+router.get("/issue", issueController.index);
+//impact Routes
+router.post("/impact",impactController.create)
+router.get("/impact",impactController.index)
 
 
 module.exports = router;
