@@ -21,7 +21,7 @@ const issueSchema = new Schema(
         default: [0, 0],
       },
     },
-    videos: {
+    video: {
       type: Schema.Types.ObjectId,
       ref: "Video",
     },

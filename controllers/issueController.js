@@ -7,9 +7,9 @@ exports.index = async (req, res, next) => {
       {
         $lookup: {
           from: "videos",
-          localField: "videos",
+          localField: "video",
           foreignField: "_id",
-          as: "videos",
+          as: "video",
         },
       },
     ]);
@@ -63,7 +63,7 @@ exports.create = async (req, res, next) => {
       { _id: issueId },
       {
         $set: {
-          videos: videoId,
+          video: videoId,
         },
       }
     );

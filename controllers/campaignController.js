@@ -2,6 +2,7 @@ const {
   Campaign,
   CampaignParticipant,
   User,
+  Impact,
   Video,
   donation,
   petitions,
@@ -9,7 +10,6 @@ const {
 } = require("../models");
 const mongoose = require("mongoose");
 const { endorseCampaign } = require("../libs/campaign");
-const { ObjectId } = require("mongodb");
 require("dotenv").config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
@@ -28,6 +28,11 @@ exports.index = async (req, res, next) => {
         path: "videos",
         populate: { path: "videos", model: Video },
       },
+      {
+        path:"impacts",
+        populate:{path:"impacts",model:Impact}
+
+      }
     ]);
     return res.json({
       status: 200,

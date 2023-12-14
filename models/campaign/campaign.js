@@ -35,7 +35,7 @@ const campaignSchema = new Schema(
       ref: "Video",
       //autopopulate: true
     },
-    impactVideos:[{
+    impacts:[{
       type:Schema.Types.ObjectId,
       ref:"impact"
     }]

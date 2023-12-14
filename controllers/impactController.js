@@ -1,13 +1,8 @@
 const {
   User,
   Video,
-  Issue,
   Impact,
-  Campaign,
-  campaignPhases,
-  petitions,
-  CampaignParticipant,
-  donation,
+  Campaign
 } = require("../models");
 const mongoose = require("mongoose");
 require("dotenv").config();
@@ -85,7 +80,7 @@ exports.create = async (req, res, next) => {
       { _id: data.campaign },
       {
         $push: {
-          impactVideos: impactId,
+          impacts: impactId,
         },
       }
     );
