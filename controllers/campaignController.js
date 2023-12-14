@@ -153,7 +153,7 @@ exports.create = async (req, res, next) => {
         {
           $set: {
             phases: savePhaseId,
-            videos: videoId,
+            video: videoId,
           },
         }
       );
@@ -166,6 +166,7 @@ exports.create = async (req, res, next) => {
       });
     }
   } catch (err) {
+    console.log("erro is", err);
     return res.json({ status: 500, message: err, success: false });
   }
 };

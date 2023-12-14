@@ -22,7 +22,6 @@ const campaignSchema = new Schema(
         ref: "phase",
       },
     ],
-
     story: {
       type: String,
       required: false,
@@ -31,11 +30,15 @@ const campaignSchema = new Schema(
       type: String,
       required: false,
     },
-    videos: {
+    video:{
       type: Schema.Types.ObjectId,
       ref: "Video",
       //autopopulate: true
     },
+    impactVideos:[{
+      type:Schema.Types.ObjectId,
+      ref:"impact"
+    }]
   },
   {
     timestamps: true,

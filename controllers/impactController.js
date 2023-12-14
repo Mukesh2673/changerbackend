@@ -1,26 +1,20 @@
-const { User, Video, Issue,Impact, Campaign,campaignPhases,petitions,CampaignParticipant, donation } = require("../models");
+const {
+  User,
+  Video,
+  Issue,
+  Impact,
+  Campaign,
+  campaignPhases,
+  petitions,
+  CampaignParticipant,
+  donation,
+} = require("../models");
 const mongoose = require("mongoose");
 require("dotenv").config();
 
 exports.index = async (req, res, next) => {
   try {
-    const impactData = await Impact.find().populate([{
-      path: "campaigns",
-      populate:[{
-        path:"phases",
-         populate:[
-            { path: "donation", model: donation },
-            { path: "petition", model: petitions },
-            { path: "participation", model: CampaignParticipant },
-          ],  
-        },
-        {
-          path: "videos",
-          populate: { path: "videos", model: Video },
-        }
-      ]
-      }
-    ]);
+    const impactData = await Impact.find().populate();
     return res.json({
       status: 200,
       data: impactData,
@@ -34,7 +28,11 @@ exports.index = async (req, res, next) => {
 exports.create = async (req, res, next) => {
   try {
     const data = req.body;
-    if (!mongoose.Types.ObjectId.isValid(data.user)) {
+    const isValidId = (id) => {
+      return mongoose.Types.ObjectId.isValid(id);
+    };
+    const userId = isValidId(data.user);
+    if (!userId) {
       return res.status(400).json({
         status: 400,
         error: "Invalid User ID format",
@@ -49,9 +47,27 @@ exports.create = async (req, res, next) => {
         success: false,
       });
     }
+    const campaignId = isValidId(data.campaign);
+    if (!campaignId) {
+      return res.status(400).json({
+        status: 400,
+        error: "Invalid Campaign Id",
+        success: false,
+      });
+    }
+    const campaign = await Campaign.findById({ _id: data.campaign });
+    {
+      if (!campaign) {
+        return res.json({
+          status: 401,
+          message: "campaign not exist",
+          success: false,
+        });
+      }
+    }
     const impacts = new Impact({
-      user:data.user,
-      campaigns:data.campaigns,
+      user: data.user,
+      campaign: data.campaign,
       description: data.description,
     });
     const savedImpact = await impacts.save();
@@ -65,6 +81,14 @@ exports.create = async (req, res, next) => {
     });
     const savedVideo = await videos.save();
     const videoId = savedVideo._id;
+    await Campaign.findByIdAndUpdate(
+      { _id: data.campaign },
+      {
+        $push: {
+          impactVideos: impactId,
+        },
+      }
+    );
     await Impact.findByIdAndUpdate(
       { _id: impactId },
       {
@@ -79,7 +103,7 @@ exports.create = async (req, res, next) => {
       success: true,
     });
   } catch (err) {
-    console.log('err is',err)
+    console.log("err is", err);
     return res.json({ status: 500, message: err, success: false });
   }
 };
