@@ -266,15 +266,16 @@ exports.upload = async (file) => {
                 status: encodedResult.Job.Status,
                 status: 200,
               };
-              //deleteFile("media/");
-              //deleteFile("uploads/");
+              deleteFile("media/");
+              deleteFile("uploads/");
               resolve(response);
             }
           }
+          console.log("input file is*************",newName)
           resolve(data);
         } catch (err) {
-          //deleteFile("uploads/");
-          //deleteFile("media/");
+          deleteFile("uploads/");
+          deleteFile("media/");
           console.log(`Error uploading file to S3. Details: ${err}`);
           reject(err);
         }
