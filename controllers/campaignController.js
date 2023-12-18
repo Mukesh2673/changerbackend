@@ -252,7 +252,7 @@ exports.donateToCampaign = async (req, res) => {
       description: req.body.description,
     });
     if (charge)
-      return res.status(200).json({ message: "Success", amount: amount });
+      return res.status(200).json({ message: "Success", amount: amount,data:charge });
   } catch (err) {
     console.log("errr is", err);
     res.status(400).json({ message: "fail", error: err });
