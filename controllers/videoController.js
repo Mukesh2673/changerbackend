@@ -7,15 +7,17 @@ const Buffer = require("buffer/").Buffer;
 const fs = require("fs");
 const { Video } = require("../models");
 const { endorseCampaign } = require("../libs/campaign");
-const { deleteFile ,thumbnailFile} = require("../libs/utils");
-const {upload,uploadVideoThumbnail,uploadImage} =require("../libs/fileUpload")
-const algoliasearch = require('algoliasearch');
-const client = algoliasearch(process.env.ALGOLIA_APP_ID, process.env.ALGOLIA_SEARCh_ONLY_API_KEY);
-
-
-
-
-
+const { deleteFile, thumbnailFile } = require("../libs/utils");
+const {
+  upload,
+  uploadVideoThumbnail,
+  uploadImage,
+} = require("../libs/fileUpload");
+const algoliasearch = require("algoliasearch");
+const client = algoliasearch(
+  process.env.ALGOLIA_APP_ID,
+  process.env.ALGOLIA_SEARCh_ONLY_API_KEY
+);
 
 exports.index = async (req, res, next) => {
   try {
@@ -216,35 +218,35 @@ exports.thumbnail = async (req, res, next) => {
   }
 };
 
-exports.upload = async (req, res, next) =>{
+exports.upload = async (req, res, next) => {
   try {
-    const thumbnail= await uploadVideoThumbnail(req.file)
-    const uploadStatus =await upload(req.file);
-    uploadStatus.thumbnailKey=thumbnail.key
+    const thumbnail = await uploadVideoThumbnail(req.file);
+    const uploadStatus = await upload(req.file);
+    uploadStatus.thumbnailKey = thumbnail.key;
     return res.status(200).json(uploadStatus);
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }
 };
 
-exports.uploadImages=async(req,res)=>{
+exports.uploadImages = async (req, res) => {
   try {
-    const thumbnail= await uploadImage(req.file)
-    let data=`${thumbnail.Bucket}/${thumbnail.key}`
-    return res.status(200).json({message:'uploaded',image:data});
+    const thumbnail = await uploadImage(req.file);
+    let data = `${thumbnail.Bucket}/${thumbnail.key}`;
+    return res.status(200).json({ message: "uploaded", image: data });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }
 };
 
-exports.search=async(req,res)=>{
+exports.search = async (req, res) => {
   try {
-     const query=req.params.key
-     const index = client.initIndex('Videos');
-     await index.search(query).then(({ hits }) => {
-      return res.status(200).json({message:'records',data:hits});
+    const query = req.params.key;
+    const index = client.initIndex("Videos");
+    await index.search(query).then(({ hits }) => {
+      return res.status(200).json({ message: "records", data: hits });
     });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }
-}
+};
