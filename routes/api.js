@@ -48,6 +48,7 @@ router.get("/videos", videoController.index);
 router.post("/thumbnail", upload.single("video"), videoController.thumbnail);
 router.post("/upload", upload.single("video"), videoController.upload);
 router.get("/videos/likes/:vid/:uid", videoController.getVideoLikes);
+router.get("/videos/search/:key",videoController.search)
 
 router.post("/videos", videoController.store);
 router.post("/videos/like/:vid/:uid", videoController.likeVideo);

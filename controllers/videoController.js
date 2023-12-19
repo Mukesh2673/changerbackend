@@ -9,6 +9,14 @@ const { Video } = require("../models");
 const { endorseCampaign } = require("../libs/campaign");
 const { deleteFile ,thumbnailFile} = require("../libs/utils");
 const {upload,uploadVideoThumbnail,uploadImage} =require("../libs/fileUpload")
+const algoliasearch = require('algoliasearch');
+const client = algoliasearch(process.env.ALGOLIA_APP_ID, process.env.ALGOLIA_SEARCh_ONLY_API_KEY);
+
+
+
+
+
+
 exports.index = async (req, res, next) => {
   try {
     const {
@@ -228,3 +236,15 @@ exports.uploadImages=async(req,res)=>{
     return res.status(500).json({ message: error.message, status: 500 });
   }
 };
+
+exports.search=async(req,res)=>{
+  try {
+     const query=req.params.key
+     const index = client.initIndex('Videos');
+     await index.search(query).then(({ hits }) => {
+      return res.status(200).json({message:'records',data:hits});
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message, status: 500 });
+  }
+}
