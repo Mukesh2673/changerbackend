@@ -1,21 +1,23 @@
 const { User, Video, Issue } = require("../models");
+const { saveAlgolia, searchAlgolia } = require("../libs/algolia");
 const mongoose = require("mongoose");
 require("dotenv").config();
+
+exports.issueRecords = async (query) => {
+  let records = await Issue.find(query).populate([
+    {
+      path: "video",
+      populate: { path: "videos", model: Video },
+    },
+  ]);
+  return records;
+};
 exports.index = async (req, res, next) => {
   try {
-    const agg = await Issue.aggregate([
-      {
-        $lookup: {
-          from: "videos",
-          localField: "video",
-          foreignField: "_id",
-          as: "video",
-        },
-      },
-    ]);
+    let issues = await this.issueRecords({});
     return res.json({
       status: 200,
-      data: agg,
+      data: issues,
       success: true,
     });
   } catch (error) {
@@ -46,6 +48,7 @@ exports.create = async (req, res, next) => {
       user: data.user,
       cause: data.cause,
       location: data.location,
+      _geoloc:data._geoloc
     });
     const savedIssue = await issue.save();
     const issueId = savedIssue._id;
@@ -59,6 +62,13 @@ exports.create = async (req, res, next) => {
     });
     const savedVideo = await videos.save();
     const videoId = savedVideo._id;
+    const videoRecords = await Video.find({ _id: videoId }).populate([
+      {
+        path: "issue",
+        populate: { path: "issues", model: Issue },
+      },
+    ]);
+    saveAlgolia(videoRecords, "videos");
     await Issue.findByIdAndUpdate(
       { _id: issueId },
       {
@@ -67,12 +77,34 @@ exports.create = async (req, res, next) => {
         },
       }
     );
+    const issueRecord = await this.issueRecords({ _id: issueId });
+    let obj=issueRecord[0]
+    console.log("obj is",Object.keys(obj))
+
+
+
+
+
+
+
+
+    
+
+    console.log("issue record is",issueRecord)
+    
+    
+    
+    
+    saveAlgolia(issueRecord, "issues");
     return res.json({
       status: 200,
       message: "issue added successfully",
       success: true,
     });
   } catch (err) {
+    console.log("err is", err);
     return res.json({ status: 500, message: err, success: false });
   }
 };
+
+

@@ -1,9 +1,9 @@
 const {
-  User,
-  Video,
-  Impact,
-  Campaign
-} = require("../models");
+  saveAlgolia,
+  searchAlgolia,
+  updateAlgolia,
+} = require("../libs/algolia");
+const { User, Video, Impact, Campaign } = require("../models");
 const mongoose = require("mongoose");
 require("dotenv").config();
 
@@ -92,6 +92,14 @@ exports.create = async (req, res, next) => {
         },
       }
     );
+    const impactData = await Impact.find({ _id: impactId });
+    const campaignData = await Campaign.find({ _id: data.campaign });
+    const query = campaignData[0]._id;
+    const filter={search:query,type:"campaigns"}
+    const campaignAlgo = await searchAlgolia(filter);
+    campaignAlgo[0].impacts = campaignData[0].impacts;
+    await saveAlgolia(impactData, "impacts");
+    await updateAlgolia(campaignAlgo[0], "campaigns");
     return res.json({
       status: 200,
       message: "impact added successfully",
@@ -102,3 +110,5 @@ exports.create = async (req, res, next) => {
     return res.json({ status: 500, message: err, success: false });
   }
 };
+
+

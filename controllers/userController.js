@@ -1,4 +1,5 @@
 const { User } = require("../models");
+const { saveAlgolia, searchAlgolia } = require("../libs/algolia");
 
 exports.getUser = async (req, res, next) => {
   try {
@@ -13,13 +14,12 @@ exports.getUserByUID = async (req, res, next) => {
   try {
     const user = await User.findOne({ uid: req.params.uid });
     return res.json(user);
-  } catch (error){
+  } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
 
 exports.createUser = async (req, res, next) => {
-  console.log("This is me right here: ", req.body);
   try {
     const existingUser = await User.findOne({ username: req.body.username });
     if (existingUser) {
@@ -40,10 +40,11 @@ exports.createUser = async (req, res, next) => {
     follower: [],
     description: "",
   });
-
   try {
     const savedUser = await user.save();
-    console.log("this is: ", savedUser);
+    const userId = savedUser._id;
+    const records = await User.find({ _id: userId });
+    saveAlgolia(records, "users");
     return res.status(200).json(savedUser);
   } catch (error) {
     console.log(error);
@@ -91,7 +92,6 @@ exports.unFollowUser = async (req, res) => {
 
 exports.editProfile = async (req, res) => {
   const { id: _id } = req.params;
-  console.log("this is the request's body", req.body);
   try {
     const updateUser = await User.findOneAndUpdate({ _id }, req.body);
     const user = await User.findById(_id);
@@ -122,3 +122,4 @@ exports.getFollowingVideos = async (req, res) => {
     return res.status(404).json({ error: e.message });
   }
 };
+

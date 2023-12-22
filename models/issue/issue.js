@@ -21,6 +21,7 @@ const issueSchema = new Schema(
         default: [0, 0],
       },
     },
+    _geoloc: [],
     video: {
       type: Schema.Types.ObjectId,
       ref: "Video",

@@ -13,11 +13,7 @@ const {
   uploadVideoThumbnail,
   uploadImage,
 } = require("../libs/fileUpload");
-const algoliasearch = require("algoliasearch");
-const client = algoliasearch(
-  process.env.ALGOLIA_APP_ID,
-  process.env.ALGOLIA_SEARCh_ONLY_API_KEY
-);
+const { saveAlgolia, searchAlgolia } = require("../libs/algolia");
 
 exports.index = async (req, res, next) => {
   try {
@@ -93,7 +89,9 @@ exports.store = async (req, res, next) => {
 
   try {
     const savedVideo = await video.save();
-
+    const videoId = savedVideo._id;
+    const videoRecords = await Video.find({ _id: videoId });
+    saveAlgolia(videoRecords, "videos");
     if (req.body.campaign) {
       await endorseCampaign(user, req.body.campaign);
     }
@@ -239,14 +237,4 @@ exports.uploadImages = async (req, res) => {
   }
 };
 
-exports.search = async (req, res) => {
-  try {
-    const query = req.params.key;
-    const index = client.initIndex("Videos");
-    await index.search(query).then(({ hits }) => {
-      return res.status(200).json({ message: "records", data: hits });
-    });
-  } catch (error) {
-    return res.status(500).json({ message: error.message, status: 500 });
-  }
-};
+

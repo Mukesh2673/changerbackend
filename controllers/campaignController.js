@@ -10,30 +10,34 @@ const {
 } = require("../models");
 const mongoose = require("mongoose");
 const { endorseCampaign } = require("../libs/campaign");
+const { saveAlgolia, searchAlgolia ,multipleSearchAlgolia} = require("../libs/algolia");
 require("dotenv").config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+exports.campaignRecords = async (query) => {
+  let records = await Campaign.find(query).populate([
+    {
+      path: "phases",
+      populate: [
+        { path: "donation", model: donation },
+        { path: "petition", model: petitions },
+        { path: "participation", model: CampaignParticipant },
+      ],
+    },
+    {
+      path: "videos",
+      populate: { path: "videos", model: Video },
+    },
+    {
+      path: "impacts",
+      populate: { path: "impacts", model: Impact },
+    },
+  ]);
+  return records;
+};
 
 exports.index = async (req, res, next) => {
   try {
-    let campaignData = await Campaign.find().populate([
-      {
-        path: "phases",
-        populate: [
-          { path: "donation", model: donation },
-          { path: "petition", model: petitions },
-          { path: "participation", model: CampaignParticipant },
-        ],
-      },
-      {
-        path: "videos",
-        populate: { path: "videos", model: Video },
-      },
-      {
-        path:"impacts",
-        populate:{path:"impacts",model:Impact}
-
-      }
-    ]);
+    let campaignData = await this.campaignRecords({});
     return res.json({
       status: 200,
       data: campaignData,
@@ -99,6 +103,8 @@ exports.create = async (req, res, next) => {
     const videoId = savedVideo._id;
     const phaseArr = data.phase;
     const savePhaseId = [];
+    const videRecords = await Video.find({ _id: videoId });
+    await saveAlgolia(videRecords, "videos");
     for (let i = 0; i < phaseArr.length; i++) {
       const phaseItem = new campaignPhases({
         title: phaseArr[i].title,
@@ -163,13 +169,15 @@ exports.create = async (req, res, next) => {
         }
       );
     }
-    {
-      return res.json({
-        status: 200,
-        message: "campaign added successfully",
-        success: true,
-      });
-    }
+    let records = await this.campaignRecords({ _id: campaignsId });
+
+    await saveAlgolia(records, "campaigns");
+    return res.json({
+      status: 200,
+      message: "campaign added successfully",
+      success: true,
+      data: records,
+    });
   } catch (err) {
     console.log("erro is", err);
     return res.json({ status: 500, message: err, success: false });
@@ -252,7 +260,9 @@ exports.donateToCampaign = async (req, res) => {
       description: req.body.description,
     });
     if (charge)
-      return res.status(200).json({ message: "Success", amount: amount,data:charge });
+      return res
+        .status(200)
+        .json({ message: "Success", amount: amount, data: charge });
   } catch (err) {
     console.log("errr is", err);
     res.status(400).json({ message: "fail", error: err });

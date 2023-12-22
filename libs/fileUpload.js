@@ -31,6 +31,7 @@ exports.upload = async (file) => {
   .videoBitrate(1000)
   //   .videoFilters('scale=1280:720')
   .outputOptions([
+    '-movflags', 'faststart',  
     '-minrate 5000',
     '-maxrate 1000'
   ])

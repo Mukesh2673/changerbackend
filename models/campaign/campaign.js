@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const campaignSchema = new Schema(
@@ -5,7 +6,7 @@ const campaignSchema = new Schema(
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      // autopopulate: true
+      index: true,
     },
     cause: {
       type: String,
@@ -20,6 +21,7 @@ const campaignSchema = new Schema(
       {
         type: Schema.Types.ObjectId,
         ref: "phase",
+        required: false,
       },
     ],
     story: {
@@ -33,12 +35,14 @@ const campaignSchema = new Schema(
     video:{
       type: Schema.Types.ObjectId,
       ref: "Video",
-      //autopopulate: true
+      index: true,
     },
     impacts:[{
       type:Schema.Types.ObjectId,
-      ref:"impact"
+      ref:"impact",
+      index: true,
     }]
+    
   },
   {
     timestamps: true,

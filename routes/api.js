@@ -4,10 +4,9 @@ const multer = require("multer");
 const fs = require("fs");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const path="uploads/"
-    fs.mkdirSync(path, { recursive: true })
-    return cb(null, path)
-
+    const path = "uploads/";
+    fs.mkdirSync(path, { recursive: true });
+    return cb(null, path);
   },
   filename: (req, file, cb) => {
     cb(null, file.originalname);
@@ -19,8 +18,9 @@ const auth = require("../middleware/firebaseAuth").authCheck;
 const userController = require("../controllers/userController");
 const campaignController = require("../controllers/campaignController");
 const videoController = require("../controllers/videoController");
-const issueController = require("../controllers/issueController")
-const impactController=require("../controllers/impactController")
+const issueController = require("../controllers/issueController");
+const impactController = require("../controllers/impactController");
+const searchController=require("../controllers/searchController")
 // USER ROUTES
 router.get("/users/:id", userController.getUser);
 router.get("/users/uid/:uid", userController.getUserByUID);
@@ -35,11 +35,14 @@ router.get("/campaigns", campaignController.index);
 router.get("/campaigns/:id", campaignController.show);
 router.post("/campaign/:id/donate/", campaignController.donate);
 router.post("/campaign/:id/participate/", campaignController.participant);
-router.post("/campaigns",campaignController.create)
-router.post("/donate",campaignController.donateToCampaign)
-router.post("/paymentsession",campaignController.paymentSession)
-router.post("/uploadImage",upload.single("Image"),videoController.uploadImages)
-
+router.post("/campaigns", campaignController.create);
+router.post("/donate", campaignController.donateToCampaign);
+router.post("/paymentsession", campaignController.paymentSession);
+router.post(
+  "/uploadImage",
+  upload.single("Image"),
+  videoController.uploadImages
+);
 
 // VIDEO ROUTES
 router.get("/videos/:id", videoController.show);
@@ -48,7 +51,6 @@ router.get("/videos", videoController.index);
 router.post("/thumbnail", upload.single("video"), videoController.thumbnail);
 router.post("/upload", upload.single("video"), videoController.upload);
 router.get("/videos/likes/:vid/:uid", videoController.getVideoLikes);
-router.get("/videos/search/:key",videoController.search)
 
 router.post("/videos", videoController.store);
 router.post("/videos/like/:vid/:uid", videoController.likeVideo);
@@ -57,14 +59,15 @@ router.post(
   videoController.encodingFinishedHook
 );
 
-
-
 //issue Routes
 router.post("/issue", issueController.create);
 router.get("/issue", issueController.index);
-//impact Routes
-router.post("/impact",impactController.create)
-router.get("/impact",impactController.index)
 
+//impact Routes
+router.post("/impact", impactController.create);
+router.get("/impact", impactController.index);
+
+//search
+router.get("/search",searchController.search)
 
 module.exports = router;
