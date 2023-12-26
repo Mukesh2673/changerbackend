@@ -10,7 +10,6 @@ const impactSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "campaign",
     },
-
     videos: {
       type: Schema.Types.ObjectId,
       ref: "Video",
@@ -23,6 +22,7 @@ const impactSchema = new Schema(
       type: String,
       default: "",
     },
+    _geoloc: [],
   },
   {
     timestamps: true,

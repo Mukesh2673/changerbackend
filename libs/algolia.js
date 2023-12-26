@@ -71,6 +71,7 @@ exports.searchAlgolia = async (query) => {
       let res = results.filter((data) => data.hits.length > 0);
       for (let i = 0; i < res.length; i++) {
         records[i] = res[i].hits[0];
+        delete records[i]["_highlightResult"];
       }
       return records;
     });

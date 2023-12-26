@@ -65,6 +65,7 @@ exports.create = async (req, res, next) => {
       campaign: data.campaign,
       description: data.description,
       cause: campaign.cause,
+      _geoloc: campaign?._geoloc,
     });
     const savedImpact = await impacts.save();
     const impactId = savedImpact._id;
@@ -98,7 +99,7 @@ exports.create = async (req, res, next) => {
     const query = campaignData[0]._id;
     const filter = { search: query, type: "campaigns" };
     const campaignAlgo = await searchAlgolia(filter);
-    campaignAlgo[0].impacts = campaignData[0].impacts;
+    campaignAlgo[0].impacts = campaignData[0]?.impacts;
     await saveAlgolia(impactData, "impacts");
     let obj = {
       objectID: campaignAlgo[0].objectID,

@@ -41,9 +41,9 @@ const campaignSchema = new Schema(
       type:Schema.Types.ObjectId,
       ref:"impact",
       index: true,
-    }]
-    
-  },
+    }],
+    _geoloc: [],
+    },
   {
     timestamps: true,
   }

@@ -135,11 +135,17 @@ exports.create = async (req, res, next) => {
         (item) => item?.name == "participation"
       );
       const participantionsId = [];
+      const location=[]
       for (let j = 0; j < participation.length; j++) {
         participation[j].phaseId = savePhaseId[i];
         const participant = new CampaignParticipant(participation[j]);
         const savedParticipant = await participant.save();
         let id = savedParticipant._id;
+        let geoLocation={
+          "lat":parseFloat(savedParticipant.location.coordinates[0]),
+          "lng":parseFloat(savedParticipant.location.coordinates[1])
+        }
+        location.push(geoLocation)        
         participantionsId.push(id);
       }
       const donations = new donation(donationCount[0]);
@@ -165,12 +171,12 @@ exports.create = async (req, res, next) => {
           $set: {
             phases: savePhaseId,
             video: videoId,
+            _geoloc:location
           },
         }
       );
     }
     let records = await this.campaignRecords({ _id: campaignsId });
-
     await saveAlgolia(records, "campaigns");
     return res.json({
       status: 200,
