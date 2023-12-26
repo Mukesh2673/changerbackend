@@ -18,17 +18,15 @@ exports.saveAlgolia = async (records, index) => {
 };
 exports.searchAlgolia = async (query) => {
   try {
-    console.log('query data is=>>>>>>>>>',query)
-    var queries=[]
-    if(query.type)
-    {
+    var queries = [];
+    if (query.type) {
       queries = [
         {
           indexName: query.type,
           query: query.search,
-        }]
-    }
-    else{
+        },
+      ];
+    } else {
       queries = [
         {
           indexName: "users",
@@ -51,11 +49,7 @@ exports.searchAlgolia = async (query) => {
           query: query.search,
         },
       ];
-
-
-
-
-    } 
+    }
 
     if (query.location) {
       const targetLatitude = parseFloat(query.location[0].lat);
@@ -66,12 +60,11 @@ exports.searchAlgolia = async (query) => {
         queries[i].aroundRadius = searchRadius;
       }
     }
-    if (query.causes) {
-      let arr = [];
+    if (query.cause) {
+      const causeFilter = `cause:${query.cause}`;
       for (let i = 0; i < queries.length; i++) {
-        arr[i] = { indexName: queries[i].indexName, query: query.causes };
+        queries[i].facetFilters = [`${causeFilter}`];
       }
-      queries = [...queries, ...arr];
     }
     return await client.multipleQueries(queries).then(({ results }) => {
       const records = [];

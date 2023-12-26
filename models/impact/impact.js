@@ -6,12 +6,11 @@ const impactSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
     },
-    campaign: 
-      {
-        type: Schema.Types.ObjectId,
-        ref: "campaign",
-      },
-  
+    campaign: {
+      type: Schema.Types.ObjectId,
+      ref: "campaign",
+    },
+
     videos: {
       type: Schema.Types.ObjectId,
       ref: "Video",
@@ -19,6 +18,10 @@ const impactSchema = new Schema(
     description: {
       type: String,
       required: false,
+    },
+    cause: {
+      type: String,
+      default: "",
     },
   },
   {

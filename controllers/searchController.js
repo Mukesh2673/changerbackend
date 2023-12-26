@@ -14,9 +14,9 @@ exports.search = async (req, res) => {
     if (query?.lat && query?.lng) {
       filter.location = [{ lat: query.lat, lng: query.lng }];
     }
-    if(query?.causes)
+    if(query?.cause)
     {
-       filter.causes=query?.causes
+       filter.cause=query?.cause
     }
     const arr = ["campaigns", "users", "impacts", "vides", "issues"];
     if (arr.includes(query.type)) {

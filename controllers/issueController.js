@@ -48,7 +48,7 @@ exports.create = async (req, res, next) => {
       user: data.user,
       cause: data.cause,
       location: data.location,
-      _geoloc:data._geoloc
+      _geoloc: data._geoloc,
     });
     const savedIssue = await issue.save();
     const issueId = savedIssue._id;
@@ -78,23 +78,6 @@ exports.create = async (req, res, next) => {
       }
     );
     const issueRecord = await this.issueRecords({ _id: issueId });
-    let obj=issueRecord[0]
-    console.log("obj is",Object.keys(obj))
-
-
-
-
-
-
-
-
-    
-
-    console.log("issue record is",issueRecord)
-    
-    
-    
-    
     saveAlgolia(issueRecord, "issues");
     return res.json({
       status: 200,
@@ -106,5 +89,3 @@ exports.create = async (req, res, next) => {
     return res.json({ status: 500, message: err, success: false });
   }
 };
-
-

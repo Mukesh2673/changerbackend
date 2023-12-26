@@ -64,6 +64,7 @@ exports.create = async (req, res, next) => {
       user: data.user,
       campaign: data.campaign,
       description: data.description,
+      cause: campaign.cause,
     });
     const savedImpact = await impacts.save();
     const impactId = savedImpact._id;
@@ -95,20 +96,22 @@ exports.create = async (req, res, next) => {
     const impactData = await Impact.find({ _id: impactId });
     const campaignData = await Campaign.find({ _id: data.campaign });
     const query = campaignData[0]._id;
-    const filter={search:query,type:"campaigns"}
+    const filter = { search: query, type: "campaigns" };
     const campaignAlgo = await searchAlgolia(filter);
     campaignAlgo[0].impacts = campaignData[0].impacts;
     await saveAlgolia(impactData, "impacts");
-    await updateAlgolia(campaignAlgo[0], "campaigns");
+    let obj = {
+      objectID: campaignAlgo[0].objectID,
+      impacts: campaignAlgo[0].impacts,
+    };
+    await updateAlgolia(obj, "campaigns");
     return res.json({
       status: 200,
       message: "impact added successfully",
       success: true,
     });
   } catch (err) {
-    console.log("err is", err);
+    console.log("err", err);
     return res.json({ status: 500, message: err, success: false });
   }
 };
-
-
