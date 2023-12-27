@@ -19,7 +19,7 @@ exports.saveAlgolia = async (records, index) => {
 exports.searchAlgolia = async (query) => {
   try {
     var queries = [];
-    if (query.type) {
+    if (query.type && query.type !== "hashtags") {
       queries = [
         {
           indexName: query.type,
@@ -50,7 +50,6 @@ exports.searchAlgolia = async (query) => {
         },
       ];
     }
-
     if (query.location) {
       const targetLatitude = parseFloat(query.location[0].lat);
       const targetLongitude = parseFloat(query.location[0].lng);
@@ -64,6 +63,13 @@ exports.searchAlgolia = async (query) => {
       const causeFilter = `cause:${query.cause}`;
       for (let i = 0; i < queries.length; i++) {
         queries[i].facetFilters = [`${causeFilter}`];
+      }
+    }
+    if (query.hashtags) {
+      const hashtags = `hashtags:${query.hashtags}`;
+      for (let i = 0; i < queries.length; i++) {
+        queries[i].facetFilters = [`${hashtags}`];
+        delete queries[i].query;
       }
     }
     return await client.multipleQueries(queries).then(({ results }) => {

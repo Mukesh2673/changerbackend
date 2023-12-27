@@ -21,6 +21,7 @@ const videoController = require("../controllers/videoController");
 const issueController = require("../controllers/issueController");
 const impactController = require("../controllers/impactController");
 const searchController=require("../controllers/searchController")
+const hashtagsController=require("../controllers/hashtagController")
 // USER ROUTES
 router.get("/users/:id", userController.getUser);
 router.get("/users/uid/:uid", userController.getUserByUID);
@@ -70,4 +71,6 @@ router.get("/impact", impactController.index);
 //search
 router.get("/search",searchController.search)
 
+//hasTags
+router.post("/hashtags",hashtagsController.add)
 module.exports = router;

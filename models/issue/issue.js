@@ -26,6 +26,10 @@ const issueSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Video",
     },
+    hashtags: {
+      type: Array,
+      default: [],
+    },
   },
   {
     timestamps: true,

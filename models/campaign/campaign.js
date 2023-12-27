@@ -43,6 +43,10 @@ const campaignSchema = new Schema(
       index: true,
     }],
     _geoloc: [],
+    hashtags:{
+      type: Array,
+      default: [],
+    }
     },
   {
     timestamps: true,

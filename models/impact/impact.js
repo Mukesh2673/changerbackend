@@ -22,8 +22,13 @@ const impactSchema = new Schema(
       type: String,
       default: "",
     },
+    hashtags: {
+      type: Array,
+      default: [],
+    },
     _geoloc: [],
   },
+
   {
     timestamps: true,
   }

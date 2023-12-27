@@ -1,0 +1,96 @@
+const { searchAlgolia, updateAlgolia } = require("../libs/algolia");
+require("dotenv").config();
+const { Campaign, Issue, Impact } = require("../models");
+const mongoose = require("mongoose");
+const update = async (model, data, type) => {
+  try {
+    const id = data._id;
+    if (!mongoose.Types.ObjectId.isValid(data._id)) {
+      return {
+        status: 400,
+        error: "Invalid  ID format",
+        success: false,
+      };
+    }
+    const result = await model.findById({ _id: data._id });
+    if (!result) {
+      return {
+        status: 401,
+        message: `invalid ${type}`,
+        success: false,
+      };
+    }
+    let tags = result?.hashtags;
+    var tagsArray = [];
+    if (tags?.length > 0) {
+      let arr = [...tags, ...data.hashtags];
+      tagsArray = arr.filter(
+        (value, index, self) => self.indexOf(value) === index
+      );
+    } else {
+      tagsArray = data.hashtags;
+    }
+    await model.findByIdAndUpdate(
+      { _id: id },
+      {
+        $set: {
+          hashtags: tagsArray,
+        },
+      }
+    );
+    const records = await model.findById({ _id: data._id });
+    let filterData = { search: id, type: type };
+    let updateObject = {};
+    const searchAlgo = await searchAlgolia(filterData);
+    updateObject = {
+      objectID: searchAlgo[0].objectID,
+      hashtags: tagsArray,
+    };
+    await updateAlgolia(updateObject, type);
+
+    obj = {
+      status: 200,
+      message: "hastags added successfully",
+      success: true,
+      data: records,
+    };
+    return obj;
+  } catch (err) {
+    console.log("Perr is", err);
+    return (obj = {
+      status: 400,
+      message: err,
+      success: false,
+    });
+  }
+};
+
+exports.add = async (req, res) => {
+  try {
+    const query = req.query;
+    const data = req.body;
+    const arr = [
+      "campaigns",
+      "users",
+      "impacts",
+      "videos",
+      "issues",
+      "hashtags",
+    ];
+    if (arr.includes(query.type)) {
+      var response;
+      if (query.type === "campaigns") {
+        response = await update(Campaign, data, "campaigns");
+      } else if (query.type === "issues") {
+        response = await update(Issue, data, "issues");
+      } else if (query.type === "impacts") {
+        response = await update(Impact, data, "impacts");
+      }
+      return res.status(400).json(response);
+    } else {
+      return res.status(400).json({ message: "invalid request type" });
+    }
+  } catch (error) {
+    return res.status(500).json({ message: error.message, status: 500 });
+  }
+};
