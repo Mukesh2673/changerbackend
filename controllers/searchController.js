@@ -1,4 +1,4 @@
-const { searchAlgolia, multipleSearchAlgolia } = require("../libs/algolia");
+const { searchAlgolia } = require("../libs/algolia");
 require("dotenv").config();
 
 exports.search = async (req, res) => {

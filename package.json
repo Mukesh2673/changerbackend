@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "main": "app.js",
-    "scripts": {
-      "start": "set HTTPS=true && nodemon app.js",
-      "seed": "node seeders/seed.js"
-    },
+  "scripts": {
+    "start": "set HTTPS=true && nodemon app.js",
+    "seed": "node seeders/seed.js"
+  },
   "dependencies": {
     "@aws-sdk/client-mediaconvert": "^3.438.0",
     "@faker-js/faker": "^8.0.2",

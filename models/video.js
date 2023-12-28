@@ -1,7 +1,5 @@
 const mongoose = require("mongoose");
 const mongoosePaginate = require("mongoose-paginate-v2");
-const mongoolia = require("mongoolia").default;
-
 const Schema = mongoose.Schema;
 
 const videoSchema = new Schema(
