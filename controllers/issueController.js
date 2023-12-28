@@ -1,5 +1,6 @@
 const { User, Video, Issue } = require("../models");
-const { saveAlgolia, searchAlgolia } = require("../libs/algolia");
+const { saveAlgolia } = require("../libs/algolia");
+const { generateTags } = require("../controllers/hashtagController");
 const mongoose = require("mongoose");
 require("dotenv").config();
 
@@ -28,6 +29,7 @@ exports.index = async (req, res, next) => {
 exports.create = async (req, res, next) => {
   try {
     const data = req.body;
+    const tags = await generateTags(data.title);
     if (!mongoose.Types.ObjectId.isValid(data.user)) {
       return res.status(400).json({
         status: 400,
@@ -51,6 +53,16 @@ exports.create = async (req, res, next) => {
       _geoloc: data._geoloc,
     });
     const savedIssue = await issue.save();
+    let issueTags = savedIssue?.hashtags;
+    var tagsArray = [];
+    if (issueTags?.length > 0) {
+      let arr = [...issueTags, ...tags];
+      tagsArray = arr.filter(
+        (value, index, self) => self.indexOf(value) === index
+      );
+    } else {
+      tagsArray = tags;
+    }
     const issueId = savedIssue._id;
     const videos = new Video({
       user: req.body.user,
@@ -73,6 +85,7 @@ exports.create = async (req, res, next) => {
       { _id: issueId },
       {
         $set: {
+          hashtags: tagsArray,
           video: videoId,
         },
       }

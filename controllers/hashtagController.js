@@ -2,6 +2,8 @@ const { searchAlgolia, updateAlgolia } = require("../libs/algolia");
 require("dotenv").config();
 const { Campaign, Issue, Impact } = require("../models");
 const mongoose = require("mongoose");
+const natural = require('natural');
+const pos = require('pos');
 const update = async (model, data, type) => {
   try {
     const id = data._id;
@@ -94,3 +96,21 @@ exports.add = async (req, res) => {
     return res.status(500).json({ message: error.message, status: 500 });
   }
 };
+
+exports.generateTags=async(text)=>{
+  const hashtags=[]
+  const tokenizer = new natural.WordTokenizer();
+  const words = tokenizer.tokenize(text);
+  const tagger = new pos.Tagger();
+  const taggedWords = tagger.tag(words);
+  for (const taggedWord of taggedWords){
+    const word = taggedWord[0];
+    const tag = taggedWord[1];
+
+    // Consider nouns and adjectives as potential hashtags
+    if (tag.startsWith('N') || tag.startsWith('J')) {
+      hashtags.push(`#${word.toLowerCase()}`);
+    }
+  }
+return hashtags
+}

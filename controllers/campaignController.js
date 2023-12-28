@@ -9,8 +9,9 @@ const {
   campaignPhases,
 } = require("../models");
 const mongoose = require("mongoose");
+const { generateTags } = require("../controllers/hashtagController");
 const { endorseCampaign } = require("../libs/campaign");
-const { saveAlgolia, searchAlgolia ,multipleSearchAlgolia} = require("../libs/algolia");
+const { saveAlgolia } = require("../libs/algolia");
 require("dotenv").config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 exports.campaignRecords = async (query) => {
@@ -66,6 +67,7 @@ exports.show = async (req, res, next) => {
 exports.create = async (req, res, next) => {
   try {
     const data = req.body;
+    const tags = await generateTags(data.title);
     if (!mongoose.Types.ObjectId.isValid(data.user)) {
       return res.status(400).json({
         status: 400,
@@ -89,6 +91,17 @@ exports.create = async (req, res, next) => {
       image: data.image,
     });
     const campaigns = await campaign.save();
+    let campaignTag = campaigns?.hashtags;
+    var tagsArray = [];
+    if (campaignTag?.length > 0) {
+      let arr = [...campaignTag, ...tags];
+      tagsArray = arr.filter(
+        (value, index, self) => self.indexOf(value) === index
+      );
+    } else {
+      tagsArray = tags;
+    }
+
     const campaignsId = campaigns._id;
     const videos = new Video({
       user: req.body.user,
@@ -135,17 +148,17 @@ exports.create = async (req, res, next) => {
         (item) => item?.name == "participation"
       );
       const participantionsId = [];
-      const location=[]
+      const location = [];
       for (let j = 0; j < participation.length; j++) {
         participation[j].phaseId = savePhaseId[i];
         const participant = new CampaignParticipant(participation[j]);
         const savedParticipant = await participant.save();
         let id = savedParticipant._id;
-        let geoLocation={
-          "lat":parseFloat(savedParticipant.location.coordinates[0]),
-          "lng":parseFloat(savedParticipant.location.coordinates[1])
-        }
-        location.push(geoLocation)        
+        let geoLocation = {
+          lat: parseFloat(savedParticipant.location.coordinates[0]),
+          lng: parseFloat(savedParticipant.location.coordinates[1]),
+        };
+        location.push(geoLocation);
         participantionsId.push(id);
       }
       const donations = new donation(donationCount[0]);
@@ -170,8 +183,9 @@ exports.create = async (req, res, next) => {
         {
           $set: {
             phases: savePhaseId,
+            hashtags: tagsArray,
             video: videoId,
-            _geoloc:location
+            _geoloc: location,
           },
         }
       );

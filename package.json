@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "main": "app.js",
-  "scripts": {
-    "start": "set HTTPS=true && nodemon app.js",
-    "seed": "node seeders/seed.js"
-  },
+    "scripts": {
+      "start": "set HTTPS=true && nodemon app.js",
+      "seed": "node seeders/seed.js"
+    },
   "dependencies": {
     "@aws-sdk/client-mediaconvert": "^3.438.0",
     "@faker-js/faker": "^8.0.2",
@@ -30,7 +30,9 @@
     "mongoose-paginate-v2": "^1.7.1",
     "morgan": "~1.9.1",
     "multer": "^1.4.5-lts.1",
+    "natural": "^6.10.4",
     "nodemon": "^2.0.22",
+    "pos": "^0.4.2",
     "stripe": "^12.16.0"
   },
   "engines": {
