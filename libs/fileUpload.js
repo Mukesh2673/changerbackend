@@ -28,13 +28,14 @@ exports.upload = async (file) => {
     const source = `uploads/${file.filename}`;
     new ffmpeg(source)
       .videoCodec("libx265")
-  .videoBitrate(1000)
-  //   .videoFilters('scale=1280:720')
-  .outputOptions([
-    '-movflags', 'faststart',  
-    '-minrate 5000',
-    '-maxrate 1000'
-  ])
+      .videoBitrate(1000)
+      //   .videoFilters('scale=1280:720')
+      .outputOptions([
+        "-movflags",
+        "faststart",
+        "-minrate 5000",
+        "-maxrate 1000",
+      ])
       .on("end", async function () {
         AWS.config.update(options);
         const s3 = new AWS.S3({
@@ -223,7 +224,7 @@ exports.upload = async (file) => {
                         MaxAbrBitrate: 500000,
                         MinAbrBitrate: 100000,
                       },
-                    },    
+                    },
                   },
                 ],
                 AdAvailOffset: 0,
@@ -272,7 +273,6 @@ exports.upload = async (file) => {
               resolve(response);
             }
           }
-          console.log("input file is*************",newName)
           resolve(data);
         } catch (err) {
           deleteFile("uploads/");
@@ -304,7 +304,7 @@ exports.uploadVideoThumbnail = async (file) => {
           s3ForcePathStyle: true,
         });
         let newName = Date.now() + ".png";
-        const fileContent = fs.readFileSync('thumbnail/tn.png');
+        const fileContent = fs.readFileSync("thumbnail/tn.png");
         let s3Params = {
           ContentType: "image/png",
           Bucket: "thumbnail",
@@ -330,14 +330,14 @@ exports.uploadVideoThumbnail = async (file) => {
       });
   });
 };
-exports.uploadImage=async(file)=>{
+exports.uploadImage = async (file) => {
   return new Promise((resolve, reject) => {
     const source = `uploads/${file.filename}`;
     const fileContent = fs.readFileSync(source);
     AWS.config.update(options);
-        const s3 = new AWS.S3({
-          s3ForcePathStyle: true,
-        });
+    const s3 = new AWS.S3({
+      s3ForcePathStyle: true,
+    });
     let newName = Date.now() + ".png";
     let s3Params = {
       ContentType: "image/png",
@@ -355,6 +355,5 @@ exports.uploadImage=async(file)=>{
       deleteFile("uploads/");
       console.log("erroris", err);
     }
-
-  })
-}
+  });
+};

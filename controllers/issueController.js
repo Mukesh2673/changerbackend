@@ -22,7 +22,7 @@ exports.index = async (req, res, next) => {
       success: true,
     });
   } catch (error) {
-    console.log("err irs", error);
+    console.log("err is", error);
     return res.json({ status: 400, data: [], success: false, message: error });
   }
 };

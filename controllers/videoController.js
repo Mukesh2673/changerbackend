@@ -7,13 +7,13 @@ const Buffer = require("buffer/").Buffer;
 const fs = require("fs");
 const { Video } = require("../models");
 const { endorseCampaign } = require("../libs/campaign");
-const { deleteFile, thumbnailFile } = require("../libs/utils");
+const { deleteFile } = require("../libs/utils");
 const {
   upload,
   uploadVideoThumbnail,
   uploadImage,
 } = require("../libs/fileUpload");
-const { saveAlgolia, searchAlgolia } = require("../libs/algolia");
+const { saveAlgolia } = require("../libs/algolia");
 
 exports.index = async (req, res, next) => {
   try {
@@ -86,7 +86,6 @@ exports.store = async (req, res, next) => {
     thumbnail_url: req.body.thumbnail_url,
     type: req.body.type,
   });
-
   try {
     const savedVideo = await video.save();
     const videoId = savedVideo._id;

@@ -58,7 +58,7 @@ const update = async (model, data, type) => {
     };
     return obj;
   } catch (err) {
-    console.log("Perr is", err);
+    console.log("err is", err);
     return (obj = {
       status: 400,
       message: err,
