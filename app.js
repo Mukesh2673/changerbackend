@@ -22,7 +22,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
+app.use('/.well-known',express.static(path.join(__dirname, '.well-known')));
 app.use(cors());
 app.options('*', cors());
 
