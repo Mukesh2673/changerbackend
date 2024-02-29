@@ -14,6 +14,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 const auth = require("../middleware/firebaseAuth").authCheck;
+const { validateToken } = require("../middleware/auth");
 
 const userController = require("../controllers/userController");
 const campaignController = require("../controllers/campaignController");
@@ -26,10 +27,11 @@ const hashtagsController=require("../controllers/hashtagController")
 router.get("/users/:id", userController.getUser);
 router.get("/users/uid/:uid", userController.getUserByUID);
 router.get("/users/following/:cuid/:fuid", userController.getFollowingVideos);
-router.post("/users", userController.createUser);
+router.post("/users",validateToken, userController.createUser);
 router.post("/users/follow/:cuid/:fuid", userController.followUser);
 router.post("/users/unfollow/:cuid/:fuid", userController.unFollowUser);
 router.post("/users/update/:id", userController.editProfile);
+router.get("/users/cognito/:cuid",userController.getUserByCognito)
 
 // CAMPAIGN ROUTES
 router.get("/campaigns", campaignController.index);
@@ -63,6 +65,7 @@ router.post(
 //issue Routes
 router.post("/issue", issueController.create);
 router.get("/issue", issueController.index);
+router.post("/issue/location",issueController.location);
 
 //impact Routes
 router.post("/impact", impactController.create);

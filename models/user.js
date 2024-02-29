@@ -14,7 +14,7 @@ const userSchema = new Schema(
     },
     email: {
       type: String,
-      required: true,
+      required: false,
     },
     username: {
       type: String,
@@ -22,7 +22,7 @@ const userSchema = new Schema(
     },
     uid: {
       type: String,
-      required: true,
+      required: false,
     },
     dob: {
       type: Date,
@@ -50,6 +50,10 @@ const userSchema = new Schema(
       type: String,
       default: "",
       required: false,
+    },
+    cognitoUsername: {
+      type: String,
+      required: true,
     },
     endorsed_campaigns: {
       type: [String],

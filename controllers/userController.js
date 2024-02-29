@@ -9,6 +9,24 @@ exports.getUser = async (req, res, next) => {
     return res.status(500).json({ message: error.message });
   }
 };
+exports.getUserByCognito = async (req, res, next) => {
+  try {
+    let userName=req.params.cuid
+    console.log("id is",userName)
+    const existingUser = await User.findOne({cognitoUsername:userName});
+    if (existingUser) {
+      return res.status(200).json({ message: "username-exists",user:existingUser,status:403 });
+    }
+    else{
+      return res.status(200).json({ message: "username not exist",status:200 });
+
+    }
+
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 
 exports.getUserByUID = async (req, res, next) => {
   try {
@@ -36,6 +54,7 @@ exports.createUser = async (req, res, next) => {
     dob: req.body.dob,
     uid: req.body.uid,
     email: req.body.email,
+    cognitoUsername:req.body.cognitoUsername,
     followers: [],
     follower: [],
     description: "",

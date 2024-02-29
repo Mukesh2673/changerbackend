@@ -35,5 +35,5 @@ const issueSchema = new Schema(
     timestamps: true,
   }
 );
-issueSchema.index({ coordinates: "2dsphere" });
+issueSchema.index({ location: "2dsphere" });
 module.exports = mongoose.model("issue", issueSchema);

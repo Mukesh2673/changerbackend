@@ -102,3 +102,39 @@ exports.create = async (req, res, next) => {
     return res.json({ status: 500, message: err, success: false });
   }
 };
+exports.location = async (req, res, next) => {
+  try {
+    let cause = req.body.cause;
+    const longitude = req.body.lng;
+    const latitude = req.body.lat;
+    const coordinates = [parseFloat(latitude), parseFloat(longitude)];
+    const distance = 1;
+    const unitValue = 10000000;
+    const query = []; 
+    query.push({
+      $geoNear:{
+        near: {
+            type: 'Point',
+            coordinates: coordinates
+        },
+
+        maxDistance: distance * unitValue,
+        distanceField: 'distance',
+        distanceMultiplier: 1 / unitValue,
+        key:"location"
+    }
+    })
+    if (cause) {
+      query.push({$match:{ cause: { $in: cause } }});
+    }
+    const result = await Issue.aggregate(query);
+    return res.json({
+      status: 200,
+      success: true,
+      data: result,
+    });
+  } catch (err) {
+    console.log("value of err is", err);
+    return res.json({ status: 500, message: err, success: false });
+  }
+};
