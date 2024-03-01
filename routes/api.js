@@ -31,6 +31,7 @@ router.post("/users",validateToken, userController.createUser);
 router.post("/users/follow/:cuid/:fuid", userController.followUser);
 router.post("/users/unfollow/:cuid/:fuid", userController.unFollowUser);
 router.post("/users/update/:id", userController.editProfile);
+router.patch("/user/cause",userController.cause)
 router.get("/users/cognito/:cuid",userController.getUserByCognito)
 
 // CAMPAIGN ROUTES

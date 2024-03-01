@@ -71,6 +71,48 @@ exports.createUser = async (req, res, next) => {
   }
 };
 
+exports.cause = async (req, res, next) => {
+  const {cause,uid}=req.body
+  console.log("cause",uid)
+  try {
+    const existingUser =await User.findById(uid);
+    if (existingUser) {
+     let result=await User.updateOne({ _id: uid }, { cause: cause } );
+      return res.status(200).json({ message: "cause added" });
+    }
+    else{
+      return res.status(403).json({ message: "username not exists" });
+
+    }
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+  // const cause=req.body.cause
+  return
+  const user = new User({
+    username: req.body.username,
+    first_name: req.body.first_name,
+    last_name: req.body.last_name,
+    dob: req.body.dob,
+    uid: req.body.uid,
+    email: req.body.email,
+    cognitoUsername:req.body.cognitoUsername,
+    followers: [],
+    follower: [],
+    description: "",
+  });
+  try {
+    const savedUser = await user.save();
+    const userId = savedUser._id;
+    const records = await User.find({ _id: userId });
+    saveAlgolia(records, "users");
+    return res.status(200).json(savedUser);
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ message: error.message });
+  }
+};
+
 exports.followUser = async (req, res) => {
   const { cuid, fuid } = req.params;
 

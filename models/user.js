@@ -60,6 +60,11 @@ const userSchema = new Schema(
       default: [],
       required: false,
     },
+    cause:{
+      type:[],
+      default:[],
+      required:false
+    }
   },
   {
     timestamps: true,
