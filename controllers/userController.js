@@ -9,6 +9,16 @@ exports.getUser = async (req, res, next) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+exports.users = async (req, res, next) => {
+  try {
+    const user = await User.find({});
+    return res.json(user);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 exports.getUserByCognito = async (req, res, next) => {
   try {
     let userName=req.params.cuid

@@ -107,7 +107,7 @@ exports.location = async (req, res, next) => {
     let cause = req.body.cause;
     const longitude = req.body.lng;
     const latitude = req.body.lat;
-    const coordinates = [parseFloat(latitude), parseFloat(longitude)];
+    const coordinates = [ parseFloat(longitude),parseFloat(latitude)];
     const distance = 1;
     const unitValue = 10000000;
     const query = []; 

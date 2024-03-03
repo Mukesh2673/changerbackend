@@ -24,6 +24,7 @@ const impactController = require("../controllers/impactController");
 const searchController=require("../controllers/searchController")
 const hashtagsController=require("../controllers/hashtagController")
 // USER ROUTES
+router.get("/users",userController.users)
 router.get("/users/:id", userController.getUser);
 router.get("/users/uid/:uid", userController.getUserByUID);
 router.get("/users/following/:cuid/:fuid", userController.getFollowingVideos);
