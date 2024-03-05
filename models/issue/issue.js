@@ -21,7 +21,12 @@ const issueSchema = new Schema(
         default: [0, 0],
       },
     },
-    _geoloc: [],
+
+    address:{
+      type: String,
+      required: false,
+    },
+
     video: {
       type: Schema.Types.ObjectId,
       ref: "Video",
@@ -30,6 +35,11 @@ const issueSchema = new Schema(
       type: Array,
       default: [],
     },
+    user:{
+      type: Schema.Types.ObjectId,
+      ref:"User"
+
+    }
   },
   {
     timestamps: true,

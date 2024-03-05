@@ -10,12 +10,54 @@ exports.issueRecords = async (query) => {
       path: "video",
       populate: { path: "videos", model: Video },
     },
+    {
+      path: "user",
+      populate: { path: "User", model: User },
+    }
   ]);
   return records;
 };
 exports.index = async (req, res, next) => {
   try {
-    let issues = await this.issueRecords({});
+    const query=[]
+    if(req.query.location)
+    {
+      const location=JSON.parse(decodeURIComponent(req.query.location))
+      const longitude = location[0];
+      const latitude = location[1];
+      const coordinates = [ parseFloat(longitude),parseFloat(latitude)];
+      const distance = 1;
+      const unitValue = 10000000;
+      query.push({
+        $geoNear:{
+          near: {
+              type: 'Point',
+              coordinates: coordinates
+          },
+  
+          maxDistance: distance * unitValue,
+          distanceField: 'distance',
+          distanceMultiplier: 1 / unitValue,
+          key:"location"
+      }
+      }
+      )
+    }
+    if(req?.query?.cause?.length>0){
+      const cause=JSON.parse(decodeURIComponent(req.query.cause))
+      query.push({$match:{ cause: { $in: cause } }});
+    }
+    query.push({
+      $lookup: {
+        from: 'users', // The name of the collection to join with
+        localField: 'user', // The field from the input documents
+        foreignField: '_id', // The field from the documents of the "from" collection
+        as: 'user', // The alias for the resulting array of joined documents
+      },
+    })
+
+    const issues = await Issue.aggregate(query);
+
     return res.json({
       status: 200,
       data: issues,
@@ -50,7 +92,7 @@ exports.create = async (req, res, next) => {
       user: data.user,
       cause: data.cause,
       location: data.location,
-      _geoloc: data._geoloc,
+      address: data.address,
     });
     const savedIssue = await issue.save();
     let issueTags = savedIssue?.hashtags;
@@ -123,7 +165,16 @@ exports.location = async (req, res, next) => {
         distanceMultiplier: 1 / unitValue,
         key:"location"
     }
-    })
+    },
+    {
+      $lookup: {
+        from: 'users', // The name of the collection to join with
+        localField: 'user', // The field from the input documents
+        foreignField: '_id', // The field from the documents of the "from" collection
+        as: 'user', // The alias for the resulting array of joined documents
+      },
+    },
+    )
     if (cause) {
       query.push({$match:{ cause: { $in: cause } }});
     }
