@@ -67,7 +67,7 @@ exports.createUser = async (req, res, next) => {
     cognitoUsername:req.body.cognitoUsername,
     followers: [],
     follower: [],
-    description: "",
+    bio: req.body.bio ? req.body.bio:"",
   });
   try {
     const savedUser = await user.save();
@@ -83,7 +83,6 @@ exports.createUser = async (req, res, next) => {
 
 exports.cause = async (req, res, next) => {
   const {cause,uid}=req.body
-  console.log("cause",uid)
   try {
     const existingUser =await User.findById(uid);
     if (existingUser) {
@@ -98,30 +97,22 @@ exports.cause = async (req, res, next) => {
     return res.status(500).json({ message: error.message });
   }
   // const cause=req.body.cause
-  return
-  const user = new User({
-    username: req.body.username,
-    first_name: req.body.first_name,
-    last_name: req.body.last_name,
-    dob: req.body.dob,
-    uid: req.body.uid,
-    email: req.body.email,
-    cognitoUsername:req.body.cognitoUsername,
-    followers: [],
-    follower: [],
-    description: "",
-  });
-  try {
-    const savedUser = await user.save();
-    const userId = savedUser._id;
-    const records = await User.find({ _id: userId });
-    saveAlgolia(records, "users");
-    return res.status(200).json(savedUser);
-  } catch (error) {
-    console.log(error);
-    return res.status(400).json({ message: error.message });
-  }
+
 };
+exports.delete=async (req,res)=>{
+  try{
+    let cognitoId=req.params.uid
+    await User.deleteOne({ cognitoUsername:cognitoId});
+    return res.json({ success: "User Deleted" });
+
+  }
+  catch(error)
+  {
+    return res.status(500).json({ message: error.message });
+
+  }
+
+}
 
 exports.followUser = async (req, res) => {
   const { cuid, fuid } = req.params;
@@ -164,8 +155,15 @@ exports.unFollowUser = async (req, res) => {
 exports.editProfile = async (req, res) => {
   const { id: _id } = req.params;
   try {
-    const updateUser = await User.findOneAndUpdate({ _id }, req.body);
-    const user = await User.findById(_id);
+    const id=req.params.id
+    const updateUser = await User.findOneAndUpdate({ _id:id }, req.body);
+    if(!updateUser)
+    {
+      return res.json({ status: 404, message: "Invalid User", success: false });
+
+
+    }
+    const user = await User.findById({ _id: id });
     return res.status(200).json(user);
   } catch (e) {
     return res.status(404).json({ error: e.message });
@@ -193,4 +191,34 @@ exports.getFollowingVideos = async (req, res) => {
     return res.status(404).json({ error: e.message });
   }
 };
+
+exports.privacy=async (req,res)=>{
+try{
+
+  const {id,privacy}=req.body
+  const updateUser = await User.findOneAndUpdate({ _id:id }, {privacy:privacy});
+  
+  const user = await User.findById({ _id: id });
+  return res.status(200).json(user);
+
+}
+catch(e){
+  return res.status(404).json({ error: e.message });
+
+}
+}
+exports.language=async (req,res)=>{
+  try{
+
+    const {id,language}=req.body
+    const updateUser = await User.findOneAndUpdate({ _id:id }, {language:language});
+    const user = await User.findById({ _id: id });
+    return res.status(200).json(user);
+  
+  }
+  catch(e){
+    return res.status(404).json({ error: e.message });
+  
+  }
+}
 

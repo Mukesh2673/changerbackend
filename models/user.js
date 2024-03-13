@@ -46,7 +46,7 @@ const userSchema = new Schema(
       default: [],
       required: false,
     },
-    description: {
+    bio: {
       type: String,
       default: "",
       required: false,
@@ -63,6 +63,21 @@ const userSchema = new Schema(
     cause:{
       type:[],
       default:[],
+      required:false
+    },
+    privacy:{
+      type: Boolean,
+      required: false,
+      default:false
+    },
+    language: {
+      type: String,
+      default:'english',
+      required:false
+    },
+    profileImage:{
+      type:String,
+      default:null,
       required:false
     }
   },

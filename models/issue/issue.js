@@ -26,11 +26,17 @@ const issueSchema = new Schema(
       type: String,
       required: false,
     },
-
+    
     video: {
       type: Schema.Types.ObjectId,
       ref: "Video",
     },
+    votes:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'upvotes',
+        required:false
+      }
+      ],    
     hashtags: {
       type: Array,
       default: [],
@@ -38,7 +44,6 @@ const issueSchema = new Schema(
     user:{
       type: Schema.Types.ObjectId,
       ref:"User"
-
     }
   },
   {

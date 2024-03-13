@@ -228,12 +228,21 @@ exports.upload = async (req, res, next) => {
 
 exports.uploadImages = async (req, res) => {
   try {
-    const thumbnail = await uploadImage(req.file);
+    const thumbnail = await uploadImage(req.file,"thumbnail");
     let data = `${thumbnail.Bucket}/${thumbnail.key}`;
     return res.status(200).json({ message: "uploaded", image: data });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }
 };
+exports.uploadProfile=async (req,res)=>{
+  try {
+    const thumbnail = await uploadImage(req.file,"profile");
+    let data = `${thumbnail.Bucket}/${thumbnail.key}`;
+    return res.status(200).json({ message: "uploaded", image: data });
+  } catch (error) {
+    return res.status(500).json({ message: error.message, status: 500 });
+  }
+}
 
 

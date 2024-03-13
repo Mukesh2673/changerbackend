@@ -330,7 +330,7 @@ exports.uploadVideoThumbnail = async (file) => {
       });
   });
 };
-exports.uploadImage = async (file) => {
+exports.uploadImage = async (file,bucket) => {
   return new Promise((resolve, reject) => {
     const source = `uploads/${file.filename}`;
     const fileContent = fs.readFileSync(source);
@@ -341,7 +341,7 @@ exports.uploadImage = async (file) => {
     let newName = Date.now() + ".png";
     let s3Params = {
       ContentType: "image/png",
-      Bucket: "thumbnail",
+      Bucket:bucket,
       Body: fileContent,
       Key: `${newName}`,
     };
@@ -352,7 +352,7 @@ exports.uploadImage = async (file) => {
       }
       resolve(data);
     } catch (err) {
-      deleteFile("uploads/");
+     deleteFile("uploads/");
       console.log("erroris", err);
     }
   });

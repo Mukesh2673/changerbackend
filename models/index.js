@@ -1,5 +1,6 @@
 module.exports = {
     User: require("./user"),
+    Upvotes:require("./upvotes"),
     Issue:require("./issue/issue"),
     Impact:require("./impact/impact"),
     Campaign: require("./campaign/campaign"),

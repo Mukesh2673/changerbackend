@@ -34,6 +34,14 @@ router.post("/users/unfollow/:cuid/:fuid", userController.unFollowUser);
 router.post("/users/update/:id", userController.editProfile);
 router.patch("/user/cause",userController.cause)
 router.get("/users/cognito/:cuid",userController.getUserByCognito)
+router.delete("/users/:uid",userController.delete)
+router.post("/user/privacy",userController.privacy)
+router.post("/user/language",userController.language)
+router.post(
+  "/upload/profile",
+  upload.single("Image"),
+  videoController.uploadProfile
+);
 
 // CAMPAIGN ROUTES
 router.get("/campaigns", campaignController.index);
@@ -48,7 +56,6 @@ router.post(
   upload.single("Image"),
   videoController.uploadImages
 );
-
 // VIDEO ROUTES
 router.get("/videos/:id", videoController.show);
 router.delete("/videos/:id", videoController.delete);
@@ -68,6 +75,9 @@ router.post(
 router.post("/issue", issueController.create);
 router.get("/issue", issueController.index);
 router.post("/issue/location",issueController.location);
+router.post("/issue/generate",issueController.generate);
+router.post("/issue/upvotes",issueController.upvotes)
+router.get("/user/issue/:uid", issueController.userIssues);
 
 //impact Routes
 router.post("/impact", impactController.create);
@@ -78,4 +88,6 @@ router.get("/search",searchController.search)
 
 //hasTags
 router.post("/hashtags",hashtagsController.add)
+
+
 module.exports = router;
