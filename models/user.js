@@ -79,6 +79,11 @@ const userSchema = new Schema(
       type:String,
       default:null,
       required:false
+    },
+    karmaPoint:{
+      type:Number,
+      default:0,
+      required:false
     }
   },
   {

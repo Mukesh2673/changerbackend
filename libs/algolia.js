@@ -103,3 +103,13 @@ exports.updateAlgolia = async (objects, index) => {
     return error;
   }
 };
+exports.deleteAlgolia=async(index)=>{
+  try{
+    const algoliaIndex = client.initIndex(index);
+    return await algoliaIndex.deleteObjects(index).then((objectId)=>objectId)
+  }
+  catch(err)
+  {
+    console.log("err is",err)
+  }
+}

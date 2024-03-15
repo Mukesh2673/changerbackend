@@ -10,6 +10,7 @@ const issueSchema = new Schema(
       type: String,
       required: false,
     },
+
     location: {
       type: {
         type: String,
@@ -26,7 +27,14 @@ const issueSchema = new Schema(
       type: String,
       required: false,
     },
-    
+    description:{
+      type: String,
+      default: "",
+    },
+    notification:{
+      type: String,
+      default: "nothing",
+    },
     video: {
       type: Schema.Types.ObjectId,
       ref: "Video",
@@ -44,7 +52,12 @@ const issueSchema = new Schema(
     user:{
       type: Schema.Types.ObjectId,
       ref:"User"
-    }
+    },
+    joined:[{
+      type: Schema.Types.ObjectId,
+      ref:"User",
+      required:false
+    }]
   },
   {
     timestamps: true,

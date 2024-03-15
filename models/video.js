@@ -28,11 +28,11 @@ const videoSchema = new Schema(
       type: String,
       required: false,
     },
-    likes: {
-      type: [String],
-      default: [],
-      required: true,
-    },
+    likes:[{
+      type: Schema.Types.ObjectId,
+      ref:"User",
+      required:false
+    }],
     video_url: {
       type: String,
       required: true,
@@ -57,6 +57,17 @@ const videoSchema = new Schema(
       type: String,
       required: false,
     },
+    location:{
+      type: {
+        type: String,
+        default: "Point",
+        enum: "Point",
+      },
+      coordinates: {
+        type: [Number],
+        default: [0, 0],
+      },
+    },
   },
   {
     timestamps: true,
@@ -65,4 +76,5 @@ const videoSchema = new Schema(
 
 videoSchema.plugin(mongoosePaginate);
 videoSchema.plugin(require("mongoose-autopopulate"));
+videoSchema.index({ location: "2dsphere" });
 module.exports = mongoose.model("Video", videoSchema);

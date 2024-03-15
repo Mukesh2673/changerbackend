@@ -60,6 +60,7 @@ router.post(
 router.get("/videos/:id", videoController.show);
 router.delete("/videos/:id", videoController.delete);
 router.get("/videos", videoController.index);
+router.post("/video/location",videoController.location)
 router.post("/thumbnail", upload.single("video"), videoController.thumbnail);
 router.post("/upload", upload.single("video"), videoController.upload);
 router.get("/videos/likes/:vid/:uid", videoController.getVideoLikes);
@@ -70,7 +71,6 @@ router.post(
   "/hook/encoding-complete/:id?",
   videoController.encodingFinishedHook
 );
-
 //issue Routes
 router.post("/issue", issueController.create);
 router.get("/issue", issueController.index);
@@ -78,6 +78,11 @@ router.post("/issue/location",issueController.location);
 router.post("/issue/generate",issueController.generate);
 router.post("/issue/upvotes",issueController.upvotes)
 router.get("/user/issue/:uid", issueController.userIssues);
+router.post("/issue/join",issueController.joinIssue)
+router.post("/issue/leave",issueController.leaveIssue)
+router.get("/issue/:id",issueController.issueDetails)
+router.patch("/issue/:id",issueController.update)
+router.delete("/issue/:id",issueController.deleteIssue)
 
 //impact Routes
 router.post("/impact", impactController.create);

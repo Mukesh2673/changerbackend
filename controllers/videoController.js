@@ -57,6 +57,67 @@ exports.index = async (req, res, next) => {
   }
 };
 
+exports.location=async(req,res,next)=>{
+  try {
+    const longitude = req.body.lng;
+    const latitude = req.body.lat;
+    const coordinates = [ parseFloat(longitude),parseFloat(latitude)];
+    const distance = 1;
+    const unitValue = 10000000;
+    const query = []; 
+    query.push({
+      $geoNear:{
+        near: {
+            type: 'Point',
+            coordinates: coordinates
+        },
+        maxDistance: distance * unitValue,
+        distanceField: 'distance',
+        distanceMultiplier: 1 / unitValue,
+        key:"location"
+    }
+    },
+
+    // {
+    //   $project: {
+    //     _id: 1,
+    //     video:1,
+    //     joined:1,
+    //     location:1,
+    //     hashtags:1,
+    //     title:1,
+    //     cause:1,
+    //     address:1,
+    //     createdAt:1,
+    //     updatedAt:1,
+    //     videos:1,  
+    //     user: 1,
+    //     votes: {
+    //       $size: {
+    //         $filter: {
+    //           input: '$votes',
+    //           as: 'vote',
+    //           cond: {
+    //             $eq: ['$$vote.likes', true]
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
+
+    )
+    const result = await Video.aggregate(query);
+    return res.json({
+      status: 200,
+      success: true,
+      data: result,
+    });
+  } catch (err) {
+    console.log("value of err is", err);
+    return res.json({ status: 500, message: err, success: false });
+  }
+}
 exports.show = async (req, res, next) => {
   try {
     const video = await Video.findById(req.params.id);
@@ -106,21 +167,18 @@ exports.likeVideo = async (req, res) => {
   try {
     const video = await Video.findById({ _id: vid });
     let hasLiked = false;
-
     if (video.likes.includes(uid)) {
       // remove like
       await Video.updateOne({ _id: vid }, { $pull: { likes: uid } });
       hasLiked = false;
       const updatedVideo = await Video.findById({ _id: vid });
       const likes = updatedVideo.likes.length;
-
       return res.status(200).json({ likedVideo: hasLiked, likes });
     } else {
       await Video.updateOne({ _id: vid }, { $push: { likes: uid } });
       hasLiked = true;
       const updatedVideo = await Video.findById({ _id: vid });
       const likes = updatedVideo.likes.length;
-
       return res.status(200).json({ likedVideo: hasLiked, likes });
     }
   } catch (e) {
@@ -131,6 +189,7 @@ exports.likeVideo = async (req, res) => {
 exports.getVideoLikes = async (req, res) => {
   const { vid, uid } = req.params;
   try {
+    
     const video = await Video.findById({ _id: vid });
     let hasLiked = false;
 
