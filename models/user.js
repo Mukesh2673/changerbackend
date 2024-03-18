@@ -36,16 +36,8 @@ const userSchema = new Schema(
       type: Boolean,
       required: false,
     },
-    following: {
-      type: [String],
-      default: [],
-      required: false,
-    },
-    followers: {
-      type: [String],
-      default: [],
-      required: false,
-    },
+  
+
     bio: {
       type: String,
       default: "",
@@ -84,7 +76,21 @@ const userSchema = new Schema(
       type:Number,
       default:0,
       required:false
-    }
+    },
+    followers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref:"User",
+        required:false
+      }
+    ],
+    following:[   
+      {
+      type: Schema.Types.ObjectId,
+      ref:"User",
+      required:false
+    }]
+
   },
   {
     timestamps: true,

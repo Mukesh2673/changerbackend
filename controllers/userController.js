@@ -1,9 +1,16 @@
 const { User } = require("../models");
-const { saveAlgolia, searchAlgolia } = require("../libs/algolia");
+const { saveAlgolia, searchAlgolia,updateAlgolia } = require("../libs/algolia");
 
 exports.getUser = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).populate([
+      {
+        path: "followers",
+        populate: { path: "User", model: User },
+      }
+
+    ]);
+    
     return res.json(user);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -118,39 +125,201 @@ exports.followUser = async (req, res) => {
   const { cuid, fuid } = req.params;
 
   try {
+    const currentUser= await User.find({ _id: cuid })
+       
+    if(!currentUser || currentUser.length<1)
+    {
+      return res.json({
+        status: 401,
+        message: "invalid Login User",
+        success: false,
+      });
+    }
+    const followUser=await User.find({_id:fuid})
+    if(!followUser || followUser.length<1)
+    {
+      return res.json({
+        status: 401,
+        message: "invalid following User",
+        success: false,
+      });
+    }
+    if(followUser[0]?.followers?.length>0 && followUser[0]?.followers?.includes(cuid))
+    {
+      return res.json({
+        status: 400,
+        message: "User already followed",
+        success: false,
+      });
+    }
+
+   // console.log("follow euser is",followUser)
+
     // add current user's id to users followers array
-    await User.updateOne({ _id: fuid }, { $push: { followers: cuid } });
+    const follow=await User.updateOne({ _id: fuid }, { $push: { followers: cuid } },   { new: true });
+    
+    //Add users id to my followings array
+    const following=await User.updateOne({ _id: cuid }, { $push: { following: fuid } });
 
-    // Add users id to my followings array
-    await User.updateOne({ _id: cuid }, { $push: { following: fuid } });
 
+   
     // Get followers
-    const user = await User.findById({ _id: fuid }).select("followers");
+    const followers = await User.find({ _id: fuid }).populate([
+      {
+        path: "followers",
+        populate: { path: "User", model: User },
+      }
+    ])
 
-    return res.status(200).json({ user });
+//Get following
+const followingCurrentUser= await User.find({ _id: cuid }).populate([
+  {
+    path: "following",
+    populate: { path: "User", model: User },
+  }
+])
+
+
+//update follower in algolia
+    let filterUserAlgolia = { search: fuid, type: "users" };
+    const searchAlgo = await searchAlgolia(filterUserAlgolia);
+    if(searchAlgo.length>0)
+    {
+    let obj={
+      objectID: searchAlgo[0].objectID,
+      followers:followers[0].followers
+    }
+    await updateAlgolia(obj, "users");
+  }
+
+//update following in algoila
+    let filterCurrentUserAlgolia = { search: cuid, type: "users" };
+    const searchCurrentUserAlgo = await searchAlgolia(filterCurrentUserAlgolia);
+    if(searchCurrentUserAlgo.length>0)
+    {
+    let obj={
+      objectID: searchCurrentUserAlgo[0].objectID,
+      followers:followingCurrentUser[0].followingCurrentUser
+    }
+    await updateAlgolia(obj, "users");
+  }
+
+    return res.json({
+      status: 200,
+      message: "user follow sucessfully",
+      success: true,
+      data:followers
+    });
+
   } catch (e) {
-    return res.status(404).json({ error: e.message });
+    console.log('err is',e)
+    return res.json({
+      status: 500,
+      message: e,
+      success: e,
+    });  
   }
 };
 
 exports.unFollowUser = async (req, res) => {
   const { cuid, fuid } = req.params;
-
   try {
-    // remove current user's id from users followers array
-    await User.updateOne({ _id: fuid }, { $pull: { followers: cuid } });
+    const currentUser= await User.find({ _id: cuid })
+       
+    if(!currentUser || currentUser.length<1)
+    {
+      return res.json({
+        status: 401,
+        message: "invalid Login User",
+        success: false,
+      });
+    }
+    const followUser=await User.find({_id:fuid})
+    if(!followUser || followUser.length<1)
+    {
+      return res.json({
+        status: 401,
+        message: "invalid following User",
+        success: false,
+      });
+    }
+    if(followUser[0]?.followers?.length>0 && !followUser[0]?.followers?.includes(cuid))
+    {
+      return res.json({
+        status: 400,
+        message: "User not followed",
+        success: false,
+      });
+    }
 
-    // remove users id from my followings array
-    await User.updateOne({ _id: cuid }, { $pull: { following: fuid } });
+   // console.log("follow euser is",followUser)
 
-    // Get followers
-    const user = await User.findById({ _id: fuid }).select("followers");
+    // add current user's id to users followers array
+    const follow=await User.updateOne({ _id: fuid }, { $pull: { followers: cuid } },   { new: true });
+    
+    //Add users id to my followings array
+    const following=await User.updateOne({ _id: cuid }, { $pull: { following: fuid } },{ new: true } );
 
-    return res.status(200).json({ user });
+
+   
+// Get followers
+    const followers = await User.find({ _id: fuid }).populate([
+      {
+        path: "followers",
+        populate: { path: "User", model: User },
+      }
+    ])
+
+//Get following
+const followingCurrentUser= await User.find({ _id: cuid }).populate([
+  {
+    path: "following",
+    populate: { path: "User", model: User },
+  }
+])
+
+
+//update follower in algolia
+    let filterUserAlgolia = { search: fuid, type: "users" };
+    const searchAlgo = await searchAlgolia(filterUserAlgolia);
+    if(searchAlgo.length>0)
+    {
+    let obj={
+      objectID: searchAlgo[0].objectID,
+      followers:followers[0].followers
+    }
+    await updateAlgolia(obj, "users");
+  }
+
+//update following in algoila
+    let filterCurrentUserAlgolia = { search: cuid, type: "users" };
+    const searchCurrentUserAlgo = await searchAlgolia(filterCurrentUserAlgolia);
+    if(searchCurrentUserAlgo.length>0)
+    {
+    let obj={
+      objectID: searchCurrentUserAlgo[0].objectID,
+      followers:followingCurrentUser[0].followingCurrentUser
+    }
+    await updateAlgolia(obj, "users");
+  }
+
+    return res.json({
+      status: 200,
+      message: "user unfollow sucessfully",
+      success: true,
+      data:followers
+    });
+
   } catch (e) {
-    return res.status(404).json({ error: e.message });
+    return res.json({
+      status: 500,
+      message: e,
+      success: true,
+    });  
   }
 };
+
+
 
 exports.editProfile = async (req, res) => {
   const { id: _id } = req.params;

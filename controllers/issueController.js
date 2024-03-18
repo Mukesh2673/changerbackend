@@ -309,7 +309,7 @@ exports.upvotes = async (req, res, next) => {
           $set: {
             likes: !votes[0].likes,
           },
-        },
+        },  
         { new: true }
       );
       return res.json({
@@ -336,6 +336,11 @@ exports.userIssues = async (req, res) => {
         path: "user",
         populate: { path: "User", model: User },
       },
+      {
+          path: "joined",
+          populate: { path: "User", model: User },
+      },
+      
     ]);
     return res.json({
       status: 200,
