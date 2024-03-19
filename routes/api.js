@@ -37,6 +37,7 @@ router.get("/users/cognito/:cuid",userController.getUserByCognito)
 router.delete("/users/:uid",userController.delete)
 router.post("/user/privacy",userController.privacy)
 router.post("/user/language",userController.language)
+router.post("/user/report",userController.report)
 router.post(
   "/upload/profile",
   upload.single("Image"),
@@ -83,6 +84,8 @@ router.post("/issue/leave",issueController.leaveIssue)
 router.get("/issue/:id",issueController.issueDetails)
 router.patch("/issue/:id",issueController.update)
 router.delete("/issue/:id",issueController.deleteIssue)
+router.post("/issue/message",issueController.messages)
+
 
 //impact Routes
 router.post("/impact", impactController.create);

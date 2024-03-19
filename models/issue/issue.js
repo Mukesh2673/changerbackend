@@ -39,12 +39,20 @@ const issueSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Video",
     },
-    votes:[{
+    votes:[
+      {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'upvotes',
         required:false
       }
+      ],
+      messages:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'message',
+        required:false
+      }
       ],    
+      
     hashtags: {
       type: Array,
       default: [],

@@ -1,13 +1,15 @@
-const { User, Video, Issue, Upvotes } = require("../models");
+const { User, Video, Issue, Upvotes, Message } = require("../models");
 const { generateTags } = require("./hashtagController");
 const mongoose = require("mongoose");
+const { ObjectId } = mongoose.Types;
+
 require("dotenv").config();
 const OpenAI = require("openai");
 const {
   searchAlgolia,
   updateAlgolia,
   saveAlgolia,
-  deleteAlgolia
+  deleteAlgolia,
 } = require("../libs/algolia");
 exports.issueRecords = async (query) => {
   let records = await Issue.find(query).populate([
@@ -227,17 +229,7 @@ exports.location = async (req, res, next) => {
           updatedAt: 1,
           videos: 1,
           user: 1,
-          votes: {
-            $size: {
-              $filter: {
-                input: "$votes",
-                as: "vote",
-                cond: {
-                  $eq: ["$$vote.likes", true],
-                },
-              },
-            },
-          },
+          votes: 1
         },
       }
     );
@@ -282,41 +274,56 @@ exports.generate = async (req, res, next) => {
 exports.upvotes = async (req, res, next) => {
   try {
     const { uid, issueId } = req.body;
-    const votes = await Upvotes.find({ user: uid });
-    if (votes.length < 1) {
+    const votes = await Upvotes.find({ user: uid, issue: issueId });
+    if (votes?.length < 1) {
+      console.log("iffffffffffffffffffffffffffffff")
       const votes = new Upvotes({
         issue: issueId,
         user: uid,
       });
       await votes.save();
-      const voteId = votes._id;
-      const issue = await Issue.findByIdAndUpdate(
+      console.log("votes isss", votes);
+      const issue = await Issue.updateOne(
         { _id: issueId },
-        { $push: { votes: voteId } },
+        { $push: {votes: votes._id} },
         { new: true }
       );
-
       return res.json({
         status: 200,
         message: "voted",
         success: true,
-        data: votes,
+        voted: true,
+        data: issue,
       });
     } else {
-      let result = await Upvotes.findByIdAndUpdate(
-        { _id: votes[0]._id },
-        {
-          $set: {
-            likes: !votes[0].likes,
-          },
-        },  
-        { new: true }
-      );
+            const deletedDocument = await Upvotes.findOneAndDelete({
+        user: uid,
+        issue: issueId,
+      });
+      console.log("dele tesfddsf", deletedDocument);
+      const issues = await Issue.find({ _id: issueId });
+      console.log("issuess is",issues)
+      if (issues[0].votes.length > 0 && issues[0]?.votes.includes(votes[0]?._id)) {
+        console.log('voted idssded',votes._id)
+        const updatedIssue = await Issue.updateOne(
+          { _id: issueId },
+          { $pull: { votes: votes._id } },
+          { new: true }
+        );
+
+        return res.json({
+          status: 200,
+          message: "voted",
+          success: true,
+          voted: false,
+          data: updatedIssue,
+        });
+      }
       return res.json({
         status: 200,
         message: "voted",
         success: true,
-        data: result,
+        voted: false,
       });
     }
   } catch (err) {
@@ -337,10 +344,9 @@ exports.userIssues = async (req, res) => {
         populate: { path: "User", model: User },
       },
       {
-          path: "joined",
-          populate: { path: "User", model: User },
+        path: "joined",
+        populate: { path: "User", model: User },
       },
-      
     ]);
     return res.json({
       status: 200,
@@ -370,13 +376,13 @@ exports.joinIssue = async (req, res) => {
     let joined = result?.joined;
     if (joined.length > 0) {
       let exist = joined.includes(userId);
-      if (exist){
+      if (exist) {
         return res.json({
           status: 400,
           message: "issue already Joined",
           success: true,
         });
-      } 
+      }
     }
     const karmaPoint = auth.karmaPoint + 50;
     const user = await User.findByIdAndUpdate(
@@ -429,7 +435,7 @@ exports.leaveIssue = async (req, res) => {
   const result = await Issue.findById({ _id: issueId });
   let filterData = { search: result._id, type: "issues" };
   if (result) {
-    const auth = await User.findById({ _id: userId});
+    const auth = await User.findById({ _id: userId });
     if (!auth) {
       return res.json({
         status: 401,
@@ -499,9 +505,9 @@ exports.leaveIssue = async (req, res) => {
     });
   }
 };
-exports.issueDetails=async (req,res)=>{
+exports.issueDetails = async (req, res) => {
   try {
-    const issueId=req.params.id
+    const issueId = req.params.id;
     let records = await Issue.find({ _id: issueId }).populate([
       {
         path: "video",
@@ -513,9 +519,15 @@ exports.issueDetails=async (req,res)=>{
       },
       {
         path: "joined",
-        populate: { path: "User", model: User},
+        populate: { path: "User", model: User },
       },
-      
+      {
+        path: "messages",
+        populate: {
+          path: "sender",
+          model: User,
+        },
+      },
     ]);
     return res.json({
       status: 200,
@@ -526,34 +538,32 @@ exports.issueDetails=async (req,res)=>{
   } catch (err) {
     return res.json({ status: 500, message: err, success: false });
   }
-
-}
-exports.update=async(req,res)=>{
-  try{
-    const issueId=req.params.id
-    const {title,description,notification}=req.body
-    const isExist=await Issue.find({_id:issueId})
-    if(isExist)
-    {
-      const issue= await Issue.findByIdAndUpdate(
-        {_id:issueId},
+};
+exports.update = async (req, res) => {
+  try {
+    const issueId = req.params.id;
+    const { title, description, notification } = req.body;
+    const isExist = await Issue.find({ _id: issueId });
+    if (isExist) {
+      const issue = await Issue.findByIdAndUpdate(
+        { _id: issueId },
         {
-          $set:{
-            title:title,
-            description:description,
-            notification:notification
-          }
+          $set: {
+            title: title,
+            description: description,
+            notification: notification,
+          },
         },
         { new: true }
-      )
+      );
       let filterData = { search: issueId, type: "issues" };
       const searchIssueAlgo = await searchAlgolia(filterData);
       if (searchIssueAlgo.length > 0) {
         let obj = {
           objectID: searchIssueAlgo[0].objectID,
-          title:title,
-          description:description,
-          notification:notification
+          title: title,
+          description: description,
+          notification: notification,
         };
         await updateAlgolia(obj, "issues");
       }
@@ -561,62 +571,78 @@ exports.update=async(req,res)=>{
         status: 200,
         message: "issue updated successfully",
         success: true,
-        data:issue
+        data: issue,
       });
-    }
-    else{
+    } else {
       return res.json({
         status: 500,
         message: "invalid issue",
         success: false,
       });
     }
-
-  }
-  catch(err)
-  {
+  } catch (err) {
     return res.json({
       status: 500,
       message: "some thing went wrong",
       success: false,
     });
   }
-
-}
-exports.deleteIssue=async(req,res)=>{
-  const issueId=req.params.id
-  const isExist=await Issue.find({_id:issueId})
-  try{
-  
-  if(isExist.length>0)
-  {
-    const deletedIssue=await Issue.findByIdAndRemove(issueId)
-    let filterData = { search: issueId, type: "issues" };
-    const searchIssueAlgo = await searchAlgolia(filterData);
-    if(searchIssueAlgo.length > 0)
-    {  const objectID=searchIssueAlgo.ObjectId
-        await deleteAlgolia(objectID)
+};
+exports.deleteIssue = async (req, res) => {
+  const issueId = req.params.id;
+  const isExist = await Issue.find({ _id: issueId });
+  try {
+    if (isExist.length > 0) {
+      const deletedIssue = await Issue.findByIdAndRemove(issueId);
+      let filterData = { search: issueId, type: "issues" };
+      const searchIssueAlgo = await searchAlgolia(filterData);
+      if (searchIssueAlgo.length > 0) {
+        const objectID = searchIssueAlgo.ObjectId;
+        await deleteAlgolia(objectID);
+      }
+      return res.json({
+        status: 200,
+        message: "issue deleted successfully",
+        success: true,
+      });
+    } else {
+      return res.json({
+        status: 500,
+        message: "invalid issue",
+        success: false,
+      });
     }
+  } catch (err) {
+    return res.json({
+      status: 500,
+      message: "some thing went wrong",
+      success: false,
+    });
+  }
+};
+exports.messages = async (req, res) => {
+  try {
+    let records = req.body;
+    const message = new Message(records);
+    const savedMessage = await message.save();
+    let messageId = savedMessage._id;
+    await Issue.findByIdAndUpdate(
+      { _id: records.issue },
+      { $push: { messages: messageId } },
+      { new: true }
+    );
     return res.json({
       status: 200,
-      message: "issue deleted successfully",
-      success: true,
+      message: "sent Message Successfully",
+      success: false,
+      data: savedMessage,
     });
-  }
-  else{
+  } catch (err) {
+    console.log("erero ", err);
     return res.json({
       status: 500,
-      message: "invalid issue",
+      message: "Something Went wrong",
       success: false,
     });
   }
-  }
-  catch(err)
-  {
-    return res.json({
-      status: 500,
-      message: "some thing went wrong",
-      success: false,
-    });
-  }
-}
+};

@@ -1,4 +1,4 @@
-const { User } = require("../models");
+const { User,Report } = require("../models");
 const { saveAlgolia, searchAlgolia,updateAlgolia } = require("../libs/algolia");
 
 exports.getUser = async (req, res, next) => {
@@ -6,6 +6,10 @@ exports.getUser = async (req, res, next) => {
     const user = await User.findById(req.params.id).populate([
       {
         path: "followers",
+        populate: { path: "User", model: User },
+      },
+      {
+        path: "following",
         populate: { path: "User", model: User },
       }
 
@@ -29,7 +33,6 @@ exports.users = async (req, res, next) => {
 exports.getUserByCognito = async (req, res, next) => {
   try {
     let userName=req.params.cuid
-    console.log("id is",userName)
     const existingUser = await User.findOne({cognitoUsername:userName});
     if (existingUser) {
       return res.status(200).json({ message: "username-exists",user:existingUser,status:403 });
@@ -391,3 +394,17 @@ exports.language=async (req,res)=>{
   }
 }
 
+exports.report = async (req, res) => {
+  try{
+    let records=req.body
+    const report =new Report(records)
+    const savedReports=await report.save();
+    return res.json({ status: 200, message: "Report added Successfully", success: false,data:savedReports });
+
+  }
+  catch(err){
+    return res.json({ status: 500, message: "Something Went wrong", success: false });
+
+  }
+
+};
