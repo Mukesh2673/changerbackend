@@ -43,6 +43,10 @@ router.post(
   upload.single("Image"),
   videoController.uploadProfile
 );
+router.post("/user/message",userController.message)
+router.get("/user/message/:pid/:uid",userController.getMessages)
+
+
 
 // CAMPAIGN ROUTES
 router.get("/campaigns", campaignController.index);
@@ -72,6 +76,7 @@ router.post(
   "/hook/encoding-complete/:id?",
   videoController.encodingFinishedHook
 );
+router.post("/video/comment",videoController.commentVideo);
 //issue Routes
 router.post("/issue", issueController.create);
 router.get("/issue", issueController.index);
@@ -85,7 +90,9 @@ router.get("/issue/:id",issueController.issueDetails)
 router.patch("/issue/:id",issueController.update)
 router.delete("/issue/:id",issueController.deleteIssue)
 router.post("/issue/message",issueController.messages)
-
+router.post("/issue/report",issueController.report)
+router.post("/issue/share",issueController.share)
+router.post("/issue/views",issueController.views)
 
 //impact Routes
 router.post("/impact", impactController.create);

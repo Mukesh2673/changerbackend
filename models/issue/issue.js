@@ -31,6 +31,18 @@ const issueSchema = new Schema(
       type: String,
       default: "",
     },
+    
+    shared:[{
+      type: Schema.Types.ObjectId,
+      ref:"User",
+      required:false
+    }],
+    views:[{
+      type: Schema.Types.ObjectId,
+      ref:"User",
+      required:false
+    }],
+
     notification:{
       type: String,
       default: "nothing",

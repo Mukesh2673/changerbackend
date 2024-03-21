@@ -5,7 +5,7 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 const { VideoType } = require("../constants");
 const Buffer = require("buffer/").Buffer;
 const fs = require("fs");
-const { Video } = require("../models");
+const { Video, Comment, User } = require("../models");
 const { endorseCampaign } = require("../libs/campaign");
 const { deleteFile } = require("../libs/utils");
 const {
@@ -57,56 +57,56 @@ exports.index = async (req, res, next) => {
   }
 };
 
-exports.location=async(req,res,next)=>{
+exports.location = async (req, res, next) => {
   try {
     const longitude = req.body.lng;
     const latitude = req.body.lat;
-    const coordinates = [ parseFloat(longitude),parseFloat(latitude)];
+    const coordinates = [parseFloat(longitude), parseFloat(latitude)];
     const distance = 1;
     const unitValue = 10000000;
-    const query = []; 
-    query.push({
-      $geoNear:{
-        near: {
-            type: 'Point',
-            coordinates: coordinates
+    const query = [];
+    query.push(
+      {
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: coordinates,
+          },
+          maxDistance: distance * unitValue,
+          distanceField: "distance",
+          distanceMultiplier: 1 / unitValue,
+          key: "location",
         },
-        maxDistance: distance * unitValue,
-        distanceField: 'distance',
-        distanceMultiplier: 1 / unitValue,
-        key:"location"
-    }
-    },
+      }
 
-    // {
-    //   $project: {
-    //     _id: 1,
-    //     video:1,
-    //     joined:1,
-    //     location:1,
-    //     hashtags:1,
-    //     title:1,
-    //     cause:1,
-    //     address:1,
-    //     createdAt:1,
-    //     updatedAt:1,
-    //     videos:1,  
-    //     user: 1,
-    //     votes: {
-    //       $size: {
-    //         $filter: {
-    //           input: '$votes',
-    //           as: 'vote',
-    //           cond: {
-    //             $eq: ['$$vote.likes', true]
-    //           }
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
-
-    )
+      // {
+      //   $project: {
+      //     _id: 1,
+      //     video:1,
+      //     joined:1,
+      //     location:1,
+      //     hashtags:1,
+      //     title:1,
+      //     cause:1,
+      //     address:1,
+      //     createdAt:1,
+      //     updatedAt:1,
+      //     videos:1,
+      //     user: 1,
+      //     votes: {
+      //       $size: {
+      //         $filter: {
+      //           input: '$votes',
+      //           as: 'vote',
+      //           cond: {
+      //             $eq: ['$$vote.likes', true]
+      //           }
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
+    );
     const result = await Video.aggregate(query);
     return res.json({
       status: 200,
@@ -117,7 +117,7 @@ exports.location=async(req,res,next)=>{
     console.log("value of err is", err);
     return res.json({ status: 500, message: err, success: false });
   }
-}
+};
 exports.show = async (req, res, next) => {
   try {
     const video = await Video.findById(req.params.id);
@@ -189,7 +189,6 @@ exports.likeVideo = async (req, res) => {
 exports.getVideoLikes = async (req, res) => {
   const { vid, uid } = req.params;
   try {
-    
     const video = await Video.findById({ _id: vid });
     let hasLiked = false;
 
@@ -287,21 +286,59 @@ exports.upload = async (req, res, next) => {
 
 exports.uploadImages = async (req, res) => {
   try {
-    const thumbnail = await uploadImage(req.file,"thumbnail");
+    const thumbnail = await uploadImage(req.file, "thumbnail");
     let data = `${thumbnail.Bucket}/${thumbnail.key}`;
     return res.status(200).json({ message: "uploaded", image: data });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }
 };
-exports.uploadProfile=async (req,res)=>{
+exports.uploadProfile = async (req, res) => {
   try {
-    const thumbnail = await uploadImage(req.file,"profile");
+    const thumbnail = await uploadImage(req.file, "profile");
     let data = `${thumbnail.Bucket}/${thumbnail.key}`;
     return res.status(200).json({ message: "uploaded", image: data });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }
-}
+};
 
+exports.commentVideo = async (req, res) => {
+  try {
+    let records = req.body;
+    const message = new Comment(records);
+    const savedMessage = await message.save();
+    let messageId = savedMessage._id;
+    await Video.findByIdAndUpdate(
+      { _id: records.video },
+      { $push: { comments: messageId } },
+      { new: true }
+    );
+    const newMessages = await Video.find({
+      _id: records.video,
+    }).populate([
+      {
+        path: "comments",
+        populate: {
+          path: "sender",
+          model: User,
+        },
+        model: Comment,
+      },
+    ]);
 
+    return res.json({
+      status: 200,
+      message: "sent Message Successfully",
+      success: false,
+      data: newMessages,
+    });
+  } catch (err) {
+    console.log("erero ", err);
+    return res.json({
+      status: 500,
+      message: "Something Went wrong",
+      success: false,
+    });
+  }
+};

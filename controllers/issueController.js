@@ -1,4 +1,4 @@
-const { User, Video, Issue, Upvotes, Message } = require("../models");
+const { User, Video, Issue, Upvotes, Message, Report,Comment } = require("../models");
 const { generateTags } = require("./hashtagController");
 const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Types;
@@ -115,6 +115,7 @@ exports.create = async (req, res, next) => {
       cause: data.cause,
       location: data.location,
       address: data.address,
+      joined:[user._id]
     });
     const savedIssue = await issue.save();
     let issueTags = savedIssue?.hashtags;
@@ -229,7 +230,7 @@ exports.location = async (req, res, next) => {
           updatedAt: 1,
           videos: 1,
           user: 1,
-          votes: 1
+          votes: 1,
         },
       }
     );
@@ -276,16 +277,14 @@ exports.upvotes = async (req, res, next) => {
     const { uid, issueId } = req.body;
     const votes = await Upvotes.find({ user: uid, issue: issueId });
     if (votes?.length < 1) {
-      console.log("iffffffffffffffffffffffffffffff")
       const votes = new Upvotes({
         issue: issueId,
         user: uid,
       });
       await votes.save();
-      console.log("votes isss", votes);
       const issue = await Issue.updateOne(
         { _id: issueId },
-        { $push: {votes: votes._id} },
+        { $push: { votes: votes._id } },
         { new: true }
       );
       return res.json({
@@ -296,15 +295,18 @@ exports.upvotes = async (req, res, next) => {
         data: issue,
       });
     } else {
-            const deletedDocument = await Upvotes.findOneAndDelete({
+      const deletedDocument = await Upvotes.findOneAndDelete({
         user: uid,
         issue: issueId,
       });
       console.log("dele tesfddsf", deletedDocument);
       const issues = await Issue.find({ _id: issueId });
-      console.log("issuess is",issues)
-      if (issues[0].votes.length > 0 && issues[0]?.votes.includes(votes[0]?._id)) {
-        console.log('voted idssded',votes._id)
+      console.log("issuess is", issues);
+      if (
+        issues[0].votes.length > 0 &&
+        issues[0]?.votes.includes(votes[0]?._id)
+      ) {
+        console.log("voted idssded", votes._id);
         const updatedIssue = await Issue.updateOne(
           { _id: issueId },
           { $pull: { votes: votes._id } },
@@ -511,8 +513,17 @@ exports.issueDetails = async (req, res) => {
     let records = await Issue.find({ _id: issueId }).populate([
       {
         path: "video",
-        populate: { path: "videos", model: Video },
-      },
+        populate: { path: "comments",
+                populate:{
+                  path:"sender",
+                  model: User 
+
+                },
+                model: Comment 
+              }
+          },
+        
+      
       {
         path: "user",
         populate: { path: "User", model: User },
@@ -642,6 +653,136 @@ exports.messages = async (req, res) => {
     return res.json({
       status: 500,
       message: "Something Went wrong",
+      success: false,
+    });
+  }
+};
+exports.report = async (req, res) => {
+  try {
+    let records = req.body;
+    const report = new Report(records);
+    const savedReports = await report.save();
+    return res.json({
+      status: 200,
+      message: "Report added Successfully",
+      success: false,
+      data: savedReports,
+    });
+  } catch (err) {
+    return res.json({
+      status: 500,
+      message: "Something Went wrong",
+      success: false,
+    });
+  }
+};
+
+exports.share = async (req, res) => {
+  try {
+    const { id, uid } = req.body;
+    const issueId = id;
+    const isExist = await Issue.find({ _id: issueId });
+
+    if (isExist) {
+      const shared = isExist[0].shared;
+
+      let exist = shared.includes(uid);
+      if (exist) {
+        return res.json({
+          status: 200,
+          message: "shared",
+          success: true,
+        });
+      } else {
+        const issue = await Issue.findByIdAndUpdate(
+          { _id: issueId },
+          { $push: { shared: uid } },
+
+          { new: true }
+        );
+
+        let filterData = { search: issueId, type: "issues" };
+        const searchIssueAlgo = await searchAlgolia(filterData);
+        if (searchIssueAlgo.length > 0) {
+          let obj = {
+            objectID: searchIssueAlgo[0].objectID,
+            shared: issue.shared,
+          };
+          await updateAlgolia(obj, "issues");
+        }
+        return res.json({
+          status: 200,
+          message: "issue shared successfully",
+          success: true,
+          data: issue,
+        });
+      }
+    } else {
+      return res.json({
+        status: 500,
+        message: "invalid issue",
+        success: false,
+      });
+    }
+  } catch (err) {
+    return res.json({
+      status: 500,
+      message: "some thing went wrong",
+      success: false,
+    });
+  }
+};
+exports.views = async (req, res) => {
+  try {
+    const { id, uid } = req.body;
+    const issueId = id;
+    const isExist = await Issue.find({ _id: issueId });
+
+    if (isExist) {
+      const views = isExist[0].views;
+
+      let exist = views.includes(uid);
+      if (exist) {
+        return res.json({
+          status: 200,
+          message: "shared",
+          success: true,
+        });
+      } else {
+        const issue = await Issue.findByIdAndUpdate(
+          { _id: issueId },
+          { $push: { views: uid } },
+
+          { new: true }
+        );
+
+        let filterData = { search: issueId, type: "issues" };
+        const searchIssueAlgo = await searchAlgolia(filterData);
+        if (searchIssueAlgo.length > 0) {
+          let obj = {
+            objectID: searchIssueAlgo[0].objectID,
+            views: issue.views,
+          };
+          await updateAlgolia(obj, "issues");
+        }
+        return res.json({
+          status: 200,
+          message: "saved views",
+          success: true,
+          data: issue,
+        });
+      }
+    } else {
+      return res.json({
+        status: 500,
+        message: "invalid issue",
+        success: false,
+      });
+    }
+  } catch (err) {
+    return res.json({
+      status: 500,
+      message: "some thing went wrong",
       success: false,
     });
   }

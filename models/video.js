@@ -33,6 +33,11 @@ const videoSchema = new Schema(
       ref:"User",
       required:false
     }],
+    comments:[{
+      type: Schema.Types.ObjectId,
+      ref:"Comment",
+      required:false
+    }],
     video_url: {
       type: String,
       required: true,

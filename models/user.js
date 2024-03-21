@@ -62,6 +62,16 @@ const userSchema = new Schema(
       required: false,
       default:false
     },
+    messages:[{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'message',
+      required:false
+    }
+    ],    
+    
+
+
+
     language: {
       type: String,
       default:'english',

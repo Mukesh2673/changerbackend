@@ -1,4 +1,4 @@
-const { User,Report } = require("../models");
+const { User,Report,Message } = require("../models");
 const { saveAlgolia, searchAlgolia,updateAlgolia } = require("../libs/algolia");
 
 exports.getUser = async (req, res, next) => {
@@ -12,6 +12,8 @@ exports.getUser = async (req, res, next) => {
         path: "following",
         populate: { path: "User", model: User },
       }
+     
+        
 
     ]);
     
@@ -408,3 +410,58 @@ exports.report = async (req, res) => {
   }
 
 };
+
+exports.message=async (req,res)=>{
+  try{
+    const records=req.body
+    const message = new Message(records);
+    const savedMessage = await message.save();
+    let messageId = savedMessage._id;
+    await User.findByIdAndUpdate(
+      { _id: records.profile },
+      { $push: { messages: messageId } },
+      { new: true }
+    );
+
+
+
+
+    return res.json({
+      status: 200,
+      message: "sent Message Successfully",
+      success: false,
+      data: savedMessage,
+    });
+  }
+  catch(err)
+  {
+    console.log("error is",err)
+    return res.json({
+      status: 500,
+      message: "Something Went wrong",
+      success: false,
+    });
+  }
+}
+exports.getMessages=async(req,res)=>{
+  try{
+    const { pid, uid } = req.params;
+    let records=await Message.find({
+      sender:uid,
+      profile:pid
+    })
+    return res.json({
+      status: 200,
+      message: "messages records",
+      success: true,
+      data: records,
+    });
+  }
+
+  catch(err)
+  {
+    return res.json({ status: 500, message: err, success: false });
+
+  }
+  
+  }

@@ -1,4 +1,6 @@
 module.exports = {
+    Comment:require("./comment"),
+    Replies:require("./comment/reply"),
     Message:require("./message"),
     Report:require("./report"),
     User: require("./user"),
