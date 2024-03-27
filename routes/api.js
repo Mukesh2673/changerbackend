@@ -27,8 +27,8 @@ router.get("/users",userController.users)
 router.get("/users/:id", userController.getUser);
 router.get("/users/uid/:uid", userController.getUserByUID);
 router.get("/users/following/:cuid/:fuid", userController.getFollowingVideos);
-//router.post("/users",validateToken, userController.createUser);
-router.post("/users", userController.createUser);
+router.post("/users",validateToken, userController.createUser);
+//router.post("/users", userController.createUser);
 router.post("/users/follow/:cuid/:fuid", userController.followUser);
 router.post("/users/unfollow/:cuid/:fuid", userController.unFollowUser);
 router.post("/users/update/:id", userController.editProfile);
@@ -45,8 +45,6 @@ router.post(
 );
 router.post("/user/message",userController.message)
 router.get("/user/message/:pid/:uid",userController.getMessages)
-
-
 
 // CAMPAIGN ROUTES
 router.get("/campaigns", campaignController.index);
@@ -97,10 +95,8 @@ router.post("/issue/views",issueController.views)
 //impact Routes
 router.post("/impact", impactController.create);
 router.get("/impact", impactController.index);
-
 //search
 router.get("/search",searchController.search)
-
 //hasTags
 router.post("/hashtags",hashtagsController.add)
 

@@ -25,9 +25,10 @@ exports.index = async (req, res, next) => {
       tab,
     } = req.query;
 
-    const query = {
-      encoding_status: "FINISHED",
-    };
+    const query = {};
+    const pageSize=10 
+    const displayPage=parseInt(page)
+    const skip = (displayPage - 1) * pageSize;
 
     if (!!campaign) {
       query["campaign"] = campaign;
@@ -47,12 +48,21 @@ exports.index = async (req, res, next) => {
       query["user"] = { $in: following };
     }
 
-    const result = await Video.paginate(query, {
-      page,
-      sort: { createdAt: "desc" },
-    });
+    const result = await Video.find(query)
+    .sort({ createdAt: "desc" })
+    .populate({
+        path: "comments",
+        populate: {
+            path: "sender",
+            model: "User"
+        },
+        model: Comment
+    })
+    .skip(skip)
+    .limit(pageSize)
     return res.json(result);
   } catch (error) {
+    console.log("err is",error)
     return res.json([]);
   }
 };
@@ -98,7 +108,7 @@ exports.location = async (req, res, next) => {
       //         $filter: {
       //           input: '$votes',
       //           as: 'vote',
-      //           cond: {
+      //           cond: {W
       //             $eq: ['$$vote.likes', true]
       //           }
       //         }
