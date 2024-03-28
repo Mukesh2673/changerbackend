@@ -5,7 +5,7 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 const { VideoType } = require("../constants");
 const Buffer = require("buffer/").Buffer;
 const fs = require("fs");
-const { Video, Comment, User } = require("../models");
+const { Video, Comment, User,Issue } = require("../models");
 const { endorseCampaign } = require("../libs/campaign");
 const { deleteFile } = require("../libs/utils");
 const {
@@ -25,11 +25,19 @@ exports.index = async (req, res, next) => {
       tab,
     } = req.query;
 
-    const query = {};
+    var query = {};
     const pageSize=10 
     const displayPage=parseInt(page)
     const skip = (displayPage - 1) * pageSize;
+    if (!!type) {
+      query= {  
+         $or: [
+        { type: 'IMPACT' },
+        { type: 'actionVideo' }
+      ]
+  }
 
+    }
     if (!!campaign) {
       query["campaign"] = campaign;
     }
@@ -38,26 +46,40 @@ exports.index = async (req, res, next) => {
       query["user"] = user;
     }
 
-    if (!!type) {
-      query["type"] = type;
-    }
+   
 
     if (tab === "following" && req.user) {
       const following = req.user.following.map((_id) => new ObjectId(_id));
 
       query["user"] = { $in: following };
     }
-
     const result = await Video.find(query)
     .sort({ createdAt: "desc" })
-    .populate({
+    .populate([{
         path: "comments",
         populate: {
             path: "sender",
             model: "User"
         },
         model: Comment
-    })
+    },
+    {
+      path:"issue",
+      populate:[{
+        path:"user",
+        model:User
+      },
+      {
+        path:"joined",
+        model:User
+      },
+    
+    ],
+      model:Issue
+    },
+   
+  
+  ])
     .skip(skip)
     .limit(pageSize)
     return res.json(result);

@@ -4,15 +4,15 @@ const Axios=require('axios')
 const AWS = require('aws-sdk');
 AWS.config.update({ region: process.env["AWS_REGION"] });
 const cognitoPoolId=process.env["AWS_COGNITOPOOL_ID"]
+const jwks=require('../constants/ jwks')
 
-//const cognitoPoolId = "us-east-2_ZgoWAopWn";
-const cognitoIssuer = `https://cognito-idp.us-east-2.amazonaws.com/${cognitoPoolId}`;
 let cacheKeys
 const getPublicKeys = async () => {
     if (!cacheKeys) {
-      const url = `${cognitoIssuer}/.well-known/jwks.json`;
-      const publicKeys = await Axios.default.get(url);
-      cacheKeys = publicKeys.data.keys.reduce((agg, current) => {
+      //get jwks.json data by below url and save it to the jwks.json file
+      //https://cognito-idp.<Region>.amazonaws.com/<userPoolId>/.well-known/jwks.json
+      const publicKeys=jwks.jwks
+      cacheKeys = publicKeys.keys.reduce((agg, current) => {
         const pem = jwkToPem(current);
         agg[current.kid] = { instance: current, pem };
         return agg;
@@ -25,9 +25,6 @@ const getPublicKeys = async () => {
 const getJwkByKid = async (kid)=> {
     const keys = await getPublicKeys();
     const publicKey = keys[kid];
-  
-    // if the public key is missing reload cache and try one more time
-    // https://forums.aws.amazon.com/message.jspa?messageID=747599
     if (!publicKey) {
       cacheKeys = undefined;
       const keys2 = await getPublicKeys();
@@ -50,11 +47,16 @@ exports.validateCognitoToken = async (authToken1) => {
       return new Promise((resolve, reject) => {       
         try {        
           let data=jwt.verify(authToken1, pem, { algorithms: ['RS256'] }, (err, decoded) => {  
+            if(err)
+            {
+              reject(err)
+            }
             return decoded
+
     1      });
+          
           resolve(data);
         } catch (err) {
-          console.log("erroris", err);
           reject(err)
         }
       });
