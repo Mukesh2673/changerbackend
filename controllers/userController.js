@@ -1,5 +1,28 @@
-const { User,Report,Message } = require("../models");
+const { User,Report,Message,Notification } = require("../models");
 const { saveAlgolia, searchAlgolia,updateAlgolia } = require("../libs/algolia");
+
+exports.notification=async(req,res)=>{
+  try{
+    const notificationId=req.params.id
+    const notification = await Notification.find({user:notificationId}).populate([
+      {
+          path: "user",
+         model: User
+      },
+      {
+        path: "activity",
+        model: User
+      }])
+    return res.json({ status: 200, data:notification, success: true, message: 'Notifications' });
+
+  }
+  catch(err)
+  {
+    return res.json({ status: 400, data: [], success: false, message: error });
+
+  }
+}
+
 
 exports.getUser = async (req, res, next) => {
   try {
@@ -324,8 +347,6 @@ const followingCurrentUser= await User.find({ _id: cuid }).populate([
   }
 };
 
-
-
 exports.editProfile = async (req, res) => {
   const { id: _id } = req.params;
   try {
@@ -371,7 +392,6 @@ try{
 
   const {id,privacy}=req.body
   const updateUser = await User.findOneAndUpdate({ _id:id }, {privacy:privacy});
-  
   const user = await User.findById({ _id: id });
   return res.status(200).json(user);
 

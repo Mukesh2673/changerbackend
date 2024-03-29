@@ -5,7 +5,7 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 const { VideoType } = require("../constants");
 const Buffer = require("buffer/").Buffer;
 const fs = require("fs");
-const { Video, Comment, User,Issue } = require("../models");
+const { Video, Comment, User,Issue,Notification } = require("../models");
 const { endorseCampaign } = require("../libs/campaign");
 const { deleteFile } = require("../libs/utils");
 const {
@@ -197,17 +197,27 @@ exports.store = async (req, res, next) => {
 exports.likeVideo = async (req, res) => {
   const { vid, uid } = req.params;
   try {
-    const video = await Video.findById({ _id: vid });
+    const video = await Video.findById({ _id: vid })
     let hasLiked = false;
+    const sender=await User.findById({_id:uid})
+
     if (video.likes.includes(uid)) {
       // remove like
       await Video.updateOne({ _id: vid }, { $pull: { likes: uid } });
       hasLiked = false;
       const updatedVideo = await Video.findById({ _id: vid });
       const likes = updatedVideo.likes.length;
-      return res.status(200).json({ likedVideo: hasLiked, likes });
+   return res.status(200).json({ likedVideo: hasLiked, likes });
     } else {
-      await Video.updateOne({ _id: vid }, { $push: { likes: uid } });
+      let data =await Video.findByIdAndUpdate({ _id: vid }, { $push: { likes: uid } });
+      const message=`${sender.first_name} ${sender.last_name} liked your action video for ${data.title}`
+      const notification=new Notification({
+        messages:message,
+        user:uid,
+        activity:data.user._id,
+        notificationType:"likedVideo"
+      })
+      await notification.save();
       hasLiked = true;
       const updatedVideo = await Video.findById({ _id: vid });
       const likes = updatedVideo.likes.length;
@@ -341,11 +351,14 @@ exports.commentVideo = async (req, res) => {
     const message = new Comment(records);
     const savedMessage = await message.save();
     let messageId = savedMessage._id;
-    await Video.findByIdAndUpdate(
+    let result=await Video.findByIdAndUpdate(
       { _id: records.video },
       { $push: { comments: messageId } },
-      { new: true }
+      { new: true}
     );
+    const issueId=result.issue
+    const issueRecords=await Issue.findById({_id:issueId})
+    const sender=await User.findById({_id:records.sender})
     const newMessages = await Video.find({
       _id: records.video,
     }).populate([
@@ -358,7 +371,14 @@ exports.commentVideo = async (req, res) => {
         model: Comment,
       },
     ]);
-
+    const notificationMessage=`${sender.first_name} ${sender.last_name} commented your action video for ${issueRecords.title}`
+    const notification=new Notification({
+      messages:notificationMessage,
+      user:result?.user?._id,
+      activity:sender._id,
+      notificationType:"commented"
+    })
+    await notification.save();
     return res.json({
       status: 200,
       message: "sent Message Successfully",

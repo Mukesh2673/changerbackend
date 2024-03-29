@@ -1,5 +1,6 @@
 module.exports = {
     Comment:require("./comment"),
+    Notification:require("./notification"),
     Replies:require("./comment/reply"),
     Message:require("./message"),
     Report:require("./report"),
