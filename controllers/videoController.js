@@ -5,7 +5,7 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 const { VideoType } = require("../constants");
 const Buffer = require("buffer/").Buffer;
 const fs = require("fs");
-const { Video, Comment, User,Issue,Notification } = require("../models");
+const { Video, Comment, User, Issue, Notification } = require("../models");
 const { endorseCampaign } = require("../libs/campaign");
 const { deleteFile } = require("../libs/utils");
 const {
@@ -14,7 +14,7 @@ const {
   uploadImage,
 } = require("../libs/fileUpload");
 const { saveAlgolia } = require("../libs/algolia");
-
+const { sendMessage } = require("../libs/webSocket");
 exports.index = async (req, res, next) => {
   try {
     const {
@@ -26,17 +26,13 @@ exports.index = async (req, res, next) => {
     } = req.query;
 
     var query = {};
-    const pageSize=10 
-    const displayPage=parseInt(page)
+    const pageSize = 10;
+    const displayPage = parseInt(page);
     const skip = (displayPage - 1) * pageSize;
     if (!!type) {
-      query= {  
-         $or: [
-        { type: 'IMPACT' },
-        { type: 'actionVideo' }
-      ]
-  }
-
+      query = {
+        $or: [{ type: "IMPACT" }, { type: "actionVideo" }],
+      };
     }
     if (!!campaign) {
       query["campaign"] = campaign;
@@ -46,45 +42,42 @@ exports.index = async (req, res, next) => {
       query["user"] = user;
     }
 
-   
-
     if (tab === "following" && req.user) {
       const following = req.user.following.map((_id) => new ObjectId(_id));
 
       query["user"] = { $in: following };
     }
     const result = await Video.find(query)
-    .sort({ createdAt: "desc" })
-    .populate([{
-        path: "comments",
-        populate: {
+      .sort({ createdAt: "desc" })
+      .populate([
+        {
+          path: "comments",
+          populate: {
             path: "sender",
-            model: "User"
+            model: "User",
+          },
+          model: Comment,
         },
-        model: Comment
-    },
-    {
-      path:"issue",
-      populate:[{
-        path:"user",
-        model:User
-      },
-      {
-        path:"joined",
-        model:User
-      },
-    
-    ],
-      model:Issue
-    },
-   
-  
-  ])
-    .skip(skip)
-    .limit(pageSize)
+        {
+          path: "issue",
+          populate: [
+            {
+              path: "user",
+              model: User,
+            },
+            {
+              path: "joined",
+              model: User,
+            },
+          ],
+          model: Issue,
+        },
+      ])
+      .skip(skip)
+      .limit(pageSize);
     return res.json(result);
   } catch (error) {
-    console.log("err is",error)
+    console.log("err is", error);
     return res.json([]);
   }
 };
@@ -197,9 +190,9 @@ exports.store = async (req, res, next) => {
 exports.likeVideo = async (req, res) => {
   const { vid, uid } = req.params;
   try {
-    const video = await Video.findById({ _id: vid })
+    const video = await Video.findById({ _id: vid });
     let hasLiked = false;
-    const sender=await User.findById({_id:uid})
+    const sender = await User.findById({ _id: uid });
 
     if (video.likes.includes(uid)) {
       // remove like
@@ -207,20 +200,24 @@ exports.likeVideo = async (req, res) => {
       hasLiked = false;
       const updatedVideo = await Video.findById({ _id: vid });
       const likes = updatedVideo.likes.length;
-   return res.status(200).json({ likedVideo: hasLiked, likes });
+      return res.status(200).json({ likedVideo: hasLiked, likes });
     } else {
-      let data =await Video.findByIdAndUpdate({ _id: vid }, { $push: { likes: uid } });
-      const message=`${sender.first_name} ${sender.last_name} liked your action video for ${data.title}`
-      const notification=new Notification({
-        messages:message,
-        user:uid,
-        activity:data.user._id,
-        notificationType:"likedVideo"
-      })
+      let data = await Video.findByIdAndUpdate(
+        { _id: vid },
+        { $push: { likes: uid } }
+      );
+      const message = `${sender.first_name} ${sender.last_name} liked your action video for ${data.title}`;
+      const notification = new Notification({
+        messages: message,
+        user: uid,
+        activity: data.user._id,
+        notificationType: "likedVideo",
+      });
       await notification.save();
       hasLiked = true;
       const updatedVideo = await Video.findById({ _id: vid });
       const likes = updatedVideo.likes.length;
+      sendMessage("like", message, uid);
       return res.status(200).json({ likedVideo: hasLiked, likes });
     }
   } catch (e) {
@@ -351,14 +348,14 @@ exports.commentVideo = async (req, res) => {
     const message = new Comment(records);
     const savedMessage = await message.save();
     let messageId = savedMessage._id;
-    let result=await Video.findByIdAndUpdate(
+    let result = await Video.findByIdAndUpdate(
       { _id: records.video },
       { $push: { comments: messageId } },
-      { new: true}
+      { new: true }
     );
-    const issueId=result.issue
-    const issueRecords=await Issue.findById({_id:issueId})
-    const sender=await User.findById({_id:records.sender})
+    const issueId = result.issue;
+    const issueRecords = await Issue.findById({ _id: issueId });
+    const sender = await User.findById({ _id: records.sender });
     const newMessages = await Video.find({
       _id: records.video,
     }).populate([
@@ -371,14 +368,16 @@ exports.commentVideo = async (req, res) => {
         model: Comment,
       },
     ]);
-    const notificationMessage=`${sender.first_name} ${sender.last_name} commented your action video for ${issueRecords.title}`
-    const notification=new Notification({
-      messages:notificationMessage,
-      user:result?.user?._id,
-      activity:sender._id,
-      notificationType:"commented"
-    })
+    const notificationMessage = `${sender.first_name} ${sender.last_name} commented your action video for ${issueRecords.title}`;
+    const notification = new Notification({
+      messages: notificationMessage,
+      user: result?.user?._id,
+      activity: sender._id,
+      notificationType: "commented",
+    });
     await notification.save();
+    const uid = result?.user?._id.toString();
+    sendMessage("comment", notificationMessage, uid);
     return res.json({
       status: 200,
       message: "sent Message Successfully",

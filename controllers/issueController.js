@@ -11,6 +11,8 @@ const {
   deleteAlgolia,
 } = require("../libs/algolia");
 const user = require("../models/user");
+const { sendMessage } = require("../libs/webSocket");
+
 exports.issueRecords = async (query) => {
   let records = await Issue.find(query).populate([
     {
@@ -100,6 +102,7 @@ exports.create = async (req, res, next) => {
         success: false,
       });
     }
+ 
     const karmaPoint = auth.karmaPoint + 100;
     const user = await User.findByIdAndUpdate(
       { _id: auth._id },
@@ -179,6 +182,7 @@ exports.create = async (req, res, next) => {
       joinedIssue:savedIssue.joined,
       notificationType:"joinedIssue"
     })
+    sendMessage("joinedIssue", message, auth._id);
     await notification.save();
     return res.json({
       status: 200,
@@ -329,6 +333,8 @@ exports.upvotes = async (req, res, next) => {
         notificationType:notificationType
       })
       await notification.save();
+      sendMessage("discussion", message, auth._id);
+
       return res.json({
         status: 200,
         message: "voted",
@@ -465,6 +471,7 @@ exports.joinIssue = async (req, res) => {
       notificationType:"joinedIssue"
     })
     await notification.save();
+    sendMessage("joinedIssue", message, auth._id);
     const karmaPointnotification=new Notification({
       messages:`you received +50 karma for good intention of joining Problem of  ${result.title}`,
       user:auth._id,
@@ -473,11 +480,7 @@ exports.joinIssue = async (req, res) => {
       notificationType:"joinedIssue"
     })
     await karmaPointnotification.save();
-    
-
-
-
-
+    sendMessage("joinedIssue", message, auth._id);
     let filterData = { search: result._id, type: "issues" };
     const searchAlgo = await searchAlgolia(filterData);
     updateObject = {
@@ -530,6 +533,8 @@ exports.leaveIssue = async (req, res) => {
           notificationType:"leaveIssue"
         })
         await notification.save();
+        sendMessage("leaveIssue", message, auth._id);
+
         const karmaPoint = auth.karmaPoint - 50;
         const user = await User.findByIdAndUpdate(
           { _id: auth._id },

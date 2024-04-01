@@ -4,7 +4,7 @@ const { saveAlgolia, searchAlgolia,updateAlgolia } = require("../libs/algolia");
 exports.notification=async(req,res)=>{
   try{
     const notificationId=req.params.id
-    const notification = await Notification.find({user:notificationId}).populate([
+    const notification = await Notification.find({user:notificationId}).sort({ createdAt: -1 }).populate([
       {
           path: "user",
          model: User
