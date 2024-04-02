@@ -55,16 +55,37 @@ exports.index = async (req, res, next) => {
       query.push({ $match: { cause: { $in: cause } } });
     }
     query.push({
+    
+      $lookup: {
+        from: "messages", // The name of the collection to join with
+        localField: "messages", // The field from the input documents
+        foreignField: "_id", // The field from the documents of the "from" collection
+        as: "messages",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "sender",
+              foreignField: "_id",
+              as: "sender",
+            },
+          },
+          {
+            $unwind: "$sender",
+          },
+        ], 
+      },
+
+    });
+    query.push({
       $lookup: {
         from: "users", // The name of the collection to join with
         localField: "user", // The field from the input documents
         foreignField: "_id", // The field from the documents of the "from" collection
         as: "user", // The alias for the resulting array of joined documents
       },
-   
-
-
     });
+
     query.push({
       $lookup: {
         from: "users", // The name of the collection to join with

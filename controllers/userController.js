@@ -1,5 +1,6 @@
 const { User,Report,Message,Notification } = require("../models");
 const { saveAlgolia, searchAlgolia,updateAlgolia } = require("../libs/algolia");
+const { sendMessage } = require("../libs/webSocket");
 
 exports.notification=async(req,res)=>{
   try{
@@ -442,9 +443,7 @@ exports.message=async (req,res)=>{
       { $push: { messages: messageId } },
       { new: true }
     );
-
-
-
+    sendMessage("message", message, records.profile);
 
     return res.json({
       status: 200,
@@ -467,9 +466,18 @@ exports.getMessages=async(req,res)=>{
   try{
     const { pid, uid } = req.params;
     let records=await Message.find({
-      sender:uid,
+     // sender:uid,
       profile:pid
-    })
+    }).populate([
+      {
+        path: "sender",
+        populate: { path: "user", model: User },
+      },
+      {
+        path: "profile",
+        populate: { path: "User", model: User },
+      },
+    ]);
     return res.json({
       status: 200,
       message: "messages records",
