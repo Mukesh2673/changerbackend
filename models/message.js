@@ -12,6 +12,7 @@ const messageSchema = new Schema(
         ref:"User",
         required:false
     },
+
     issues: {
         type: Schema.Types.ObjectId,
         ref: "issue",

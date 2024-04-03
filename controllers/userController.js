@@ -466,9 +466,16 @@ exports.getMessages=async(req,res)=>{
   try{
     const { pid, uid } = req.params;
     let records=await Message.find({
-     // sender:uid,
-      profile:pid
-    }).populate([
+    $or: [
+      {sender: uid},
+      {profile: uid},
+    ],
+    $and:[
+      { profile: { $exists: true, $ne: null } },
+    ]
+
+}
+).populate([
       {
         path: "sender",
         populate: { path: "user", model: User },

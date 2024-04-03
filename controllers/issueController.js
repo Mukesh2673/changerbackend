@@ -740,7 +740,7 @@ exports.messages = async (req, res) => {
     const savedMessage = await message.save();
     let messageId = savedMessage._id;
     await Issue.findByIdAndUpdate(
-      { _id: records.issue },
+      { _id: records.issues },
       { $push: { messages: messageId } },
       { new: true }
     );
