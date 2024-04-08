@@ -288,7 +288,6 @@ exports.donateToCampaign = async (req, res) => {
     res.status(400).json({ message: "fail", error: err });
   }
 };
-
 exports.participant = async (req, res) => {
   try {
     const user = req.user;
