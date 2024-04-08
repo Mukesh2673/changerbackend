@@ -466,10 +466,10 @@ exports.getMessages=async(req,res)=>{
   try{
     const { pid, uid } = req.params;
     let records=await Message.find({
-    $or: [
-      {sender: uid},
-      {profile: uid},
-    ],
+      $or: [
+        { sender: uid, profile: pid }, // Messages sent from uid to pid
+        { sender: pid, profile: uid }, 
+      ],
     $and:[
       { profile: { $exists: true, $ne: null } },
     ]
