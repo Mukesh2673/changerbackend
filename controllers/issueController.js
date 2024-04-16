@@ -83,6 +83,17 @@ exports.index = async (req, res, next) => {
         localField: "user", // The field from the input documents
         foreignField: "_id", // The field from the documents of the "from" collection
         as: "user", // The alias for the resulting array of joined documents
+        pipeline: [
+          {
+            $lookup: {
+              from: "messages",
+              localField: "messages",
+              foreignField: "_id",
+              as: "messages",
+            },
+          },
+          
+        ], 
       },
     });
 
