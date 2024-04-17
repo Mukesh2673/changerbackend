@@ -5,7 +5,7 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 const { VideoType } = require("../constants");
 const Buffer = require("buffer/").Buffer;
 const fs = require("fs");
-const { Video, Comment, User, Issue, Notification } = require("../models");
+const { Video, Comment, User, Issue, Notification,Upvotes } = require("../models");
 const { endorseCampaign } = require("../libs/campaign");
 const { deleteFile } = require("../libs/utils");
 const {
@@ -68,6 +68,10 @@ exports.index = async (req, res, next) => {
             {
               path: "joined",
               model: User,
+            },
+            {
+              path: "votes",
+              model: Upvotes,
             },
           ],
           model: Issue,
