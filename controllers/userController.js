@@ -1,4 +1,4 @@
-const { User,Report,Message,Notification } = require("../models");
+const { User,Report,Message,Notification,Issue } = require("../models");
 const { saveAlgolia, searchAlgolia,updateAlgolia } = require("../libs/algolia");
 const { sendMessage } = require("../libs/webSocket");
 
@@ -13,7 +13,17 @@ exports.notification=async(req,res)=>{
       {
         path: "activity",
         model: User
-      }])
+      },
+      {
+       path: "joinedIssue",
+       model: Issue,
+       populate: {
+        path: "user",
+        model: User
+    }
+      }
+    ])
+  
     return res.json({ status: 200, data:notification, success: true, message: 'Notifications' });
 
   }
