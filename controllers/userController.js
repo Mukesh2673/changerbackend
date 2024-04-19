@@ -20,7 +20,7 @@ exports.notification=async(req,res)=>{
        populate: {
         path: "user",
         model: User
-    }
+     }
       }
     ])
   
@@ -94,17 +94,17 @@ exports.getUserByUID = async (req, res, next) => {
 };
 
 exports.createUser = async (req, res, next) => {
-  try {
-    const existingUser = await User.findOne({ username: req.body.username });
-    if (existingUser) {
-      return res.status(403).json({ message: "username-exists" });
-    }
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
+  // try {
+  //   const existingUser = await User.findOne({ username: req.body.username });
+  //   if (existingUser) {
+  //     return res.status(403).json({ message: "username-exists" });
+  //   }
+  // } catch (error) {
+  //   return res.status(500).json({ message: error.message });
+  // }
 
   const user = new User({
-    username: req.body.username,
+    username: req.body.first_name+req.body.last_name,
     first_name: req.body.first_name,
     last_name: req.body.last_name,
     dob: req.body.dob,

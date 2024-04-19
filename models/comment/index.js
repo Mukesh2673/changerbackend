@@ -7,11 +7,16 @@ const videoMessageSchema = new Schema(
         ref:"User",
         required:true
     },
-    replies: {
+    replies: [{
         type: Schema.Types.ObjectId,
         ref: "repliesVideoMessage",
         required: false,
-    },
+    }],
+    likes: [{
+      type: Schema.Types.ObjectId,
+      ref: "commentsLikes",
+      required: false,
+  }],
     message: {
         type: String,
         required: true,
@@ -27,4 +32,4 @@ const videoMessageSchema = new Schema(
   }
 );
 
-module.exports = mongoose.model("comment", videoMessageSchema);
+module.exports = mongoose.model("Comments", videoMessageSchema);

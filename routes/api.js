@@ -75,6 +75,11 @@ router.post(
   videoController.encodingFinishedHook
 );
 router.post("/video/comment",videoController.commentVideo);
+router.post("/video/comment/like",videoController.commentLikes);
+router.post("/video/comment/reply/like",videoController.replyCommentLikes);
+router.post("/video/comment/reply",videoController.replyCommentVideo);
+
+
 //issue Routes
 router.post("/issue", issueController.create);
 router.get("/issue", issueController.index);
