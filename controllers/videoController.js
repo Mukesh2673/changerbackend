@@ -13,7 +13,7 @@ const {
   Notification,
   Upvotes,
   RepliesComment,
-  commentsLikes,
+  CommentsLikes,
 } = require("../models");
 const { endorseCampaign } = require("../libs/campaign");
 const { deleteFile } = require("../libs/utils");
@@ -117,7 +117,61 @@ exports.index = async (req, res, next) => {
     return res.json([]);
   }
 };
+exports.videosData=async()=>{
+  return await Video.find()
+    .sort({ createdAt: "desc" })
+    .populate([
+      {
+        path: "comments",
+        populate: [
+          {
+            path: "sender",
+            model: "User",
+          },
+          {
+            path: "likes",
+            model: "commentsLikes",
+          },
+          {
+            path: "replies",
+            populate: [
+              {
+                path: "sender", // Assuming "sender" is the field referencing the user who posted the reply
+                model: "User",
+              },
+              {
+                path: "likes",
+                model: "commentsLikes",
+              },
+            ],
 
+            model: "RepliesComments",
+          },
+        ],
+
+        model: Comment,
+      },
+
+      {
+        path: "issue",
+        populate: [
+          {
+            path: "user",
+            model: User,
+          },
+          {
+            path: "joined",
+            model: User,
+          },
+          {
+            path: "votes",
+            model: Upvotes,
+          },
+        ],
+        model: Issue,
+      },
+    ])
+}
 exports.location = async (req, res, next) => {
   try {
     const longitude = req.body.lng;
@@ -392,18 +446,6 @@ exports.commentVideo = async (req, res) => {
     const issueId = result.issue;
     const issueRecords = await Issue.findById({ _id: issueId });
     const sender = await User.findById({ _id: records.sender });
-    const newMessages = await Video.find({
-      _id: records.video,
-    }).populate([
-      {
-        path: "comments",
-        populate: {
-          path: "sender",
-          model: User,
-        },
-        model: Comment,
-      },
-    ]);
     const notificationMessage = `${sender.first_name} ${sender.last_name} commented your action video for ${issueRecords.title}`;
     const notification = new Notification({
       messages: notificationMessage,
@@ -413,12 +455,14 @@ exports.commentVideo = async (req, res) => {
     });
     await notification.save();
     const uid = result?.user?._id.toString();
+    
+    const newRecords=await exports.videosData()
     sendMessage("comment", notificationMessage, uid);
     return res.json({
       status: 200,
       message: "sent Message Successfully",
       success: false,
-      data: newMessages,
+      data: newRecords,
     });
   } catch (err) {
     console.log("erero ", err);
@@ -429,98 +473,11 @@ exports.commentVideo = async (req, res) => {
     });
   }
 };
-exports.commentLikes = async (req, res) => {
-  try {
-    let records = req.body;
-    const likes = new CommentsLikes(records);
-    const savedLike = await likes.save();
-    const likeId = savedLike._id;
-    let result = await Comment.findByIdAndUpdate(
-      {
-        _id: records.comment,
-      },
-      {
-        $push: { likes: likeId },
-      },
-      { new: true }
-    );
-    const sender = await User.findById({ _id: records.user });
-    const likeMessage = `${sender.first_name} ${sender.last_name} likes  your comments`;
-    const notification = new Notification({
-      messages: likeMessage,
-      user: records.sender,
-      activity: sender._id,
-      notificationType: "like",
-    });
-    await notification.save();
-    const uid = sender._id.toString();
-    sendMessage("like", likeMessage, uid);
-    //
-    return res.json({
-      status: 200,
-      message: "sent Message Successfully",
-      success: false,
-      //data: newMessages,
-    });
-  } catch (err) {
-    console.log("erero ", err);
-    return res.json({
-      status: 500,
-      message: "Something Went wrong",
-      success: false,
-    });
-  }
-};
-exports.replyCommentLikes = async (req, res) => {
-  try {
-    let records = req.body;
-    const likes = new CommentsLikes(records);
-    const savedLike = await likes.save();
-    const likeId = savedLike._id;
-    let result = await RepliesComment.findByIdAndUpdate(
-      {
-        _id: records.repliesComments,
-      },
-      {
-        $push: { likes: likeId },
-      },
-      { new: true }
-    );
-    const sender = await User.findById({ _id: records.user });
-    const likeMessage = `${sender.first_name} ${sender.last_name} likes  your comments`;
-    const notification = new Notification({
-      messages: likeMessage,
-      user: records.sender,
-      activity: sender._id,
-      notificationType: "like",
-    });
-    await notification.save();
-    const uid = sender._id.toString();
-    sendMessage("like", likeMessage, uid);
-    //
-    return res.json({
-      status: 200,
-      message: "sent Message Successfully",
-      success: false,
-      //data: newMessages,
-    });
-  } catch (err) {
-    console.log("erero ", err);
-    return res.json({
-      status: 500,
-      message: "Something Went wrong",
-      success: false,
-    });
-  }
-};
-
 exports.replyCommentVideo = async (req, res) => {
   try {
     let records = req.body;
-    console.log("recordds data is=>>>>>>..", records);
     const commentReplies = new RepliesComment(records);
     const saveReplies = await commentReplies.save();
-    console.log("value of save repfdsdfsdf", saveReplies);
     let result = await Comment.findByIdAndUpdate(
       {
         _id: records.comment,
@@ -540,11 +497,14 @@ exports.replyCommentVideo = async (req, res) => {
     });
     await notification.save();
     const uid = sender._id.toString();
+    const newRecords=await exports.videosData()
     sendMessage("comment", notificationMessage, uid);
     return res.json({
       status: 200,
       message: "replies Message Successfully",
       success: false,
+      data: newRecords,
+
     });
   } catch (err) {
     console.log("erero ", err);
@@ -555,3 +515,131 @@ exports.replyCommentVideo = async (req, res) => {
     });
   }
 };
+
+exports.commentLikes = async (req, res) => {
+  try {
+    let records = req.body;
+    const isLiked=await CommentsLikes.find({comments: new ObjectId(records.comments),user:new ObjectId(records.user)})
+    var responseMessage=''
+    if(isLiked.length>0){
+      await Comment.findByIdAndUpdate(
+        {
+          _id: new ObjectId(records.comments),
+        },
+        {
+          $pull: { likes:isLiked[0]._id },
+        },
+        { new: true }
+      );
+      //delete like
+     await CommentsLikes.deleteOne({ _id: isLiked[0]._id });
+     responseMessage='UnLiked Comment'
+    }
+    else{
+      const likes = new CommentsLikes(records);
+      const savedLike = await likes.save();
+      let result = await Comment.findByIdAndUpdate(
+        {
+          _id: new ObjectId(records.comments) ,
+        },
+        {
+          $push: { likes: savedLike._id},
+        },
+        { new: true }
+      );
+      responseMessage='Liked Comment'
+      const sender = await User.findById({ _id: records.user });
+      const likeMessage = `${sender.first_name} ${sender.last_name} likes  your comments`;
+      const notification = new Notification({
+        messages: likeMessage,
+        user: result.sender,
+        activity: sender._id,
+        notificationType: "like",
+      });
+      await notification.save();
+      const uid = result.sender.toString();
+      sendMessage("like", likeMessage, uid);
+
+    }
+ 
+
+    //
+    const newRecords=await exports.videosData()
+    return res.json({
+      status: 200,
+      message: responseMessage,
+      success: false,
+      data: newRecords,
+    });
+  } catch (err) {
+    console.log("erero ", err);
+    return res.json({
+      status: 500,
+      message: "Something Went wrong",
+      success: false,
+    });
+  }
+};
+exports.replyCommentLikes = async (req, res) => {
+  try {
+    let records = req.body;
+    const isLiked=await CommentsLikes.find({repliesComments: new ObjectId(records.repliesComments),user:new ObjectId(records.user)})
+    var responseMessage=''
+    if(isLiked.length>0){
+      await RepliesComment.findByIdAndUpdate(
+        {
+          _id: new ObjectId(records.repliesComments),
+        },
+        {
+          $pull: { likes:isLiked[0]._id },
+        },
+        { new: true }
+      );
+      //delete like
+     await CommentsLikes.deleteOne({ _id: isLiked[0]._id });
+     responseMessage='UnLiked Comment'
+    }
+    else{
+      const likes = new CommentsLikes(records);
+      const savedLike = await likes.save();
+     const result= await RepliesComment.findByIdAndUpdate(
+        {
+          _id: new ObjectId(records.repliesComments) ,
+        },
+        {
+          $push: { likes: savedLike._id},
+        },
+        { new: true }
+      );
+      responseMessage='Liked Comment'
+      const sender = await User.findById({ _id: records.user });
+      const likeMessage = `${sender.first_name} ${sender.last_name} likes  your comments`;
+      const notification = new Notification({
+        messages: likeMessage,
+        user: result.sender,
+        activity: sender._id,
+        notificationType: "like",
+      });
+      await notification.save();
+      const uid = result.sender.toString();
+      sendMessage("like", likeMessage, uid);
+
+    }
+    //
+    const newRecords=await exports.videosData()
+    return res.json({
+      status: 200,
+      message: responseMessage,
+      success: false,
+      data: newRecords,
+    });
+  } catch (err) {
+    console.log("erero ", err);
+    return res.json({
+      status: 500,
+      message: "Something Went wrong",
+      success: false,
+    });
+  } 
+};
+
