@@ -117,8 +117,8 @@ exports.index = async (req, res, next) => {
     return res.json([]);
   }
 };
-exports.videosData=async()=>{
-  return await Video.find()
+exports.videosData=async(id)=>{
+  return await Video.find({_id:new ObjectId(id)})
     .sort({ createdAt: "desc" })
     .populate([
       {
@@ -456,7 +456,7 @@ exports.commentVideo = async (req, res) => {
     await notification.save();
     const uid = result?.user?._id.toString();
     
-    const newRecords=await exports.videosData()
+    const newRecords=await exports.videosData(records.video)
     sendMessage("comment", notificationMessage, uid);
     return res.json({
       status: 200,
@@ -497,7 +497,7 @@ exports.replyCommentVideo = async (req, res) => {
     });
     await notification.save();
     const uid = sender._id.toString();
-    const newRecords=await exports.videosData()
+    const newRecords=await exports.videosData(records.video)
     sendMessage("comment", notificationMessage, uid);
     return res.json({
       status: 200,
@@ -564,7 +564,7 @@ exports.commentLikes = async (req, res) => {
  
 
     //
-    const newRecords=await exports.videosData()
+    const newRecords=await exports.videosData(records.video)
     return res.json({
       status: 200,
       message: responseMessage,
@@ -619,14 +619,14 @@ exports.replyCommentLikes = async (req, res) => {
         user: result.sender,
         activity: sender._id,
         notificationType: "like",
-      });
+      });     
       await notification.save();
       const uid = result.sender.toString();
       sendMessage("like", likeMessage, uid);
 
     }
     //
-    const newRecords=await exports.videosData()
+    const newRecords=await exports.videosData(records.video)    
     return res.json({
       status: 200,
       message: responseMessage,
