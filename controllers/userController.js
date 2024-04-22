@@ -376,6 +376,29 @@ exports.editProfile = async (req, res) => {
   }
 };
 
+
+exports.removeProfileImage = async (req, res) => {
+  try {
+    const id=req.params.id
+    const updateUser = await User.findOneAndUpdate(
+      { _id: id },
+      { $unset: { profileImage: "" } },
+      { new: true } // to return the updated document
+    );
+    
+    if(!updateUser)
+    {
+      return res.json({ status: 404, message: "Invalid User", success: false });
+
+    }
+    return res.json({ status: 200, message: "Profile image removed successfully", user: updateUser, success: true });
+  } catch (e) {
+    return res.status(404).json({ error: e.message });
+  }
+};
+
+
+
 exports.getFollowingVideos = async (req, res) => {
   const { cuid, fuid } = req.params;
   try {

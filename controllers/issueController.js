@@ -324,43 +324,61 @@ exports.generate = async (req, res, next) => {
 exports.upvotes = async (req, res, next) => {
   try {
     const { uid, issueId } = req.body;
-    const votes = await Upvotes.find({ user: uid, issue: issueId });
-     console.log("votesdasisfsdsdf",votes) 
-    if(votes?.length < 1) {
-      const votes = new Upvotes({
-        issue: issueId,
-        user: uid,
+    const auth = await User.findById({ _id: uid });
+    if(!auth){
+      return res.json({
+        status: 401,
+        message: "invalid User",
+        success: false,
+        voted: false,
       });
-      await votes.save();
+    }
+    const issue=await Issue.findById({_id:issueId})
+    console.log("issue ids=>>>>>>>",issue)
+    const upVotes=issue.votes
+    
+    if(upVotes.includes(uid)){
       const issue = await Issue.findByIdAndUpdate(
         { _id: issueId },
-        { $push: { votes: votes._id } },
+        { $pull: { votes: uid } },
         { new: true }
       );
-      const auth = await User.findById({ _id: uid });
+      return res.json({
+        status: 200,
+        message: "Unvoted",
+        success: true,
+        voted: false,
+        
+      });
+    
+    }
+    else{
+      const issue = await Issue.findByIdAndUpdate(
+        { _id: issueId },
+        { $push: { votes: uid } },
+        { new: true }
+      );
       var message=''
       var notificationType=''
       if(issue.votes.length<3)
       {
         message=`${auth?.first_name} ${auth?.last_name} upvoted your issue discussion ${issue.title}`
-        notificationType='upvoted'
-
+        notificationType='upvoted'       
       }
+      
       else{
         message=`your issue ${issue.title} became discussion panel`
         notificationType='discussion'
       }
-      console.log('message is',message)
-      console.log("issue sdata isdsfds+++++++",issue)
       const notification=new Notification({
         messages:message,
-        user:issue._id,
+        user:issue.user,
         activity:uid,
         joinedIssue:issue.joined,
         notificationType:notificationType
       })
       await notification.save();
-      sendMessage("discussion", message, auth._id);
+      sendMessage("discussion", message, issue.user);
       return res.json({
         status: 200,
         message: "voted",
@@ -368,39 +386,8 @@ exports.upvotes = async (req, res, next) => {
         voted: true,
         data: issue,
       });
-    } else {
-     
-      const issues = await Issue.find({ _id: issueId });
-      if (
-        issues[0].votes.length > 0 ||
-        issues[0]?.votes.includes(votes[0]?._id)
-      ) {
-        
-        const updatedIssue = await Issue.updateOne(
-          { _id: issueId },
-          { $pull: { votes: votes[0]._id } },
-          { new: true }
-        );
-        const deletedDocument = await Upvotes.findOneAndDelete({
-          user: uid,
-          issue: issueId,
-        });
-      
-        return res.json({
-          status: 200,
-          message: "voted",
-          success: true,
-          voted: false,
-          data: updatedIssue,
-        });
-      }
-      return res.json({
-        status: 200,
-        message: "voted",
-        success: true,
-        voted: false,
-      });
     }
+
   } catch (err) {
     console.log("err is", err);
     return res.json({ status: 500, message: err, success: false });

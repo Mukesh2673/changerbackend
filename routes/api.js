@@ -37,6 +37,8 @@ router.delete("/users/:uid",userController.delete)
 router.post("/user/privacy",userController.privacy)
 router.post("/user/language",userController.language)
 router.post("/user/report",userController.report)
+router.post("/user/profile/remove/:id",userController.removeProfileImage)
+
 router.get("/user/notification/:id",userController.notification)
 router.post(
   "/upload/profile",
