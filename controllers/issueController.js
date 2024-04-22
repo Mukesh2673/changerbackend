@@ -212,9 +212,9 @@ exports.create = async (req, res, next) => {
       user:auth._id,
       activity:savedIssue.user,
       joinedIssue:savedIssue.joined,
-      notificationType:"joinedIssue"
+      notificationType:"karmaPoint"
     })
-    sendMessage("joinedIssue", message, auth._id);
+    sendMessage("karmaPoint", message, auth._id);
     await notification.save();
     return res.json({
       status: 200,
@@ -257,15 +257,7 @@ exports.location = async (req, res, next) => {
           as: "user", // The alias for the resulting array of joined documents
         },
       },
-      {
-        $lookup: {
-          from: "upvotes", // The name of the collection to join with
-          localField: "votes", // The field from the input documents
-          foreignField: "_id", // The field from the documents of the "from" collection
-          as: "votes", // The alias for the resulting array of joined documents
-        },
-      },
-
+  
       {
         $lookup: {
           from: "videos", // The name of the collection to join with
@@ -333,7 +325,8 @@ exports.upvotes = async (req, res, next) => {
   try {
     const { uid, issueId } = req.body;
     const votes = await Upvotes.find({ user: uid, issue: issueId });
-    if (votes?.length < 1) {
+     console.log("votesdasisfsdsdf",votes) 
+    if(votes?.length < 1) {
       const votes = new Upvotes({
         issue: issueId,
         user: uid,
@@ -347,7 +340,7 @@ exports.upvotes = async (req, res, next) => {
       const auth = await User.findById({ _id: uid });
       var message=''
       var notificationType=''
-      if(issue.votes.length>2)
+      if(issue.votes.length<3)
       {
         message=`${auth?.first_name} ${auth?.last_name} upvoted your issue discussion ${issue.title}`
         notificationType='upvoted'
@@ -357,16 +350,17 @@ exports.upvotes = async (req, res, next) => {
         message=`your issue ${issue.title} became discussion panel`
         notificationType='discussion'
       }
+      console.log('message is',message)
+      console.log("issue sdata isdsfds+++++++",issue)
       const notification=new Notification({
         messages:message,
-        user:auth._id,
-        activity:issue._id,
+        user:issue._id,
+        activity:uid,
         joinedIssue:issue.joined,
         notificationType:notificationType
       })
       await notification.save();
       sendMessage("discussion", message, auth._id);
-
       return res.json({
         status: 200,
         message: "voted",
@@ -375,20 +369,22 @@ exports.upvotes = async (req, res, next) => {
         data: issue,
       });
     } else {
-      const deletedDocument = await Upvotes.findOneAndDelete({
-        user: uid,
-        issue: issueId,
-      });
+     
       const issues = await Issue.find({ _id: issueId });
       if (
-        issues[0].votes.length > 0 &&
+        issues[0].votes.length > 0 ||
         issues[0]?.votes.includes(votes[0]?._id)
       ) {
+        
         const updatedIssue = await Issue.updateOne(
           { _id: issueId },
-          { $pull: { votes: votes._id } },
+          { $pull: { votes: votes[0]._id } },
           { new: true }
         );
+        const deletedDocument = await Upvotes.findOneAndDelete({
+          user: uid,
+          issue: issueId,
+        });
       
         return res.json({
           status: 200,
@@ -493,13 +489,19 @@ exports.joinIssue = async (req, res) => {
       { $push: { joined: userId } },
       { new: true }
     );
-    const message=`${auth?.first_name} ${auth?.last_name} joined your issue discussion ${result.title}`
-    
+    // const issueRecords=await Issue.find({_id:issue._id}).populate([
+    //   {
+    //     path:"joined",
+    //     model:User
+    //   }
+    // ]);
+
+    const message=`joined your issue discussion ${result.title}`
     const notification=new Notification({
       messages:message,
       user:auth._id,
       activity:issue.user,
-      joinedIssue:issue.joined,
+      joinedIssue:issue._id,
       notificationType:"joinedIssue"
     })
     await notification.save();
@@ -509,10 +511,10 @@ exports.joinIssue = async (req, res) => {
       user:auth._id,
       activity:issue._id,
       joinedIssue:issue.joined,
-      notificationType:"joinedIssue"
+      notificationType:"karmaPoint"
     })
     await karmaPointnotification.save();
-    sendMessage("joinedIssue", message, auth._id);
+    sendMessage("karmaPoint", message, auth._id);
     let filterData = { search: result._id, type: "issues" };
     const searchAlgo = await searchAlgolia(filterData);
     updateObject = {
@@ -561,7 +563,7 @@ exports.leaveIssue = async (req, res) => {
           messages:message,
           user:auth._id,
           activity:issue.user,
-          joinedIssue:issue.joined,
+          joinedIssue:issue._id,
           notificationType:"leaveIssue"
         })
         await notification.save();

@@ -193,34 +193,6 @@ exports.location = async (req, res, next) => {
           key: "location",
         },
       }
-
-      // {
-      //   $project: {
-      //     _id: 1,
-      //     video:1,
-      //     joined:1,
-      //     location:1,
-      //     hashtags:1,
-      //     title:1,
-      //     cause:1,
-      //     address:1,
-      //     createdAt:1,
-      //     updatedAt:1,
-      //     videos:1,
-      //     user: 1,
-      //     votes: {
-      //       $size: {
-      //         $filter: {
-      //           input: '$votes',
-      //           as: 'vote',
-      //           cond: {W
-      //             $eq: ['$$vote.likes', true]
-      //           }
-      //         }
-      //       }
-      //     }
-      //   }
-      // }
     );
     const result = await Video.aggregate(query);
     return res.json({
@@ -296,10 +268,21 @@ exports.likeVideo = async (req, res) => {
         { _id: vid },
         { $push: { likes: uid } }
       );
-      const message = `${sender.first_name} ${sender.last_name} liked your action video for ${data.title}`;
+      
+      const result = await Video.find({_id:data._id})
+      .sort()
+      .populate([
+        {
+          path: "likes",
+          model: User,
+        },
+    
+      ])
+      const messageData = result[0].likes.slice(0, 4).reverse().map(element => element?.first_name).join(', ');
+      const message = `${messageData} liked your action video for ${data.title}`;
       const notification = new Notification({
         messages: message,
-        user: uid,
+        user: result[0].user._id,
         activity: data.user._id,
         notificationType: "likedVideo",
       });
@@ -307,7 +290,7 @@ exports.likeVideo = async (req, res) => {
       hasLiked = true;
       const updatedVideo = await Video.findById({ _id: vid });
       const likes = updatedVideo.likes.length;
-      sendMessage("like", message, uid);
+      sendMessage("likedVideo", message, uid);
       return res.status(200).json({ likedVideo: hasLiked, likes });
     }
   } catch (e) {
@@ -443,21 +426,29 @@ exports.commentVideo = async (req, res) => {
       { $push: { comments: messageId } },
       { new: true }
     );
+    const userPostedVideo = await Video.find({_id:result._id})
+    .sort()
+    .populate([
+      {
+        path: "comments",
+        model: User,
+      },
+  
+    ]) 
     const issueId = result.issue;
     const issueRecords = await Issue.findById({ _id: issueId });
     const sender = await User.findById({ _id: records.sender });
     const notificationMessage = `${sender.first_name} ${sender.last_name} commented your action video for ${issueRecords.title}`;
     const notification = new Notification({
       messages: notificationMessage,
-      user: result?.user?._id,
+      user: userPostedVideo[0].user._id,
       activity: sender._id,
-      notificationType: "commented",
+      notificationType: "commentVideo",
     });
     await notification.save();
     const uid = result?.user?._id.toString();
-    
     const newRecords=await exports.videosData(records.video)
-    sendMessage("comment", notificationMessage, uid);
+    sendMessage("commentVideo", notificationMessage, uid);
     return res.json({
       status: 200,
       message: "sent Message Successfully",
@@ -491,14 +482,14 @@ exports.replyCommentVideo = async (req, res) => {
     const notificationMessage = `${sender.first_name} ${sender.last_name} replies  your comments`;
     const notification = new Notification({
       messages: notificationMessage,
-      user: records.sender,
+      user: result.sender,
       activity: sender._id,
       notificationType: "commented",
     });
     await notification.save();
     const uid = sender._id.toString();
     const newRecords=await exports.videosData(records.video)
-    sendMessage("comment", notificationMessage, uid);
+    sendMessage("repliesComment", notificationMessage, uid);
     return res.json({
       status: 200,
       message: "replies Message Successfully",
@@ -533,7 +524,7 @@ exports.commentLikes = async (req, res) => {
       );
       //delete like
      await CommentsLikes.deleteOne({ _id: isLiked[0]._id });
-     responseMessage='UnLiked Comment'
+     responseMessage='unLikedComment'
     }
     else{
       const likes = new CommentsLikes(records);
@@ -554,7 +545,7 @@ exports.commentLikes = async (req, res) => {
         messages: likeMessage,
         user: result.sender,
         activity: sender._id,
-        notificationType: "like",
+        notificationType: "likeComment",
       });
       await notification.save();
       const uid = result.sender.toString();

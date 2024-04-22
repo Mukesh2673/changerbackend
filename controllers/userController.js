@@ -7,7 +7,7 @@ exports.notification=async(req,res)=>{
     const notificationId=req.params.id
     const notification = await Notification.find({user:notificationId}).sort({ createdAt: -1 }).populate([
       {
-          path: "user",
+         path: "user",
          model: User
       },
       {
@@ -18,7 +18,7 @@ exports.notification=async(req,res)=>{
        path: "joinedIssue",
        model: Issue,
        populate: {
-        path: "user",
+        path: "joined",
         model: User
      }
       }
