@@ -11,7 +11,6 @@ const {
   User,
   Issue,
   Notification,
-  Upvotes,
   RepliesComment,
   CommentsLikes,
 } = require("../models");
@@ -102,9 +101,10 @@ exports.index = async (req, res, next) => {
               model: User,
             },
             {
-              path: "votes",
-              model: Upvotes,
-            },
+              path:"votes",
+              model:User
+            }
+          
           ],
           model: Issue,
         },
@@ -163,10 +163,7 @@ exports.videosData=async(id)=>{
             path: "joined",
             model: User,
           },
-          {
-            path: "votes",
-            model: Upvotes,
-          },
+    
         ],
         model: Issue,
       },

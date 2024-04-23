@@ -54,7 +54,7 @@ const issueSchema = new Schema(
     votes:[
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'upvotes',
+        ref: 'users',
         required:false
       }
       ],

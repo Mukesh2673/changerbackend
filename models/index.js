@@ -7,7 +7,6 @@ module.exports = {
     Message:require("./message"),
     Report:require("./report"),
     User: require("./user"),
-    Upvotes:require("./upvotes"),
     Issue:require("./issue/issue"),
     Impact:require("./impact/impact"),
     Campaign: require("./campaign/campaign"),

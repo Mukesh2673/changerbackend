@@ -1,4 +1,4 @@
-const { User, Video, Issue, Upvotes, Message, Report,Comment,Notification } = require("../models");
+const { User, Video, Issue, Message, Report,Comment,Notification } = require("../models");
 const { generateTags } = require("./hashtagController");
 const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Types;
@@ -266,6 +266,15 @@ exports.location = async (req, res, next) => {
           as: "video", // The alias for the resulting array of joined documents
         },
       },
+
+      {
+        $lookup: {
+          from: "users", // The name of the collection to join with
+          localField: "votes", // The field from the input documents
+          foreignField: "_id", // The field from the documents of the "from" collection
+          as: "votes", // The alias for the resulting array of joined documents
+        },
+      },
       {
         $project: {
           _id: 1,
@@ -334,7 +343,6 @@ exports.upvotes = async (req, res, next) => {
       });
     }
     const issue=await Issue.findById({_id:issueId})
-    console.log("issue ids=>>>>>>>",issue)
     const upVotes=issue.votes
     
     if(upVotes.includes(uid)){
