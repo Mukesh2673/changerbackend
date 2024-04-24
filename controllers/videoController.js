@@ -96,10 +96,10 @@ exports.index = async (req, res, next) => {
               path: "user",
               model: User,
             },
-            {
-              path: "joined",
-              model: User,
-            },
+            // {
+            //   path: "joined",
+            //   model: User,
+            // },
             {
               path:"votes",
               model:User

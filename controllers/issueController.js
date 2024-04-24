@@ -677,6 +677,37 @@ exports.update = async (req, res) => {
         },
         { new: true }
       );
+      let records = await Issue.find({ _id: issueId }).populate([
+        {
+          path: "video",
+          populate: { path: "comments",
+                  populate:{
+                    path:"sender",
+                    model: User 
+  
+                  },
+                  model: Comment 
+                }
+            },
+          
+        
+        {
+          path: "user",
+          populate: { path: "User", model: User },
+        },
+        {
+          path: "joined",
+          populate: { path: "User", model: User },
+        },
+        {
+          path: "messages",
+          populate: {
+            path: "sender",
+            model: User,
+          },
+        },
+      ]);
+
       let filterData = { search: issueId, type: "issues" };
       const searchIssueAlgo = await searchAlgolia(filterData);
       if (searchIssueAlgo.length > 0) {
@@ -692,7 +723,7 @@ exports.update = async (req, res) => {
         status: 200,
         message: "issue updated successfully",
         success: true,
-        data: issue,
+        data: records,
       });
     } else {
       return res.json({
