@@ -162,7 +162,6 @@ exports.delete=async (req,res)=>{
 
 exports.followUser = async (req, res) => {
   const { cuid, fuid } = req.params;
-
   try {
     const currentUser= await User.find({ _id: cuid })
        
@@ -242,10 +241,12 @@ const followingCurrentUser= await User.find({ _id: cuid }).populate([
     }
     await updateAlgolia(obj, "users");
   }
-  const followMessage = `${currentUser.first_name} ${currentUser.last_name} follow  you`;
+  console.log("curren userisss=>>>>>>>>>>.",currentUser)
+  const followMessage = `${currentUser[0].first_name} ${currentUser[0].last_name} follow  you`;
+  
   const notification = new Notification({
     messages: followMessage,
-    user: followUser[0]._id,
+    user: fuid,
     activity: currentUser._id,
     notificationType: "followUser",
   });

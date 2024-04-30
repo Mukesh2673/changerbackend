@@ -275,6 +275,15 @@ exports.location = async (req, res, next) => {
           as: "votes", // The alias for the resulting array of joined documents
         },
       },
+
+      {
+        $lookup: {
+          from: "users", // The name of the collection to join with
+          localField: "joined", // The field from the input documents
+          foreignField: "_id", // The field from the documents of the "from" collection
+          as: "joined", // The alias for the resulting array of joined documents
+        },
+      },
       {
         $project: {
           _id: 1,
