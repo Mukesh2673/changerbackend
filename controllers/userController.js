@@ -242,7 +242,16 @@ const followingCurrentUser= await User.find({ _id: cuid }).populate([
     }
     await updateAlgolia(obj, "users");
   }
-
+  const followMessage = `${currentUser.first_name} ${currentUser.last_name} follow  you`;
+  const notification = new Notification({
+    messages: followMessage,
+    user: followUser[0]._id,
+    activity: currentUser._id,
+    notificationType: "followUser",
+  });
+  await notification.save();
+  const uid = currentUser._id.toString();
+  sendMessage("follow", likeMessage, uid);
     return res.json({
       status: 200,
       message: "user follow sucessfully",
