@@ -15,6 +15,8 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 const auth = require("../middleware/firebaseAuth").authCheck;
 const { validateToken } = require("../middleware/auth");
+const {validateSigninRequest,validateAdvocate}=require('../middleware/validations');
+
 const userController = require("../controllers/userController");
 const campaignController = require("../controllers/campaignController");
 const videoController = require("../controllers/videoController");
@@ -22,6 +24,8 @@ const issueController = require("../controllers/issueController");
 const impactController = require("../controllers/impactController");
 const searchController=require("../controllers/searchController")
 const hashtagsController=require("../controllers/hashtagController")
+const adVocateController=require("../controllers/advocacyController")
+const authController =require("../controllers/authController")
 // USER ROUTES
 router.get("/users",userController.users)
 router.get("/users/:id", userController.getUser);
@@ -38,6 +42,7 @@ router.post("/user/privacy",userController.privacy)
 router.post("/user/language",userController.language)
 router.post("/user/report",userController.report)
 router.post("/user/profile/remove/:id",userController.removeProfileImage)
+router.post("/signin",validateSigninRequest, authController.signin)
 
 router.get("/user/notification/:id",userController.notification)
 router.post(
@@ -106,6 +111,10 @@ router.get("/impact", impactController.index);
 router.get("/search",searchController.search)
 //hasTags
 router.post("/hashtags",hashtagsController.add)
+//advocate Routes
+router.post("/advocate",validateToken, upload.single("video"),validateAdvocate,adVocateController.add)
+router.delete("/advocate/:id",validateToken,adVocateController.delete)
+router.get("/advocate",adVocateController.get)
 
 
 module.exports = router;

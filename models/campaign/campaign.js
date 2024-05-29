@@ -12,6 +12,7 @@ const campaignSchema = new Schema(
       type: String,
       required: false,
     },
+    advocate: [{ type: mongoose.Schema.Types.ObjectId, ref: "advocates" }],
 
     title: {
       type: String,
