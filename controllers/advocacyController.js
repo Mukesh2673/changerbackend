@@ -1,6 +1,5 @@
-const { searchAlgolia, updateAlgolia } = require("../libs/algolia");
 require("dotenv").config();
-const { Campaign, Issue, Impact,Video,Advocate } = require("../models");
+const { Campaign, Issue, Video,Advocate } = require("../models");
 const {upload,uploadVideoThumbnail} = require("../libs/fileUpload");
 exports.add = async (req, res) => {
   try {
@@ -21,6 +20,7 @@ exports.add = async (req, res) => {
       type: 'advocacy',
       issue: advocacy.issue || undefined,
       campaign: advocacy.campaign || undefined,
+      advocateUser: advocacy.advocateUser || undefined
     };
 
     const advocateData = { ...videoData };

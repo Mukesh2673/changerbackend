@@ -17,13 +17,13 @@ const validateAdvocate = [
     [
       body("issue")
         .notEmpty()
-        .withMessage("Issue is required if campaign and user are not provided"),
+        .withMessage("Issue is required if campaign and advocate user are not provided"),
       body("campaign")
         .notEmpty()
-        .withMessage("Campaign is required if issue and user are not provided"),
-      body("user")
+        .withMessage("Campaign is required if issue and advocateuser are not provided"),
+      body("advocateUser")
         .notEmpty()
-        .withMessage("User is required if issue and campaign are not provided"),
+        .withMessage("advocateUser is required if issue and campaign are not provided"),
     ],
     "At least one of issue, campaign, or user must be provided"
   ),

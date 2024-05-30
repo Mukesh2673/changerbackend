@@ -8,6 +8,7 @@ const advocateSchema = new Schema(
     video: { type: Schema.Types.ObjectId, ref: "Video" },
     title: { type: String, default: "" },
     description: { type: String, default: "" },
+    advocateUser: { type: Schema.Types.ObjectId, ref: "User" },
     
   },
   {

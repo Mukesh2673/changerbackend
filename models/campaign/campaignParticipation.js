@@ -1,9 +1,8 @@
 const mongoose = require("mongoose");
-const mongoosePaginate = require("mongoose-paginate-v2");
 
 const Schema = mongoose.Schema;
 
-const campaignParticipantSchema = new Schema(
+const campaignParticipationSchema = new Schema(
   {
     participant: {
       type: String,
@@ -74,5 +73,5 @@ const campaignParticipantSchema = new Schema(
     timestamps: true,
   }
 );
-campaignParticipantSchema.index({ coordinates: "2dsphere" });
-module.exports = mongoose.model("participant", campaignParticipantSchema);
+campaignParticipationSchema.index({ coordinates: "2dsphere" });
+module.exports = mongoose.model("participation", campaignParticipationSchema,'campaignParticipation');

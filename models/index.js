@@ -1,6 +1,5 @@
 module.exports = {
-  Advocate: require("./advocate"),
-  Comment: require("./comment"),
+  Volunteers: require("./campaign/campaignVolunteers"),
   RepliesComment: require("./comment/reply"),
   CommentsLikes: require("./comment/likes"),
   Notification: require("./notification"),
@@ -12,8 +11,8 @@ module.exports = {
   Impact: require("./impact/impact"),
   Campaign: require("./campaign/campaign"),
   Video: require("./video"),
-  CampaignParticipant: require("./campaign/campaignParticipant"),
+  CampaignParticipant: require("./campaign/campaignParticipation"),
   campaignPhases: require("./campaign/campaignPhase"),
-  donation: require("./campaign/campaigndonation"),
+  donation: require("./campaign/campaignDonation"),
   petitions: require("./campaign/campaignPetition"),
 };

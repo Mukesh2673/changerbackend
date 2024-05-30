@@ -1,4 +1,12 @@
-const { User, Video, Issue, Message, Report,Comment,Notification } = require("../models");
+const {
+  User,
+  Video,
+  Issue,
+  Message,
+  Report,
+  Comment,
+  Notification,
+} = require("../models");
 const { generateTags } = require("./hashtagController");
 const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Types;
@@ -29,6 +37,14 @@ exports.issueRecords = async (query) => {
 exports.index = async (req, res, next) => {
   try {
     const query = [];
+    // Handle pagination
+    if (req.query.page && req.query.pageSize) {
+      const page = parseInt(req.query.page, 10);
+      const pageSize = parseInt(req.query.pageSize, 10);
+      const skip = (page - 1) * pageSize;
+      query.push({ $skip: skip });
+      query.push({ $limit: pageSize });
+    }
     if (req.query.location) {
       const location = JSON.parse(decodeURIComponent(req.query.location));
       const longitude = location[0];
@@ -55,7 +71,6 @@ exports.index = async (req, res, next) => {
       query.push({ $match: { cause: { $in: cause } } });
     }
     query.push({
-    
       $lookup: {
         from: "messages", // The name of the collection to join with
         localField: "messages", // The field from the input documents
@@ -73,9 +88,8 @@ exports.index = async (req, res, next) => {
           {
             $unwind: "$sender",
           },
-        ], 
+        ],
       },
-
     });
     query.push({
       $lookup: {
@@ -92,8 +106,7 @@ exports.index = async (req, res, next) => {
               as: "messages",
             },
           },
-          
-        ], 
+        ],
       },
     });
 
@@ -134,7 +147,7 @@ exports.create = async (req, res, next) => {
         success: false,
       });
     }
- 
+
     const karmaPoint = auth.karmaPoint + 100;
     const user = await User.findByIdAndUpdate(
       { _id: auth._id },
@@ -160,11 +173,9 @@ exports.create = async (req, res, next) => {
       cause: data.cause,
       location: data.location,
       address: data.address,
-      joined:[user._id]
+      joined: [user._id],
     });
     const savedIssue = await issue.save();
-
-
 
     let issueTags = savedIssue?.hashtags;
     var tagsArray = [];
@@ -206,14 +217,14 @@ exports.create = async (req, res, next) => {
     );
     const issueRecord = await this.issueRecords({ _id: issueId });
     saveAlgolia(issueRecord, "issues");
-    const message=`you received +100 karma for good intention of creating Problem of  ${savedIssue.title}`
-    const notification=new Notification({
-      messages:message,
-      user:auth._id,
-      activity:savedIssue.user,
-      joinedIssue:savedIssue.joined,
-      notificationType:"karmaPoint"
-    })
+    const message = `you received +100 karma for good intention of creating Problem of  ${savedIssue.title}`;
+    const notification = new Notification({
+      messages: message,
+      user: auth._id,
+      activity: savedIssue.user,
+      joinedIssue: savedIssue.joined,
+      notificationType: "karmaPoint",
+    });
     sendMessage("karmaPoint", message, auth._id);
     await notification.save();
     return res.json({
@@ -257,7 +268,7 @@ exports.location = async (req, res, next) => {
           as: "user", // The alias for the resulting array of joined documents
         },
       },
-  
+
       {
         $lookup: {
           from: "videos", // The name of the collection to join with
@@ -343,7 +354,7 @@ exports.upvotes = async (req, res, next) => {
   try {
     const { uid, issueId } = req.body;
     const auth = await User.findById({ _id: uid });
-    if(!auth){
+    if (!auth) {
       return res.json({
         status: 401,
         message: "invalid User",
@@ -351,10 +362,10 @@ exports.upvotes = async (req, res, next) => {
         voted: false,
       });
     }
-    const issue=await Issue.findById({_id:issueId})
-    const upVotes=issue.votes
-    
-    if(upVotes.includes(uid)){
+    const issue = await Issue.findById({ _id: issueId });
+    const upVotes = issue.votes;
+
+    if (upVotes.includes(uid)) {
       const issue = await Issue.findByIdAndUpdate(
         { _id: issueId },
         { $pull: { votes: uid } },
@@ -365,35 +376,29 @@ exports.upvotes = async (req, res, next) => {
         message: "Unvoted",
         success: true,
         voted: false,
-        
       });
-    
-    }
-    else{
+    } else {
       const issue = await Issue.findByIdAndUpdate(
         { _id: issueId },
         { $push: { votes: uid } },
         { new: true }
       );
-      var message=''
-      var notificationType=''
-      if(issue.votes.length<3)
-      {
-        message=`${auth?.first_name} ${auth?.last_name} upvoted your issue discussion ${issue.title}`
-        notificationType='upvoted'       
+      var message = "";
+      var notificationType = "";
+      if (issue.votes.length < 3) {
+        message = `${auth?.first_name} ${auth?.last_name} upvoted your issue discussion ${issue.title}`;
+        notificationType = "upvoted";
+      } else {
+        message = `your issue ${issue.title} became discussion panel`;
+        notificationType = "discussion";
       }
-      
-      else{
-        message=`your issue ${issue.title} became discussion panel`
-        notificationType='discussion'
-      }
-      const notification=new Notification({
-        messages:message,
-        user:issue.user,
-        activity:uid,
-        joinedIssue:issue.joined,
-        notificationType:notificationType
-      })
+      const notification = new Notification({
+        messages: message,
+        user: issue.user,
+        activity: uid,
+        joinedIssue: issue.joined,
+        notificationType: notificationType,
+      });
       await notification.save();
       sendMessage("discussion", message, issue.user);
       return res.json({
@@ -404,7 +409,6 @@ exports.upvotes = async (req, res, next) => {
         data: issue,
       });
     }
-
   } catch (err) {
     console.log("err is", err);
     return res.json({ status: 500, message: err, success: false });
@@ -442,12 +446,10 @@ exports.joinIssue = async (req, res) => {
   const issueId = req.body.issueId;
   const userId = req.body.userId;
   const result = await Issue.findById({ _id: issueId }).populate([
-    
-      {
-        path: "user",
-        populate: { path: "User", model: User },
-      },
-    
+    {
+      path: "user",
+      populate: { path: "User", model: User },
+    },
   ]);
   if (result) {
     const auth = await User.findById({ _id: userId });
@@ -500,23 +502,23 @@ exports.joinIssue = async (req, res) => {
     //   }
     // ]);
 
-    const message=`joined your issue discussion ${result.title}`
-    const notification=new Notification({
-      messages:message,
-      user:auth._id,
-      activity:issue.user,
-      joinedIssue:issue._id,
-      notificationType:"joinedIssue"
-    })
+    const message = `joined your issue discussion ${result.title}`;
+    const notification = new Notification({
+      messages: message,
+      user: auth._id,
+      activity: issue.user,
+      joinedIssue: issue._id,
+      notificationType: "joinedIssue",
+    });
     await notification.save();
     sendMessage("joinedIssue", message, auth._id);
-    const karmaPointnotification=new Notification({
-      messages:`you received +50 karma for good intention of joining Problem of  ${result.title}`,
-      user:auth._id,
-      activity:issue._id,
-      joinedIssue:issue.joined,
-      notificationType:"karmaPoint"
-    })
+    const karmaPointnotification = new Notification({
+      messages: `you received +50 karma for good intention of joining Problem of  ${result.title}`,
+      user: auth._id,
+      activity: issue._id,
+      joinedIssue: issue.joined,
+      notificationType: "karmaPoint",
+    });
     await karmaPointnotification.save();
     sendMessage("karmaPoint", message, auth._id);
     let filterData = { search: result._id, type: "issues" };
@@ -562,14 +564,14 @@ exports.leaveIssue = async (req, res) => {
           { $pull: { joined: userId } },
           { new: true }
         );
-        const message=`${auth?.first_name} ${auth?.last_name} leave your issue discussion ${result.title}`
-        const notification=new Notification({
-          messages:message,
-          user:auth._id,
-          activity:issue.user,
-          joinedIssue:issue._id,
-          notificationType:"leaveIssue"
-        })
+        const message = `${auth?.first_name} ${auth?.last_name} leave your issue discussion ${result.title}`;
+        const notification = new Notification({
+          messages: message,
+          user: auth._id,
+          activity: issue.user,
+          joinedIssue: issue._id,
+          notificationType: "leaveIssue",
+        });
         await notification.save();
         sendMessage("leaveIssue", message, auth._id);
 
@@ -632,17 +634,16 @@ exports.issueDetails = async (req, res) => {
     let records = await Issue.find({ _id: issueId }).populate([
       {
         path: "video",
-        populate: { path: "comments",
-                populate:{
-                  path:"sender",
-                  model: User 
-
-                },
-                model: Comment 
-              }
+        populate: {
+          path: "comments",
+          populate: {
+            path: "sender",
+            model: User,
           },
-        
-      
+          model: Comment,
+        },
+      },
+
       {
         path: "user",
         populate: { path: "User", model: User },
@@ -689,17 +690,16 @@ exports.update = async (req, res) => {
       let records = await Issue.find({ _id: issueId }).populate([
         {
           path: "video",
-          populate: { path: "comments",
-                  populate:{
-                    path:"sender",
-                    model: User 
-  
-                  },
-                  model: Comment 
-                }
+          populate: {
+            path: "comments",
+            populate: {
+              path: "sender",
+              model: User,
             },
-          
-        
+            model: Comment,
+          },
+        },
+
         {
           path: "user",
           populate: { path: "User", model: User },
@@ -935,4 +935,4 @@ exports.views = async (req, res) => {
       success: false,
     });
   }
-}
+};

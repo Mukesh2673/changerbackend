@@ -56,16 +56,23 @@ router.get("/user/message/:pid/:uid",userController.getMessages)
 // CAMPAIGN ROUTES
 router.get("/campaigns", campaignController.index);
 router.get("/campaigns/:id", campaignController.show);
-router.post("/campaign/:id/donate/", campaignController.donate);
-router.post("/campaign/:id/participate/", campaignController.participant);
+router.post("/campaign/:id/donate/", validateToken, campaignController.donate);
+router.post("/campaign/:campaignId/participate/:participationId",validateToken, campaignController.participant);
 router.post("/campaigns", campaignController.create);
-router.post("/donate", campaignController.donateToCampaign);
+router.post("/campaign/message",campaignController.messages)
+
 router.post("/paymentsession", campaignController.paymentSession);
+// get campaing that you have voluteer
+router.get("/volunteeringForYou",validateToken, campaignController.userVolunteersCompaign);
+
 router.post(
   "/uploadImage",
   upload.single("Image"),
   videoController.uploadImages
 );
+
+
+
 // VIDEO ROUTES
 router.get("/videos/:id", videoController.show);
 router.delete("/videos/:id", videoController.delete);
@@ -77,10 +84,7 @@ router.get("/videos/likes/:vid/:uid", videoController.getVideoLikes);
 
 router.post("/videos", videoController.store);
 router.post("/videos/like/:vid/:uid", videoController.likeVideo);
-router.post(
-  "/hook/encoding-complete/:id?",
-  videoController.encodingFinishedHook
-);
+
 router.post("/video/comment",videoController.commentVideo);
 router.post("/video/comment/like",videoController.commentLikes);
 router.post("/video/comment/reply/like",videoController.replyCommentLikes);
@@ -115,6 +119,5 @@ router.post("/hashtags",hashtagsController.add)
 router.post("/advocate",validateToken, upload.single("video"),validateAdvocate,adVocateController.add)
 router.delete("/advocate/:id",validateToken,adVocateController.delete)
 router.get("/advocate",adVocateController.get)
-
 
 module.exports = router;

@@ -31,10 +31,9 @@ exports.index = async (req, res, next) => {
       user,
       type = VideoType.IMPACT,
       tab,
+      pageSize = 10,
     } = req.query;
-
     var query = {};
-    const pageSize = 10;
     const displayPage = parseInt(page);
     const skip = (displayPage - 1) * pageSize;
     if (!!type) {
@@ -101,9 +100,9 @@ exports.index = async (req, res, next) => {
               model: User,
             },
             {
-              path:"votes",
-              model:User
-            }
+              path: "votes",
+              model: User,
+            },
           ],
           model: Issue,
         },
@@ -116,8 +115,8 @@ exports.index = async (req, res, next) => {
     return res.json([]);
   }
 };
-exports.videosData=async(id)=>{
-  return await Video.find({_id:new ObjectId(id)})
+exports.videosData = async (id) => {
+  return await Video.find({ _id: new ObjectId(id) })
     .sort({ createdAt: "desc" })
     .populate([
       {
@@ -162,12 +161,11 @@ exports.videosData=async(id)=>{
             path: "joined",
             model: User,
           },
-    
         ],
         model: Issue,
       },
-    ])
-}
+    ]);
+};
 exports.location = async (req, res, next) => {
   try {
     const longitude = req.body.lng;
@@ -176,20 +174,18 @@ exports.location = async (req, res, next) => {
     const distance = 1;
     const unitValue = 10000000;
     const query = [];
-    query.push(
-      {
-        $geoNear: {
-          near: {
-            type: "Point",
-            coordinates: coordinates,
-          },
-          maxDistance: distance * unitValue,
-          distanceField: "distance",
-          distanceMultiplier: 1 / unitValue,
-          key: "location",
+    query.push({
+      $geoNear: {
+        near: {
+          type: "Point",
+          coordinates: coordinates,
         },
-      }
-    );
+        maxDistance: distance * unitValue,
+        distanceField: "distance",
+        distanceMultiplier: 1 / unitValue,
+        key: "location",
+      },
+    });
     const result = await Video.aggregate(query);
     return res.json({
       status: 200,
@@ -264,17 +260,20 @@ exports.likeVideo = async (req, res) => {
         { _id: vid },
         { $push: { likes: uid } }
       );
-      
-      const result = await Video.find({_id:data._id})
-      .sort()
-      .populate([
-        {
-          path: "likes",
-          model: User,
-        },
-    
-      ])
-      const messageData = result[0].likes.slice(0, 4).reverse().map(element => element?.first_name).join(', ');
+
+      const result = await Video.find({ _id: data._id })
+        .sort()
+        .populate([
+          {
+            path: "likes",
+            model: User,
+          },
+        ]);
+      const messageData = result[0].likes
+        .slice(0, 4)
+        .reverse()
+        .map((element) => element?.first_name)
+        .join(", ");
       const message = `${messageData} liked your action video for ${data.title}`;
       const notification = new Notification({
         messages: message,
@@ -329,25 +328,6 @@ exports.delete = async (req, res, next) => {
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
-};
-
-exports.encodingFinishedHook = (req, res, next) => {
-  const encodingId = req.body?.encoding?.id;
-
-  if (encodingId) {
-    try {
-      const query = {
-        encoding_id: encodingId,
-        encoding_status: "CREATED",
-      };
-
-      Video.updateMany(query, { encoding_status: "FINISHED" }).exec();
-    } catch (error) {
-      return res.json([]);
-    }
-  }
-
-  return res.json([]);
 };
 
 exports.thumbnail = async (req, res, next) => {
@@ -422,15 +402,14 @@ exports.commentVideo = async (req, res) => {
       { $push: { comments: messageId } },
       { new: true }
     );
-    const userPostedVideo = await Video.find({_id:result._id})
-    .sort()
-    .populate([
-      {
-        path: "comments",
-        model: User,
-      },
-  
-    ]) 
+    const userPostedVideo = await Video.find({ _id: result._id })
+      .sort()
+      .populate([
+        {
+          path: "comments",
+          model: User,
+        },
+      ]);
     const issueId = result.issue;
     const issueRecords = await Issue.findById({ _id: issueId });
     const sender = await User.findById({ _id: records.sender });
@@ -443,7 +422,7 @@ exports.commentVideo = async (req, res) => {
     });
     await notification.save();
     const uid = result?.user?._id.toString();
-    const newRecords=await exports.videosData(records.video)
+    const newRecords = await exports.videosData(records.video);
     sendMessage("commentVideo", notificationMessage, uid);
     return res.json({
       status: 200,
@@ -484,14 +463,13 @@ exports.replyCommentVideo = async (req, res) => {
     });
     await notification.save();
     const uid = sender._id.toString();
-    const newRecords=await exports.videosData(records.video)
+    const newRecords = await exports.videosData(records.video);
     sendMessage("repliesComment", notificationMessage, uid);
     return res.json({
       status: 200,
       message: "replies Message Successfully",
       success: false,
       data: newRecords,
-
     });
   } catch (err) {
     console.log("erero ", err);
@@ -506,35 +484,37 @@ exports.replyCommentVideo = async (req, res) => {
 exports.commentLikes = async (req, res) => {
   try {
     let records = req.body;
-    const isLiked=await CommentsLikes.find({comments: new ObjectId(records.comments),user:new ObjectId(records.user)})
-    var responseMessage=''
-    if(isLiked.length>0){
+    const isLiked = await CommentsLikes.find({
+      comments: new ObjectId(records.comments),
+      user: new ObjectId(records.user),
+    });
+    var responseMessage = "";
+    if (isLiked.length > 0) {
       await Comment.findByIdAndUpdate(
         {
           _id: new ObjectId(records.comments),
         },
         {
-          $pull: { likes:isLiked[0]._id },
+          $pull: { likes: isLiked[0]._id },
         },
         { new: true }
       );
       //delete like
-     await CommentsLikes.deleteOne({ _id: isLiked[0]._id });
-     responseMessage='unLikedComment'
-    }
-    else{
+      await CommentsLikes.deleteOne({ _id: isLiked[0]._id });
+      responseMessage = "unLikedComment";
+    } else {
       const likes = new CommentsLikes(records);
       const savedLike = await likes.save();
       let result = await Comment.findByIdAndUpdate(
         {
-          _id: new ObjectId(records.comments) ,
+          _id: new ObjectId(records.comments),
         },
         {
-          $push: { likes: savedLike._id},
+          $push: { likes: savedLike._id },
         },
         { new: true }
       );
-      responseMessage='Liked Comment'
+      responseMessage = "Liked Comment";
       const sender = await User.findById({ _id: records.user });
       const likeMessage = `${sender.first_name} ${sender.last_name} likes  your comments`;
       const notification = new Notification({
@@ -546,12 +526,10 @@ exports.commentLikes = async (req, res) => {
       await notification.save();
       const uid = result.sender.toString();
       sendMessage("like", likeMessage, uid);
-
     }
- 
 
     //
-    const newRecords=await exports.videosData(records.video)
+    const newRecords = await exports.videosData(records.video);
     return res.json({
       status: 200,
       message: responseMessage,
@@ -570,35 +548,37 @@ exports.commentLikes = async (req, res) => {
 exports.replyCommentLikes = async (req, res) => {
   try {
     let records = req.body;
-    const isLiked=await CommentsLikes.find({repliesComments: new ObjectId(records.repliesComments),user:new ObjectId(records.user)})
-    var responseMessage=''
-    if(isLiked.length>0){
+    const isLiked = await CommentsLikes.find({
+      repliesComments: new ObjectId(records.repliesComments),
+      user: new ObjectId(records.user),
+    });
+    var responseMessage = "";
+    if (isLiked.length > 0) {
       await RepliesComment.findByIdAndUpdate(
         {
           _id: new ObjectId(records.repliesComments),
         },
         {
-          $pull: { likes:isLiked[0]._id },
+          $pull: { likes: isLiked[0]._id },
         },
         { new: true }
       );
       //delete like
-     await CommentsLikes.deleteOne({ _id: isLiked[0]._id });
-     responseMessage='UnLiked Comment'
-    }
-    else{
+      await CommentsLikes.deleteOne({ _id: isLiked[0]._id });
+      responseMessage = "UnLiked Comment";
+    } else {
       const likes = new CommentsLikes(records);
       const savedLike = await likes.save();
-     const result= await RepliesComment.findByIdAndUpdate(
+      const result = await RepliesComment.findByIdAndUpdate(
         {
-          _id: new ObjectId(records.repliesComments) ,
+          _id: new ObjectId(records.repliesComments),
         },
         {
-          $push: { likes: savedLike._id},
+          $push: { likes: savedLike._id },
         },
         { new: true }
       );
-      responseMessage='Liked Comment'
+      responseMessage = "Liked Comment";
       const sender = await User.findById({ _id: records.user });
       const likeMessage = `${sender.first_name} ${sender.last_name} likes  your comments`;
       const notification = new Notification({
@@ -606,14 +586,13 @@ exports.replyCommentLikes = async (req, res) => {
         user: result.sender,
         activity: sender._id,
         notificationType: "like",
-      });     
+      });
       await notification.save();
       const uid = result.sender.toString();
       sendMessage("like", likeMessage, uid);
-
     }
     //
-    const newRecords=await exports.videosData(records.video)    
+    const newRecords = await exports.videosData(records.video);
     return res.json({
       status: 200,
       message: responseMessage,
@@ -627,6 +606,5 @@ exports.replyCommentLikes = async (req, res) => {
       message: "Something Went wrong",
       success: false,
     });
-  } 
+  }
 };
-
