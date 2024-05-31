@@ -12,7 +12,6 @@ const {ws}=require("./libs/webSocket")
 const PORT = process.env.PORT || 3001;
 ws.on('connection', function connection(ws) {
 });
-
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");

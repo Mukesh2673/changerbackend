@@ -14,6 +14,7 @@ const mongoose = require("mongoose");
 const { generateTags } = require("../controllers/hashtagController");
 const { endorseCampaign } = require("../libs/campaign");
 const { saveAlgolia } = require("../libs/algolia");
+const { sendMessage } = require("../libs/webSocket");
 require("dotenv").config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 exports.campaignRecords = async (query) => {
@@ -78,7 +79,7 @@ exports.show = async (req, res, next) => {
     return res.status(500).json({ message: error.message });
   }
 };
-
+//create a campaign
 exports.create = async (req, res, next) => {
   try {
     const data = req.body;
@@ -116,7 +117,6 @@ exports.create = async (req, res, next) => {
     } else {
       tagsArray = tags;
     }
-
     const campaignsId = campaigns._id;
     const videos = new Video({
       user: req.body.user,
@@ -126,6 +126,7 @@ exports.create = async (req, res, next) => {
       video_url: req.body.video.videoUrl,
       type: req.body.video.type,
       thumbnail_url: req.body.thumbnailUrl,
+      hashtags: tagsArray
     });
     const savedVideo = await videos.save();
     const videoId = savedVideo._id;
@@ -219,10 +220,6 @@ exports.create = async (req, res, next) => {
   }
 };
 
-exports.update = async (req, res, next) => {};
-
-exports.delete = async (req, res, next) => {};
-
 exports.donate = async (req, res) => {
   try {
     const userId = req.user._id; // Assuming req.user contains the authenticated user object
@@ -254,7 +251,20 @@ exports.donate = async (req, res) => {
     // Handle the charge response
     if (charge.status === 'succeeded') {
       campaign.donated_amount += req.body.amount;
-      user.karmaPoint += 100;
+      switch (req.body.amount) {
+        case 13:
+          user.karmaPoint += 100;
+          break;
+        case 110:
+          user.karmaPoint +=1100;
+          break;
+        case 93:
+          user.karmaPoint += 900;
+          break;
+        default:
+          // No karma points for other amounts
+          break;
+      }
       await user.save();
       await campaign.save();
 
@@ -361,6 +371,7 @@ exports.participant = async (req, res) => {
   }
 };
 
+//get the campaign that you are volunteer
 exports.userVolunteersCompaign = async (req, res) => {
   try {
     const { user } = req;
@@ -380,7 +391,7 @@ exports.userVolunteersCompaign = async (req, res) => {
         },
       },
       {
-        $lookup: {
+        $lookup: { //participation form that have details about participation
           from: "campaignParticipation",
           localField: "participation",
           foreignField: "_id",
@@ -407,18 +418,15 @@ exports.userVolunteersCompaign = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
-
-exports.messages = async (req, res) => {
+//send message to the campaign
+exports.postMessages = async (req, res) => {
   try {
     let records = req.body;
+    const { user } = req;
+    records.sender=user
     const message = new Message(records);
     const savedMessage = await message.save();
-    let messageId = savedMessage._id;
-    // await Issue.findByIdAndUpdate(
-    //   { _id: records.issues },
-    //   { $push: { messages: messageId } },
-    //   { new: true }
-    // );
+    sendMessage("campaignMessage", message, records.profile);
     return res.json({
       status: 200,
       message: "sent Message Successfully",
@@ -426,11 +434,54 @@ exports.messages = async (req, res) => {
       data: savedMessage,
     });
   } catch (err) {
-    console.log("erero ", err);
     return res.json({
       status: 500,
       message: "Something Went wrong",
       success: false,
     });
+  }
+};
+
+//get  Messages  between campaign creator and login user
+exports.getMessages = async (req, res) => {
+  try{
+    const pid=req.user
+    const campaign = await Campaign.findById(req.params.id);
+    if (!campaign) {
+      return res.status(404).json({ message: "Campaign not found." });
+    }
+    const uid=campaign.user
+    let records=await Message.find({
+      $or: [
+        { sender: uid, profile: pid }, // Messages sent from uid to pid
+        { sender: pid, profile: uid }, 
+      ],
+    $and:[
+      { profile: { $exists: true, $ne: null } },
+      { campaign: req.params.id }
+    ]
+
+}
+).populate([
+      {
+        path: "sender",
+        select: "_id first_name last_name email username profileImage" // Select specific fields
+      },
+      {
+        path: "profile",
+        select: "_id first_name last_name email username profileImage" // Select specific fields
+      },
+    ]);
+    return res.json({
+      status: 200,
+      message: "messages records",
+      success: true,
+      data: records,
+    });
+  }
+
+  catch(err)
+  {
+    return res.json({ status: 500, message: err, success: false });
   }
 };

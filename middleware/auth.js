@@ -37,7 +37,8 @@ const   validateToken = async (req, res, next) => {
     let respData = {
       success: false,
       message: "Invalid Access Token",
-      error:error.name
+      error:error.name,
+      status:401
     };
     return res.status(401).json(respData);
   }

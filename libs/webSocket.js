@@ -1,4 +1,3 @@
-const PORT = process.env.PORT || 3001;
 const WebSocket = require("ws");
 ws = new WebSocket.Server({ port: 3002 });
 // Map to store client connections
@@ -11,12 +10,13 @@ clients.set(userId, ws);
   });
   ws.send("Connected to WebSocket server");
 });
-function sendMessage(type, data, id) { 
+function sendMessage(type, data, id){ 
     const message = JSON.stringify({ type, data });
     let uid=id
     if (typeof uid === 'object') {
         uid=id.toString();
     }  
+    console.log("message is",uid)
     const ws= clients.get(uid);
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(message);

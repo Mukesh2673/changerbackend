@@ -10,6 +10,7 @@ const {
 const { generateTags } = require("./hashtagController");
 const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Types;
+const moment = require('moment');
 require("dotenv").config();
 const OpenAI = require("openai");
 const {
@@ -196,6 +197,7 @@ exports.create = async (req, res, next) => {
       type: data.video.type,
       thumbnail_url: data.video.thumbnailUrl,
       location: data.location,
+      hashtags: tagsArray
     });
     const savedVideo = await videos.save();
     const videoId = savedVideo._id;
@@ -934,5 +936,30 @@ exports.views = async (req, res) => {
       message: "some thing went wrong",
       success: false,
     });
+  }
+};
+exports.deleteOldIssues = async (req,res) => {
+  try {
+  const oneMonthAgo = moment().subtract(1, 'months').toDate();
+  const issuesToDelete = await Issue.find({
+      $or: [
+        { votes: { $exists: false } }, // Issues where votes array does not exist
+        { votes: { $size: 0 } }, // Issues with 0 votes
+        { 
+          $and: [
+            { votes: { $size: 1 } }, // Issues with 1 vote
+            { $expr: { $eq: [ { $arrayElemAt: ["$votes", 0] }, "$user" ] } } // Vote matches user
+          ]
+        }
+      ],
+      createdAt: { $lt: oneMonthAgo }
+    },"_id");
+    if(issuesToDelete.length>0)
+    {
+    await Issue.deleteMany({ _id: { $in: issuesToDelete } });
+    await Video.deleteMany({ issue: { $in: issuesToDelete } });
+    }
+  } catch (error) {
+    console.error('Error deleting old issues:', error);
   }
 };

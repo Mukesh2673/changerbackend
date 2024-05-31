@@ -1,6 +1,6 @@
 const { searchAlgolia, updateAlgolia } = require("../libs/algolia");
 require("dotenv").config();
-const { Campaign, Issue, Impact } = require("../models");
+const { Campaign, Issue, Impact,Video } = require("../models");
 const mongoose = require("mongoose");
 const natural = require("natural");
 const pos = require("pos");
@@ -113,3 +113,23 @@ exports.generateTags = async (text) => {
   }
   return hashtags;
 };
+exports.getContent = async (req, res) => {
+  try {
+    const hashtagToFind = `#${req.params.tag}`;
+  
+    const [campaigns, issues, videos] = await Promise.all([
+      Campaign.find({ hashtags: hashtagToFind }),
+      Issue.find({ hashtags: hashtagToFind }),
+      Video.find({ hashtags: hashtagToFind })
+    ]);
+  
+    return res.status(200).json({
+      data: {
+        campaigns,
+        issues,
+        impactVideos: videos
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message, status: 500 });
+  }}
