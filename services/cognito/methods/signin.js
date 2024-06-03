@@ -11,7 +11,6 @@ const { CognitoUserPool, CognitoUser, AuthenticationDetails } = require('amazon-
   
   const signin = (poolData, body, callback) => {
     const userPool = new CognitoUserPool(poolData);
-  
     const { username, password } = body;
   
     const authenticationData = {

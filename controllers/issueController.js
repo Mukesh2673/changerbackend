@@ -10,7 +10,7 @@ const {
 const { generateTags } = require("./hashtagController");
 const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Types;
-const moment = require('moment');
+const moment = require("moment");
 require("dotenv").config();
 const OpenAI = require("openai");
 const {
@@ -197,7 +197,7 @@ exports.create = async (req, res, next) => {
       type: data.video.type,
       thumbnail_url: data.video.thumbnailUrl,
       location: data.location,
-      hashtags: tagsArray
+      hashtags: tagsArray,
     });
     const savedVideo = await videos.save();
     const videoId = savedVideo._id;
@@ -364,15 +364,21 @@ exports.upvotes = async (req, res, next) => {
         voted: false,
       });
     }
-    const issue = await Issue.findById({ _id: issueId });
+    let issue = await Issue.findById({ _id: issueId });
     const upVotes = issue.votes;
-
     if (upVotes.includes(uid)) {
-      const issue = await Issue.findByIdAndUpdate(
+      issue = await Issue.findByIdAndUpdate(
         { _id: issueId },
         { $pull: { votes: uid } },
         { new: true }
       );
+      if (issue.votes.length < 3) {
+        await Issue.findByIdAndUpdate(
+          { _id: issueId },
+          { issueState: "upVotes" },
+          { new: true }
+        );
+      }
       return res.json({
         status: 200,
         message: "Unvoted",
@@ -393,6 +399,11 @@ exports.upvotes = async (req, res, next) => {
       } else {
         message = `your issue ${issue.title} became discussion panel`;
         notificationType = "discussion";
+        await Issue.findByIdAndUpdate(
+          { _id: issueId },
+          { issueState: "discussion" },
+          { new: true }
+        );
       }
       const notification = new Notification({
         messages: message,
@@ -938,28 +949,30 @@ exports.views = async (req, res) => {
     });
   }
 };
-exports.deleteOldIssues = async (req,res) => {
+exports.deleteOldIssues = async (req, res) => {
   try {
-  const oneMonthAgo = moment().subtract(1, 'months').toDate();
-  const issuesToDelete = await Issue.find({
-      $or: [
-        { votes: { $exists: false } }, // Issues where votes array does not exist
-        { votes: { $size: 0 } }, // Issues with 0 votes
-        { 
-          $and: [
-            { votes: { $size: 1 } }, // Issues with 1 vote
-            { $expr: { $eq: [ { $arrayElemAt: ["$votes", 0] }, "$user" ] } } // Vote matches user
-          ]
-        }
-      ],
-      createdAt: { $lt: oneMonthAgo }
-    },"_id");
-    if(issuesToDelete.length>0)
-    {
-    await Issue.deleteMany({ _id: { $in: issuesToDelete } });
-    await Video.deleteMany({ issue: { $in: issuesToDelete } });
+    const oneMonthAgo = moment().subtract(1, "months").toDate();
+    const issuesToDelete = await Issue.find(
+      {
+        $or: [
+          { votes: { $exists: false } }, // Issues where votes array does not exist
+          { votes: { $size: 0 } }, // Issues with 0 votes
+          {
+            $and: [
+              { votes: { $size: 1 } }, // Issues with 1 vote
+              { $expr: { $eq: [{ $arrayElemAt: ["$votes", 0] }, "$user"] } }, // Vote matches user
+            ],
+          },
+        ],
+        createdAt: { $lt: oneMonthAgo },
+      },
+      "_id"
+    );
+    if (issuesToDelete.length > 0) {
+      await Issue.deleteMany({ _id: { $in: issuesToDelete } });
+      await Video.deleteMany({ issue: { $in: issuesToDelete } });
     }
   } catch (error) {
-    console.error('Error deleting old issues:', error);
+    console.error("Error deleting old issues:", error);
   }
 };

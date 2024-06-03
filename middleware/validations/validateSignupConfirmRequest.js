@@ -10,7 +10,7 @@ const validateSignupConfirmRequest = [
     .notEmpty()
     .withMessage('Code is required')
     .isLength({ min: 6, max: 6 })
-    .withMessage('Password must be at least 6 characters long'),
+    .withMessage('Code must be at least 6 characters long'),
 
   (req, res, next) => {
     const errors = validationResult(req);

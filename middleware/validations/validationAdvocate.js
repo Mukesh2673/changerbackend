@@ -2,7 +2,7 @@ const { body, validationResult, oneOf } = require("express-validator");
 
 const validateAdvocate = [
   body("description").notEmpty().withMessage("Description is required"),
-  body("title").notEmpty().withMessage("Description is required"),
+  body("title").notEmpty().withMessage("Title is required"),
   body("video").custom((value, { req }) => {
     if (!req.file) {
       throw new Error("Video file is required");

@@ -17,7 +17,8 @@ const issueSchema = new Schema(
     messages: [{ type: mongoose.Schema.Types.ObjectId, ref: "message", required: false }],
     hashtags: { type: Array, default: [] },
     user: { type: Schema.Types.ObjectId, ref: "User" },
-    joined: [{ type: Schema.Types.ObjectId, ref: "User", required: false }]
+    joined: [{ type: Schema.Types.ObjectId, ref: "User", required: false }],
+    issueState: { type: String, default: "upVotes"}
   },
   {
     timestamps: true,

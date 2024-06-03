@@ -1,5 +1,4 @@
-const CognitoUserPool=require('amazon-cognito-identity-js')
-const CognitoUser=require('amazon-cognito-identity-js')
+const {CognitoUserPool, CognitoUser}=require('amazon-cognito-identity-js')
 
 /**
  * Confirm the signup action
@@ -19,9 +18,8 @@ const signupConfirm = (poolData, body, callback) => {
   };
 
   const cognitoUser = new CognitoUser(userData);
-
   cognitoUser.confirmRegistration(confirmationCode, true, (err, res) =>
-    callback(err, res)
+  callback(err, res)
   );
 };
 module.exports=signupConfirm;

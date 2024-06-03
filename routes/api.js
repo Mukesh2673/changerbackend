@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 const auth = require("../middleware/firebaseAuth").authCheck;
 const { validateToken } = require("../middleware/auth");
-const {validateSigninRequest,validateAdvocate}=require('../middleware/validations');
+const {validateSigninRequest,validateAdvocate,validateSignupRequest,validateSignupConfirmRequest,validateSignPetitions}=require('../middleware/validations');
 
 const userController = require("../controllers/userController");
 const campaignController = require("../controllers/campaignController");
@@ -46,7 +46,8 @@ router.post("/user/language", userController.language)
 router.post("/user/report", userController.report)
 router.post("/user/profile/remove/:id", userController.removeProfileImage)
 router.post("/signin", validateSigninRequest, authController.signin)
-
+router.post("/signup", validateSignupRequest, authController.signup)
+router.post("/signupConfirm", validateSignupConfirmRequest, authController.signupConfirm)
 router.get("/user/notification/:id",userController.notification)
 router.post(
   "/upload/profile",
@@ -59,17 +60,16 @@ router.get("/user/message/:pid/:uid",userController.getMessages)
 // CAMPAIGN ROUTES
 router.get("/campaigns", campaignController.index);
 router.get("/campaigns/:id", campaignController.show);
-router.post("/campaign/:id/donate/", validateToken, campaignController.donate);
+router.post("/campaign/donation/:id/donate", validateToken, campaignController.donate);
 router.post("/campaign/:campaignId/participate/:participationId",validateToken, campaignController.participant);
 router.post("/campaigns", campaignController.create);
 router.post("/campaign/message", validateToken,campaignController.postMessages)
 router.get("/campaign/:id/message", validateToken,campaignController.getMessages)
 
-router.post("/paymentsession", campaignController.paymentSession);
 // get campaing that you have voluteer
 router.get("/volunteeringForYou", validateToken, campaignController.userVolunteersCompaign);
 router.post("/uploadImage", upload.single("Image"), videoController.uploadImages);
-
+router.post("/signPetition", validateToken, validateSignPetitions, campaignController.signPetitions)
 
 
 // VIDEO ROUTES

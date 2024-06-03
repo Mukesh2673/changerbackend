@@ -1,5 +1,4 @@
 const { body, validationResult }=require('express-validator');
-
 const validateSignupRequest = [
   body('email')
     .notEmpty()
@@ -10,10 +9,9 @@ const validateSignupRequest = [
     .notEmpty()
     .withMessage('Password is required')
     .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long'),
-  body('givenname').notEmpty().withMessage('Givenname is required'),
-  body('familyname').notEmpty().withMessage('Familyname is required'),
-
+    .withMessage('Password must be at least 8 characters long')
+    .matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/)
+    .withMessage('Password must contain both letters and numbers'),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

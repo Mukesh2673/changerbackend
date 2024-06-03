@@ -1,15 +1,4 @@
-const {
-  Campaign,
-  CampaignParticipant,
-  User,
-  Impact,
-  Video,
-  donation,
-  petitions,
-  campaignPhases,
-  Volunteers,
-  Message
-} = require("../models");
+const { Campaign, CampaignParticipant, User, Donated,Impact, Video, donation, petitions, campaignPhases, Volunteers, Message, SignedPetitions} = require("../models");
 const mongoose = require("mongoose");
 const { generateTags } = require("../controllers/hashtagController");
 const { endorseCampaign } = require("../libs/campaign");
@@ -222,115 +211,52 @@ exports.create = async (req, res, next) => {
 
 exports.donate = async (req, res) => {
   try {
-    const userId = req.user._id; // Assuming req.user contains the authenticated user object
-    const campaignId = req.params.id;
+    const userId = req.user; // Assuming req.user contains the authenticated user object
+    const donationId = req.params.id;
 
-    // Find the campaign
-    const campaign = await Campaign.findById(campaignId);
-    if (!campaign) {
-      return res.status(404).json({ message: "Campaign not found" });
+    // Find the donation action added within campaign phase
+    const campaignDonation = await donation.findById(donationId);
+    if (!campaignDonation) {
+      return res.status(404).json({ message: "Campaign donation not found" });
     }
-
     // Find the user and update karma points
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
-   
-
-    // Create Stripe charge
-    const stripeToken = req.body.token;
+    // Create Stripe charge for donation
+    const stripeToken = req.body.source;
     const charge = await stripe.charges.create({
       amount: parseInt(req.body.amount * 100), // Amount in cents
       currency: "usd",
-      source: stripeToken,
+      card: stripeToken,
       description: req.body.description,
     });
 
     // Handle the charge response
     if (charge.status === 'succeeded') {
-      campaign.donated_amount += req.body.amount;
-      switch (req.body.amount) {
-        case 13:
-          user.karmaPoint += 100;
-          break;
-        case 110:
-          user.karmaPoint +=1100;
-          break;
-        case 93:
-          user.karmaPoint += 900;
-          break;
-        default:
-          // No karma points for other amounts
-          break;
-      }
+      let campaignDonation=new Donated({
+        amount: req.body.amount,
+        chargeId: charge.id,
+        donation: donationId
+      }) 
+      await campaignDonation.save();
+      const karmaPoints = Math.round(req.body.amount * 10);
+      user.karmaPoint += karmaPoints;
       await user.save();
-      await campaign.save();
-
-      await endorseCampaign(userId, campaign._id);
 
       return res.status(200).json({ message: "Success" });
     } else {
       return res.status(400).json({ message: "Payment failed" });
     }
   } catch (err) {
+    console.log("valueof erro is",err)
     if (err.type === "StripeCardError") {
       return res.status(401).json({ message: "Card error" });
     }
     return res.status(500).json({ message: err.message });
   }
 };
-
-exports.paymentSession = async (req, res) => {
-  try {
-    const amount = req.body.amount * 100;
-    const successUrl = req.body.successUrl;
-    const cancelUrl = req.body.cancelUrl;
-    const name = req.body.name;
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      mode: "payment",
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: name,
-            },
-            unit_amount: amount,
-          },
-          quantity: 1,
-        },
-      ],
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-    });
-    res.json({ url: session.url });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-};
-
-// exports.donateToCampaign = async (req, res) => {
-//   var stripeToken = req.body.stripeToken;
-//   const amount = req.body.amount;
-//   try {
-//     var charge = await stripe.charges.create({
-//       amount: parseInt(amount * 100),
-//       currency: "usd",
-//       card: stripeToken.id,
-//       description: req.body.description,
-//     });
-//     if (charge)
-//       return res
-//         .status(200)
-//         .json({ message: "Success", amount: amount, data: charge });
-//   } catch (err) {
-//     console.log("errr is", err);
-//     res.status(400).json({ message: "fail", error: err });
-//   }
-// };
 
 //add Volunteers to campaign
 exports.participant = async (req, res) => {
@@ -485,3 +411,49 @@ exports.getMessages = async (req, res) => {
     return res.json({ status: 500, message: err, success: false });
   }
 };
+
+//add signPetitions
+exports.signPetitions  = async (req, res) => {
+  try {
+    const { petition, location } = req.body;
+
+    // Check if the petition exists
+    const petitionExists = await petitions.findById(petition);
+    if (!petitionExists) {
+      return res.status(404).json({
+        status: 404,
+        message: "Petition Not Exist",
+        success: false,
+      });
+    }
+
+    // Check if the petition is already signed by the user
+    const alreadySigned = await SignedPetitions.findOne({ user: req.user._id, petition });
+    if (alreadySigned) {
+      return res.status(400).json({
+        status: 400,
+        message: "Petition already Signed",
+        success: false,
+      });
+    }
+
+    // Sign the petition
+    const newSign = new SignedPetitions({ user: req.user._id, petition, location });
+    await newSign.save();
+
+    // Return success response
+    return res.status(200).json({
+      status: 200,
+      message: "Petition Signed successfully",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: "Internal Server Error",
+      success: false,
+    });
+  }
+};
+
+

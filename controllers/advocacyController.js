@@ -79,19 +79,16 @@ exports.delete = async (req, res) => {
 
       return res.json({
         status: 200,
-        message: "advocate deleted successfully",
+        message: "Advocate deleted successfully",
         success: true,
       });
     } else {
       return res.json({
         status: 500,
-        message: "invalid advocate",
+        message: "Invalid advocate",
         success: false,
       });
     }
-    
-
-    res.json({ status: 200, message: "Advocate added successfully", success: true });
   } catch (error) {
     res.status(500).json({ message: error.message, status: 500 });
   }

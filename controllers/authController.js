@@ -5,16 +5,12 @@ const CognitoIdentityService = CognitoIdentity();
 const signup = async (req, res) => {
   // Signup logic here
   // ...
-
-  const { email, password, givenname, familyname } = req.body;
-
+  
+  const { email, password} = req.body;
   const cognitoParams = {
-    username: email,
-    password,
-    givenname,
-    familyname,
+    Username: email,
+    Password: password ,
   };
-
   try {
     const cognitoUser = await new Promise((resolve, reject) => {
       CognitoIdentityService.signup(cognitoParams, (err, user) => {
@@ -28,7 +24,7 @@ const signup = async (req, res) => {
 
     res.status(200).send({
       success: true,
-      message: 'User registered successfully',
+      message: `Confirmation Code has been sent to ${email}`,
       user: cognitoUser,
     });
   } catch (error) {
