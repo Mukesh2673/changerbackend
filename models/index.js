@@ -1,6 +1,9 @@
 module.exports = {
+  BookMarks: require("./bookmarks"),
+  Advocate: require("./advocate"),
   SignedPetitions: require("./signedPetition"),
   Volunteers: require("./campaign/campaignVolunteers"),
+  Comment: require("./comment"),  
   RepliesComment: require("./comment/reply"),
   CommentsLikes: require("./comment/likes"),
   Notification: require("./notification"),
@@ -17,4 +20,5 @@ module.exports = {
   donation: require("./campaign/campaignDonation"),
   Donated: require("./campaign/campaignDonated"),
   petitions: require("./campaign/campaignPetition"),
+  
 };

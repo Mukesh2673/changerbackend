@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 const auth = require("../middleware/firebaseAuth").authCheck;
 const { validateToken } = require("../middleware/auth");
-const {validateSigninRequest,validateAdvocate,validateSignupRequest,validateSignupConfirmRequest,validateSignPetitions}=require('../middleware/validations');
+const {validateSigninRequest,validateAdvocate,validateSignupRequest,validateSignupConfirmRequest,validateSignPetitions,validateBookMarks}=require('../middleware/validations');
 
 const userController = require("../controllers/userController");
 const campaignController = require("../controllers/campaignController");
@@ -27,6 +27,7 @@ const searchController=require("../controllers/searchController")
 const hashtagsController=require("../controllers/hashtagController")
 const adVocateController=require("../controllers/advocacyController")
 const authController =require("../controllers/authController")
+const bookMarkController=require("../controllers/bookMarksController")
 cron.schedule('0 0 * * *',  issueController.deleteOldIssues);
 
 // USER ROUTES
@@ -105,7 +106,7 @@ router.delete("/issue/:id", issueController.deleteIssue)
 router.post("/issue/message", issueController.messages)
 router.post("/issue/report", issueController.report)
 router.post("/issue/share", issueController.share)
-router.post("/issue/views", issueController.views)
+router.post("/issue/:id/views", issueController.views)
 router.post("/issue/deleteOld", issueController.deleteOldIssues)
 //impact Routes
 router.post("/impact", impactController.create);
@@ -119,5 +120,9 @@ router.get("/content/hashtags/:tag", hashtagsController.getContent)
 router.post("/advocate", validateToken, upload.single("video"),validateAdvocate,adVocateController.add)
 router.delete("/advocate/:id", validateToken, adVocateController.delete)
 router.get("/advocate", adVocateController.get)
+//bookmarks 
+router.post("/bookmarks", validateToken, validateBookMarks,bookMarkController.add)
+router.delete("/bookmarks/:id",validateToken, bookMarkController.delete);
+router.get("/bookmarks",validateToken, bookMarkController.get);
 
 module.exports = router;

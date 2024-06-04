@@ -1,24 +1,11 @@
-const {
-  User,
-  Video,
-  Issue,
-  Message,
-  Report,
-  Comment,
-  Notification,
-} = require("../models");
+const { User, Video, Issue, Message, Report, Comment, Notification, Campaign, Advocate} = require("../models");
 const { generateTags } = require("./hashtagController");
 const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Types;
 const moment = require("moment");
 require("dotenv").config();
 const OpenAI = require("openai");
-const {
-  searchAlgolia,
-  updateAlgolia,
-  saveAlgolia,
-  deleteAlgolia,
-} = require("../libs/algolia");
+const { searchAlgolia, updateAlgolia, saveAlgolia, deleteAlgolia} = require("../libs/algolia");
 const user = require("../models/user");
 const { sendMessage } = require("../libs/webSocket");
 
@@ -666,6 +653,14 @@ exports.issueDetails = async (req, res) => {
         populate: { path: "User", model: User },
       },
       {
+        path: "campaign",
+        populate: { path: "campaign", model: Campaign },
+      },
+      {
+        path: "advocate",
+        populate: { path: "advocate", model: Advocate },
+      },      
+      {
         path: "messages",
         populate: {
           path: "sender",
@@ -680,6 +675,7 @@ exports.issueDetails = async (req, res) => {
       data: records,
     });
   } catch (err) {
+    console.log("valeu of issue error is",err)
     return res.json({ status: 500, message: err, success: false });
   }
 };
@@ -894,61 +890,32 @@ exports.share = async (req, res) => {
     });
   }
 };
+//add views of issue
 exports.views = async (req, res) => {
   try {
-    const { id, uid } = req.body;
-    const issueId = id;
-    const isExist = await Issue.find({ _id: issueId });
-
-    if (isExist) {
-      const views = isExist[0].views;
-
-      let exist = views.includes(uid);
-      if (exist) {
-        return res.json({
-          status: 200,
-          message: "shared",
-          success: true,
-        });
-      } else {
-        const issue = await Issue.findByIdAndUpdate(
-          { _id: issueId },
-          { $push: { views: uid } },
-
-          { new: true }
-        );
-
-        let filterData = { search: issueId, type: "issues" };
-        const searchIssueAlgo = await searchAlgolia(filterData);
-        if (searchIssueAlgo.length > 0) {
-          let obj = {
-            objectID: searchIssueAlgo[0].objectID,
-            views: issue.views,
-          };
-          await updateAlgolia(obj, "issues");
-        }
-        return res.json({
-          status: 200,
-          message: "saved views",
-          success: true,
-          data: issue,
-        });
-      }
-    } else {
-      return res.json({
-        status: 500,
-        message: "invalid issue",
-        success: false,
-      });
+    const userId = req.user;
+    const issueId = req.params.id;
+    const issue = await Issue.findById(issueId);
+    if (!issue) {
+      return res.status(404).json({ message: "Issue not found", success: false });
     }
-  } catch (err) {
+    if (issue.views.includes(userId)) {
+      return res.status(400).json({ message: "User has already viewed this issue", success: false });
+    }
+    issue.views.push(userId);
+    await issue.save();
+    res.status(200).json({ message: "View added successfully", success: true });
+  }
+  catch(err)
+  {
     return res.json({
       status: 500,
-      message: "some thing went wrong",
+      message: err.message,
       success: false,
     });
   }
 };
+//delete the issue by cron job if there is not interaction since a month
 exports.deleteOldIssues = async (req, res) => {
   try {
     const oneMonthAgo = moment().subtract(1, "months").toDate();

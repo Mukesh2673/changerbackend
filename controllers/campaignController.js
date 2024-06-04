@@ -1,4 +1,18 @@
-const { Campaign, CampaignParticipant, User, Donated,Impact, Video, donation, petitions, campaignPhases, Volunteers, Message, SignedPetitions} = require("../models");
+const {
+  Campaign,
+  CampaignParticipant,
+  User,
+  Donated,
+  Impact,
+  Video,
+  donation,
+  petitions,
+  campaignPhases,
+  Volunteers,
+  Message,
+  SignedPetitions,
+  Issue,
+} = require("../models");
 const mongoose = require("mongoose");
 const { generateTags } = require("../controllers/hashtagController");
 const { endorseCampaign } = require("../libs/campaign");
@@ -96,6 +110,25 @@ exports.create = async (req, res, next) => {
       image: data.image,
     });
     const campaigns = await campaign.save();
+    if (mongoose.Types.ObjectId.isValid(data.issue)) {
+      let issue = await Issue.findByIdAndUpdate(
+        {
+          _id: data.issue,
+        },
+        {
+          $push: {
+            campaign: campaigns._id,
+          },
+        }
+      );
+      if (!issue) {
+        return res.status(400).json({
+          status: 400,
+          error: "Invalid issue ID format",
+          success: false,
+        });
+      }
+    }
     let campaignTag = campaigns?.hashtags;
     var tagsArray = [];
     if (campaignTag?.length > 0) {
@@ -115,7 +148,7 @@ exports.create = async (req, res, next) => {
       video_url: req.body.video.videoUrl,
       type: req.body.video.type,
       thumbnail_url: req.body.thumbnailUrl,
-      hashtags: tagsArray
+      hashtags: tagsArray,
     });
     const savedVideo = await videos.save();
     const videoId = savedVideo._id;
@@ -234,12 +267,12 @@ exports.donate = async (req, res) => {
     });
 
     // Handle the charge response
-    if (charge.status === 'succeeded') {
-      let campaignDonation=new Donated({
+    if (charge.status === "succeeded") {
+      let campaignDonation = new Donated({
         amount: req.body.amount,
         chargeId: charge.id,
-        donation: donationId
-      }) 
+        donation: donationId,
+      });
       await campaignDonation.save();
       const karmaPoints = Math.round(req.body.amount * 10);
       user.karmaPoint += karmaPoints;
@@ -250,7 +283,7 @@ exports.donate = async (req, res) => {
       return res.status(400).json({ message: "Payment failed" });
     }
   } catch (err) {
-    console.log("valueof erro is",err)
+    console.log("valueof erro is", err);
     if (err.type === "StripeCardError") {
       return res.status(401).json({ message: "Card error" });
     }
@@ -317,7 +350,8 @@ exports.userVolunteersCompaign = async (req, res) => {
         },
       },
       {
-        $lookup: { //participation form that have details about participation
+        $lookup: {
+          //participation form that have details about participation
           from: "campaignParticipation",
           localField: "participation",
           foreignField: "_id",
@@ -349,7 +383,7 @@ exports.postMessages = async (req, res) => {
   try {
     let records = req.body;
     const { user } = req;
-    records.sender=user
+    records.sender = user;
     const message = new Message(records);
     const savedMessage = await message.save();
     sendMessage("campaignMessage", message, records.profile);
@@ -370,32 +404,30 @@ exports.postMessages = async (req, res) => {
 
 //get  Messages  between campaign creator and login user
 exports.getMessages = async (req, res) => {
-  try{
-    const pid=req.user
+  try {
+    const pid = req.user;
     const campaign = await Campaign.findById(req.params.id);
     if (!campaign) {
       return res.status(404).json({ message: "Campaign not found." });
     }
-    const uid=campaign.user
-    let records=await Message.find({
+    const uid = campaign.user;
+    let records = await Message.find({
       $or: [
         { sender: uid, profile: pid }, // Messages sent from uid to pid
-        { sender: pid, profile: uid }, 
+        { sender: pid, profile: uid },
       ],
-    $and:[
-      { profile: { $exists: true, $ne: null } },
-      { campaign: req.params.id }
-    ]
-
-}
-).populate([
+      $and: [
+        { profile: { $exists: true, $ne: null } },
+        { campaign: req.params.id },
+      ],
+    }).populate([
       {
         path: "sender",
-        select: "_id first_name last_name email username profileImage" // Select specific fields
+        select: "_id first_name last_name email username profileImage", // Select specific fields
       },
       {
         path: "profile",
-        select: "_id first_name last_name email username profileImage" // Select specific fields
+        select: "_id first_name last_name email username profileImage", // Select specific fields
       },
     ]);
     return res.json({
@@ -404,16 +436,13 @@ exports.getMessages = async (req, res) => {
       success: true,
       data: records,
     });
-  }
-
-  catch(err)
-  {
+  } catch (err) {
     return res.json({ status: 500, message: err, success: false });
   }
 };
 
 //add signPetitions
-exports.signPetitions  = async (req, res) => {
+exports.signPetitions = async (req, res) => {
   try {
     const { petition, location } = req.body;
 
@@ -428,7 +457,10 @@ exports.signPetitions  = async (req, res) => {
     }
 
     // Check if the petition is already signed by the user
-    const alreadySigned = await SignedPetitions.findOne({ user: req.user._id, petition });
+    const alreadySigned = await SignedPetitions.findOne({
+      user: req.user._id,
+      petition,
+    });
     if (alreadySigned) {
       return res.status(400).json({
         status: 400,
@@ -438,7 +470,11 @@ exports.signPetitions  = async (req, res) => {
     }
 
     // Sign the petition
-    const newSign = new SignedPetitions({ user: req.user._id, petition, location });
+    const newSign = new SignedPetitions({
+      user: req.user._id,
+      petition,
+      location,
+    });
     await newSign.save();
 
     // Return success response
@@ -455,5 +491,3 @@ exports.signPetitions  = async (req, res) => {
     });
   }
 };
-
-
