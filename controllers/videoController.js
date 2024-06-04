@@ -405,7 +405,7 @@ exports.uploadProfile = async (req, res) => {
   try {
     const thumbnail = await uploadImage(req.file, "profile");
     let data = `${thumbnail.Bucket}/${thumbnail.key}`;
-    return res.status(200).json({ message: "uploaded", image: data });
+    return res.status(200).json({ message: "Profile image uploaded successfully", image: data });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }
@@ -447,7 +447,7 @@ exports.commentVideo = async (req, res) => {
     sendMessage("commentVideo", notificationMessage, uid);
     return res.json({
       status: 200,
-      message: "sent Message Successfully",
+      message: "Sent message successfully",
       success: false,
       data: newRecords,
     });
@@ -455,7 +455,7 @@ exports.commentVideo = async (req, res) => {
     console.log("erero ", err);
     return res.json({
       status: 500,
-      message: "Something Went wrong",
+      message: "Something went wrong",
       success: false,
     });
   }
@@ -488,7 +488,7 @@ exports.replyCommentVideo = async (req, res) => {
     sendMessage("repliesComment", notificationMessage, uid);
     return res.json({
       status: 200,
-      message: "replies Message Successfully",
+      message: "Reply successful!",
       success: false,
       data: newRecords,
 
@@ -497,7 +497,7 @@ exports.replyCommentVideo = async (req, res) => {
     console.log("erero ", err);
     return res.json({
       status: 500,
-      message: "Something Went wrong",
+      message: "Something went wrong",
       success: false,
     });
   }
@@ -562,7 +562,7 @@ exports.commentLikes = async (req, res) => {
     console.log("erero ", err);
     return res.json({
       status: 500,
-      message: "Something Went wrong",
+      message: "Something went wrong",
       success: false,
     });
   }
@@ -624,7 +624,7 @@ exports.replyCommentLikes = async (req, res) => {
     console.log("erero ", err);
     return res.json({
       status: 500,
-      message: "Something Went wrong",
+      message: "Something went wrong",
       success: false,
     });
   } 
