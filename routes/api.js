@@ -1,3 +1,7 @@
+const swaggerUi = require("swagger-ui-express"); 
+const userRoutes = require("./userRoutes.swagger");
+const campaignRoutes = require("./campaignRoutes.swagger");
+
 var express = require("express");
 var router = express.Router();
 const multer = require("multer");
@@ -22,6 +26,7 @@ const issueController = require("../controllers/issueController");
 const impactController = require("../controllers/impactController");
 const searchController=require("../controllers/searchController")
 const hashtagsController=require("../controllers/hashtagController")
+
 // USER ROUTES
 router.get("/users",userController.users)
 router.get("/users/:id", userController.getUser);
@@ -102,10 +107,15 @@ router.post("/issue/views",issueController.views)
 //impact Routes
 router.post("/impact", impactController.create);
 router.get("/impact", impactController.index);
+
 //search
 router.get("/search",searchController.search)
-//hasTags
+
+//hashTags
 router.post("/hashtags",hashtagsController.add)
 
+router.use("/api-docs/users", swaggerUi.serve, swaggerUi.setup(userRoutes));
+router.use("/api-docs/campaigns", swaggerUi.serve, swaggerUi.setup(campaignRoutes));
+router.use("/api-docs", swaggerUi.serve, swaggerUi.setup(userRoutes));
 
 module.exports = router;

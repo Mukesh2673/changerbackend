@@ -68,13 +68,13 @@ exports.users = async (req, res, next) => {
 
 exports.getUserByCognito = async (req, res, next) => {
   try {
-    let userName=req.params.cuid
+    let userName = req.params.cuid
     const existingUser = await User.findOne({cognitoUsername:userName});
     if (existingUser) {
-      return res.status(200).json({ message: "username-exists",user:existingUser,status:403 });
+      return res.status(200).json({ message: "Username is taken!",user:existingUser,status:403 });
     }
     else{
-      return res.status(200).json({ message: "username not exist",status:200 });
+      return res.status(200).json({ message: "Username is available!",status:200 });
 
     }
 
@@ -128,15 +128,15 @@ exports.createUser = async (req, res, next) => {
 };
 
 exports.cause = async (req, res, next) => {
-  const {cause,uid}=req.body
+  const {cause,uid} = req.body
   try {
-    const existingUser =await User.findById(uid);
+    const existingUser = await User.findById(uid);
     if (existingUser) {
-     let result=await User.updateOne({ _id: uid }, { cause: cause } );
-      return res.status(200).json({ message: "cause added" });
+     let result = await User.updateOne({ _id: uid }, { cause: cause } );
+      return res.status(200).json({ message: "Cause added" });
     }
     else{
-      return res.status(403).json({ message: "username not exists" });
+      return res.status(403).json({ message: "Mistake occured!" });
 
     }
   } catch (error) {
@@ -255,7 +255,7 @@ const followingCurrentUser= await User.find({ _id: cuid }).populate([
   sendMessage("follow", likeMessage, uid);
     return res.json({
       status: 200,
-      message: "user follow sucessfully",
+      message: "User followed sucessfully!",
       success: true,
       data:followers
     });
@@ -462,14 +462,14 @@ exports.language=async (req,res)=>{
 
 exports.report = async (req, res) => {
   try{
-    let records=req.body
-    const report =new Report(records)
-    const savedReports=await report.save();
-    return res.json({ status: 200, message: "Report added Successfully", success: false,data:savedReports });
+    let records = req.body
+    const report = new Report(records)
+    const savedReports = await report.save();
+    return res.json({ status: 200, message: "Report added successfully", success: false,data:savedReports });
 
   }
   catch(err){
-    return res.json({ status: 500, message: "Something Went wrong", success: false });
+    return res.json({ status: 500, message: "Something went wrong", success: false });
 
   }
 
@@ -490,7 +490,7 @@ exports.message=async (req,res)=>{
 
     return res.json({
       status: 200,
-      message: "sent Message Successfully",
+      message: "Message sent successfully!",
       success: false,
       data: savedMessage,
     });
@@ -500,7 +500,7 @@ exports.message=async (req,res)=>{
     console.log("error is",err)
     return res.json({
       status: 500,
-      message: "Something Went wrong",
+      message: "Something went wrong!",
       success: false,
     });
   }
