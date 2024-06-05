@@ -6,7 +6,6 @@ const {
 const { generateTags } = require("../controllers/hashtagController");
 const { User, Video, Impact, Campaign } = require("../models");
 const mongoose = require("mongoose");
-require("dotenv").config();
 
 exports.index = async (req, res, next) => {
   try {

@@ -1,11 +1,7 @@
 const  CognitoIdentity =require('../services/cognito');
-
 const CognitoIdentityService = CognitoIdentity();
 
 const signup = async (req, res) => {
-  // Signup logic here
-  // ...
-  
   const { email, password} = req.body;
   const cognitoParams = {
     Username: email,
@@ -31,14 +27,12 @@ const signup = async (req, res) => {
     res.status(400).send({ success: false, message: error.message, error });
   }
 };
-
 const signupConfirm = async (req, res) => {
   const { email, code } = req.body;
   const cognitoParams = {
     username: email,
     confirmationCode: code,
   };
-
   try {
     await new Promise((resolve, reject) => {
       CognitoIdentityService.signupConfirm(cognitoParams, (err, user) => {
@@ -49,10 +43,6 @@ const signupConfirm = async (req, res) => {
         }
       });
     });
-
-    // DB logic here
-    // ...
-
     res.status(200).send({
       success: true,
       message: 'User email confirmed successfully',
@@ -82,10 +72,6 @@ const signin = async (req, res) => {
         }
       });
     });
-
-    // DB logic here
-    // ...
-
     res.status(200).send({
       success: true,
       message: 'User logined successfully',

@@ -5,7 +5,7 @@ const messageSchema = new Schema(
   sender: {type: Schema.Types.ObjectId, ref:"User", required:true},
   profile: {type: Schema.Types.ObjectId, ref:"User", required:false},
   issues:  {type: Schema.Types.ObjectId, ref: "issue", required: false},
-  campaign: {type: mongoose.Schema.Types.ObjectId, ref: "Campaign"},
+  campaign: {type: mongoose.Schema.Types.ObjectId, ref: "campaign"},
   message: {type: String, required: true},
   },
   {

@@ -1,4 +1,3 @@
-require("dotenv").config();
 const { Campaign, Issue, Video,Advocate } = require("../models");
 const {upload,uploadVideoThumbnail} = require("../libs/fileUpload");
 exports.add = async (req, res) => {
@@ -104,9 +103,7 @@ exports.get = async (req, res) => {
     }
     else{
       advocate = await Advocate.find();
-
-    }
-      
+    }     
     return res.json({
       status: 200,
       success: true,

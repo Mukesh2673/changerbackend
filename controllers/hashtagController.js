@@ -1,5 +1,4 @@
 const { searchAlgolia, updateAlgolia } = require("../libs/algolia");
-require("dotenv").config();
 const { Campaign, Issue, Impact,Video } = require("../models");
 const mongoose = require("mongoose");
 const natural = require("natural");

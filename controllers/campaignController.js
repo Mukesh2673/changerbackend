@@ -12,14 +12,16 @@ const {
   Message,
   SignedPetitions,
   Issue,
+  Notification
 } = require("../models");
 const mongoose = require("mongoose");
 const { generateTags } = require("../controllers/hashtagController");
 const { endorseCampaign } = require("../libs/campaign");
-const { saveAlgolia } = require("../libs/algolia");
 const { sendMessage } = require("../libs/webSocket");
 require("dotenv").config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const { searchAlgolia, updateAlgolia, saveAlgolia, deleteAlgolia} = require("../libs/algolia");
+
 exports.campaignRecords = async (query) => {
   const skip = query.skip !== undefined ? query.skip : 0;
   const limit = query.limit !== undefined ? query.limit : 0;
@@ -49,7 +51,7 @@ exports.campaignRecords = async (query) => {
   return records;
 };
 
-exports.index = async (req, res, next) => {
+exports.showCampaigns = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
     const pageSize = parseInt(req.query.pageSize, 10) || 10;
@@ -68,20 +70,76 @@ exports.index = async (req, res, next) => {
     return res.json({ status: 400, data: [], success: false, message: error });
   }
 };
-
-exports.show = async (req, res, next) => {
+//get Campaing by Id
+exports.showCampaign = async (req, res, next) => {
   try {
-    const campaign = await Campaign.findById(req.params.id);
+    const { id } = req.params;
 
-    if (!!campaign) {
+    const campaign = await Campaign.aggregate([
+      { $match: { _id: mongoose.Types.ObjectId(id) } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      { $unwind: '$user' },
+      {
+        $lookup: {
+          from: 'advocates',
+          localField: 'advocate',
+          foreignField: '_id',
+          as: 'advocate'
+        }
+      },
+      {
+        $lookup: {
+          from: 'phases',
+          localField: 'phases',
+          foreignField: '_id',
+          as: 'phases'
+        }
+      },
+      {
+        $lookup: {
+          from: 'videos',
+          localField: 'video',
+          foreignField: '_id',
+          as: 'video'
+        }
+      },
+      { $unwind: { path: '$video', preserveNullAndEmptyArrays: true } }, // Video may be null, so preserve nulls
+      {
+        $lookup: {
+          from: 'impacts',
+          localField: 'impacts',
+          foreignField: '_id',
+          as: 'impacts'
+        }
+      },
+      {
+        $lookup: {
+          from: 'notifications',
+          localField: 'updates',
+          foreignField: '_id',
+          as: 'updates'
+        }
+      }
+    ]);
+
+    if (campaign.length > 0) {
       return res.json(campaign);
+    } else {
+      return res.status(404).json({ message: "Campaign not found." });
     }
-
-    return res.status(404).json({ message: "Campaign not found." });
   } catch (error) {
+    console.error("Error in showCampaign:", error);
     return res.status(500).json({ message: error.message });
   }
 };
+
 //create a campaign
 exports.create = async (req, res, next) => {
   try {
@@ -102,6 +160,25 @@ exports.create = async (req, res, next) => {
         success: false,
       });
     }
+    const karmaPoint = auth.karmaPoint + 100;
+    const user = await User.findByIdAndUpdate(
+      { _id: auth._id },
+      {
+        $set: {
+          karmaPoint: karmaPoint,
+        },
+      },
+      { new: true }
+    );
+    let filterUserAlgolia = { search: user._id, type: "users" };
+    const searchAlgo = await searchAlgolia(filterUserAlgolia);
+    if (searchAlgo.length > 0) {
+      let obj = {
+        objectID: searchAlgo[0].objectID,
+        karmaPoint: user.karmaPoint,
+      };
+      await updateAlgolia(obj, "users");
+    }
     const campaign = new Campaign({
       user: data.user,
       cause: data.cause,
@@ -110,6 +187,8 @@ exports.create = async (req, res, next) => {
       image: data.image,
     });
     const campaigns = await campaign.save();
+
+    //if campaign is created from issue
     if (mongoose.Types.ObjectId.isValid(data.issue)) {
       let issue = await Issue.findByIdAndUpdate(
         {
@@ -129,6 +208,7 @@ exports.create = async (req, res, next) => {
         });
       }
     }
+    //add hastags to the campaign that are unique to each other
     let campaignTag = campaigns?.hashtags;
     var tagsArray = [];
     if (campaignTag?.length > 0) {
@@ -136,9 +216,10 @@ exports.create = async (req, res, next) => {
       tagsArray = arr.filter(
         (value, index, self) => self.indexOf(value) === index
       );
-    } else {
+    }else {
       tagsArray = tags;
     }
+    //save campaign video to video collection
     const campaignsId = campaigns._id;
     const videos = new Video({
       user: req.body.user,
@@ -156,6 +237,7 @@ exports.create = async (req, res, next) => {
     const savePhaseId = [];
     const videRecords = await Video.find({ _id: videoId });
     await saveAlgolia(videRecords, "videos");
+    //save phase data to campaign Phase Collection
     for (let i = 0; i < phaseArr.length; i++) {
       const phaseItem = new campaignPhases({
         title: phaseArr[i].title,
@@ -230,6 +312,15 @@ exports.create = async (req, res, next) => {
     }
     let records = await this.campaignRecords({ _id: campaignsId });
     await saveAlgolia(records, "campaigns");
+    const message = `You received +100 karma Point for good intention of creating Campaign ${records[0].title}`;
+    const notification = new Notification({
+      messages: message,
+      user: auth._id,
+      activity: records[0].user,
+      notificationType: "karmaPoint",
+    });
+    sendMessage("karmaPoint", message, auth._id);
+    await notification.save();
     return res.json({
       status: 200,
       message: "campaign added successfully",
@@ -246,12 +337,30 @@ exports.donate = async (req, res) => {
   try {
     const userId = req.user; // Assuming req.user contains the authenticated user object
     const donationId = req.params.id;
-
+    console.log('valueof req.params is',req.params)
     // Find the donation action added within campaign phase
     const campaignDonation = await donation.findById(donationId);
     if (!campaignDonation) {
       return res.status(404).json({ message: "Campaign donation not found" });
     }
+    // check is  donation  exist in campaign phase
+    const campaignPhase= await campaignPhases.findOne({
+      donation:donationId
+    })
+
+    if (!campaignPhase) {
+      return res.status(404).json({ message: "Donation is  not exist on phase" });
+    }
+
+    // check is campaign phase exist in campaign  
+    const campaign= await Campaign.findOne({
+      phases: { $in: [mongoose.Types.ObjectId(campaignPhase._id)] }
+    })
+
+    if (!campaign) {
+      return res.status(404).json({ message: "Donation and phase not exist in campaign" });
+    }
+
     // Find the user and update karma points
     const user = await User.findById(userId);
     if (!user) {
@@ -277,7 +386,15 @@ exports.donate = async (req, res) => {
       const karmaPoints = Math.round(req.body.amount * 10);
       user.karmaPoint += karmaPoints;
       await user.save();
-
+  
+  // Add notification for karma points
+  // const karmaMessage = `You received +50 karma points for participating in the campaign ${campaign.title}`;
+  // const karmaNotification = new Notification({
+  //   messages: karmaMessage,
+  //   user: currentUser._id,
+  //   activity: campaign.user._id,
+  //   notificationType: "karmaPoint",
+  // });
       return res.status(200).json({ message: "Success" });
     } else {
       return res.status(400).json({ message: "Payment failed" });
@@ -292,16 +409,29 @@ exports.donate = async (req, res) => {
 };
 
 //add Volunteers to campaign
-exports.participant = async (req, res) => {
+exports.participateInCampaign = async (req, res) => {
   try {
     const { user } = req;
     const { campaignId, participationId } = req.params;
 
     // Find the campaign
-    const campaign = await Campaign.findById(campaignId);
+    const campaign = await Campaign.findById(campaignId).populate({
+      path: 'user',
+      populate: { path: 'user', model: User }
+    });
+
     if (!campaign) {
       return res.status(404).json({ message: "Campaign not found." });
     }
+
+    // Update Karma Points for the user's profile
+    const currentUser = await User.findById(user._id);
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    currentUser.karmaPoint += 50;
+    await currentUser.save();
 
     // Check if the user is already participating
     const existingParticipation = await Volunteers.findOne({
@@ -309,10 +439,9 @@ exports.participant = async (req, res) => {
       user: user._id,
       participation: participationId,
     });
+
     if (existingParticipation) {
-      return res
-        .status(422)
-        .json({ message: "You are already participating in this campaign." });
+      return res.status(422).json({ message: "You are already participating in this campaign." });
     }
 
     // Create a new participation record
@@ -323,9 +452,45 @@ exports.participant = async (req, res) => {
     });
     const savedVolunteer = await newVolunteer.save();
 
-    // Return the saved volunteer record
-    return res.status(200).json(savedVolunteer);
+    // Add notification for karma points
+    const karmaMessage = `You received +50 karma points for participating in the campaign ${campaign.title}`;
+    const karmaNotification = new Notification({
+      messages: karmaMessage,
+      user: currentUser._id,
+      activity: campaign.user._id,
+      notificationType: "karmaPoint",
+    });
+    await karmaNotification.save();
+    sendMessage("karmaPoint", karmaMessage, currentUser._id);
+
+    // Add notification for campaign participation
+    const participationMessage = `${currentUser.first_name} ${currentUser.last_name} participated in the campaign ${campaign.title}`;
+    const participationNotification = new Notification({
+      messages: participationMessage,
+      user: campaign.user._id,
+      activity: currentUser._id,
+      notificationType: "campaignParticipation",
+    });
+    await participationNotification.save();
+
+    await Campaign.findByIdAndUpdate(
+      campaign._id,
+      {
+        $push: { updates: participationNotification._id },
+      },
+      { new: true }
+    );
+
+    sendMessage("campaignParticipation", participationMessage, campaign.user._id);
+
+    return res.status(200).json({
+      status: 200,
+      message: "Successfully participated in the campaign.",
+      success: true,
+      data: savedVolunteer,
+    });
   } catch (error) {
+    console.error("Error in participateInCampaign:", error);
     return res.status(500).json({ message: error.message });
   }
 };

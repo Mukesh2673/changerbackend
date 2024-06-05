@@ -1,39 +1,96 @@
-const { User,Report,Message,Notification,Issue } = require("../models");
-const { saveAlgolia, searchAlgolia,updateAlgolia } = require("../libs/algolia");
+const {
+  User,
+  Report,
+  Message,
+  Notification,
+  Issue,
+  Campaign,
+} = require("../models");
+const {
+  saveAlgolia,
+  searchAlgolia,
+  updateAlgolia,
+} = require("../libs/algolia");
 const { sendMessage } = require("../libs/webSocket");
+const moment = require("moment");
 
-exports.notification=async(req,res)=>{
-  try{
-    const notificationId=req.params.id
-    const notification = await Notification.find({user:notificationId}).sort({ createdAt: -1 }).populate([
-      {
-         path: "user",
-         model: User
-      },
-      {
-        path: "activity",
-        model: User
-      },
-      {
-       path: "joinedIssue",
-       model: Issue,
-       populate: {
-        path: "joined",
-        model: User
-     }
+exports.notification = async (req, res) => {
+  try {
+    const notificationId = req.params.id;
+    const notification = await Notification.find({ user: notificationId })
+      .sort({ createdAt: -1 })
+      .populate([
+        {
+          path: "user",
+          model: User,
+        },
+        {
+          path: "activity",
+          model: User,
+        },
+        {
+          path: "joinedIssue",
+          model: Issue,
+          populate: {
+            path: "joined",
+            model: User,
+          },
+        },
+      ]);
+
+    // Process notifications to remove joinedIssue if it is null or empty
+    const processedNotifications = notification.map((notification) => {
+      const notificationObj = notification.toObject();
+      if (
+        !notificationObj.joinedIssue ||
+        notificationObj.joinedIssue.length === 0
+      ) {
+        delete notificationObj.joinedIssue;
       }
-    ])
-  
-    return res.json({ status: 200, data:notification, success: true, message: 'Notifications' });
+      return notificationObj;
+    });
 
-  }
-  catch(err)
-  {
+    //display records by today,yesterday,ThisWeek,Older
+    const today = moment().startOf("day");
+    const yesterday = moment().subtract(1, "days").startOf("day");
+    const startOfWeek = moment().startOf("week");
+
+    const categorizedNotifications = {
+      Today: [],
+      Yesterday: [],
+      ThisWeek: [],
+      Older: [],
+    };
+    processedNotifications.forEach((notification) => {
+      const createdAt = moment(notification.createdAt);
+      if (createdAt.isSameOrAfter(today)) {
+        categorizedNotifications.Today.push(notification);
+      } else if (
+        createdAt.isSameOrAfter(yesterday) &&
+        createdAt.isBefore(today)
+      ) {
+        categorizedNotifications.Yesterday.push(notification);
+      } else if (
+        createdAt.isSameOrAfter(startOfWeek) &&
+        createdAt.isBefore(yesterday)
+      ) {
+        categorizedNotifications.ThisWeek.push(notification);
+      } else {
+        categorizedNotifications.Older.push(notification);
+      }
+    });
+
+    return res.json({
+      status: 200,
+      data: categorizedNotifications,
+      success: true,
+      message: "Notifications",
+    });
+  } catch (err) {
+    console.log("value of err irs", err);
     return res.json({ status: 400, data: [], success: false, message: error });
-
   }
-}
-
+};
 
 exports.getUser = async (req, res, next) => {
   try {
@@ -45,12 +102,8 @@ exports.getUser = async (req, res, next) => {
       {
         path: "following",
         populate: { path: "User", model: User },
-      }
-     
-        
-
+      },
     ]);
-    
     return res.json(user);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -68,21 +121,21 @@ exports.users = async (req, res, next) => {
 
 exports.getUserByCognito = async (req, res, next) => {
   try {
-    let userName=req.params.cuid
-    const existingUser = await User.findOne({cognitoUsername:userName});
+    let userName = req.params.cuid;
+    const existingUser = await User.findOne({ cognitoUsername: userName });
     if (existingUser) {
-      return res.status(200).json({ message: "username-exists",user:existingUser,status:403 });
+      return res
+        .status(200)
+        .json({ message: "username-exists", user: existingUser, status: 403 });
+    } else {
+      return res
+        .status(200)
+        .json({ message: "username not exist", status: 200 });
     }
-    else{
-      return res.status(200).json({ message: "username not exist",status:200 });
-
-    }
-
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
-
 
 exports.getUserByUID = async (req, res, next) => {
   try {
@@ -94,26 +147,17 @@ exports.getUserByUID = async (req, res, next) => {
 };
 
 exports.createUser = async (req, res, next) => {
-  // try {
-  //   const existingUser = await User.findOne({ username: req.body.username });
-  //   if (existingUser) {
-  //     return res.status(403).json({ message: "username-exists" });
-  //   }
-  // } catch (error) {
-  //   return res.status(500).json({ message: error.message });
-  // }
-
   const user = new User({
-    username: req.body.first_name+req.body.last_name,
+    username: req.body.first_name + req.body.last_name,
     first_name: req.body.first_name,
     last_name: req.body.last_name,
     dob: req.body.dob,
     uid: req.body.uid,
     email: req.body.email,
-    cognitoUsername:req.body.cognitoUsername,
+    cognitoUsername: req.body.cognitoUsername,
     followers: [],
     follower: [],
-    bio: req.body.bio ? req.body.bio:"",
+    bio: req.body.bio ? req.body.bio : "",
   });
   try {
     const savedUser = await user.save();
@@ -128,62 +172,54 @@ exports.createUser = async (req, res, next) => {
 };
 
 exports.cause = async (req, res, next) => {
-  const {cause,uid}=req.body
+  const { cause, uid } = req.body;
   try {
-    const existingUser =await User.findById(uid);
+    const existingUser = await User.findById(uid);
     if (existingUser) {
-     let result=await User.updateOne({ _id: uid }, { cause: cause } );
+      let result = await User.updateOne({ _id: uid }, { cause: cause });
       return res.status(200).json({ message: "cause added" });
-    }
-    else{
+    } else {
       return res.status(403).json({ message: "username not exists" });
-
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
   // const cause=req.body.cause
-
 };
-exports.delete=async (req,res)=>{
-  try{
-    let cognitoId=req.params.uid
-    await User.deleteOne({ cognitoUsername:cognitoId});
+exports.delete = async (req, res) => {
+  try {
+    let cognitoId = req.params.uid;
+    await User.deleteOne({ cognitoUsername: cognitoId });
     return res.json({ success: "User Deleted" });
-
-  }
-  catch(error)
-  {
+  } catch (error) {
     return res.status(500).json({ message: error.message });
-
   }
-
-}
+};
 
 exports.followUser = async (req, res) => {
   const { cuid, fuid } = req.params;
   try {
-    const currentUser= await User.find({ _id: cuid })
-       
-    if(!currentUser || currentUser.length<1)
-    {
+    const currentUser = await User.find({ _id: cuid });
+
+    if (!currentUser || currentUser.length < 1) {
       return res.json({
         status: 401,
         message: "invalid Login User",
         success: false,
       });
     }
-    const followUser=await User.find({_id:fuid})
-    if(!followUser || followUser.length<1)
-    {
+    const followUser = await User.find({ _id: fuid });
+    if (!followUser || followUser.length < 1) {
       return res.json({
         status: 401,
         message: "invalid following User",
         success: false,
       });
     }
-    if(followUser[0]?.followers?.length>0 && followUser[0]?.followers?.includes(cuid))
-    {
+    if (
+      followUser[0]?.followers?.length > 0 &&
+      followUser[0]?.followers?.includes(cuid)
+    ) {
       return res.json({
         status: 400,
         message: "User already followed",
@@ -191,109 +227,105 @@ exports.followUser = async (req, res) => {
       });
     }
 
-   // console.log("follow euser is",followUser)
-
     // add current user's id to users followers array
-    const follow=await User.updateOne({ _id: fuid }, { $push: { followers: cuid } },   { new: true });
-    
+    const follow = await User.updateOne(
+      { _id: fuid },
+      { $push: { followers: cuid } },
+      { new: true }
+    );
+
     //Add users id to my followings array
-    const following=await User.updateOne({ _id: cuid }, { $push: { following: fuid } });
-
-
-   
+    const following = await User.updateOne(
+      { _id: cuid },
+      { $push: { following: fuid } }
+    );
     // Get followers
     const followers = await User.find({ _id: fuid }).populate([
       {
         path: "followers",
         populate: { path: "User", model: User },
-      }
-    ])
+      },
+    ]);
 
-//Get following
-const followingCurrentUser= await User.find({ _id: cuid }).populate([
-  {
-    path: "following",
-    populate: { path: "User", model: User },
-  }
-])
+    //Get following
+    const followingCurrentUser = await User.find({ _id: cuid }).populate([
+      {
+        path: "following",
+        populate: { path: "User", model: User },
+      },
+    ]);
 
-
-//update follower in algolia
+    //update follower in algolia
     let filterUserAlgolia = { search: fuid, type: "users" };
     const searchAlgo = await searchAlgolia(filterUserAlgolia);
-    if(searchAlgo.length>0)
-    {
-    let obj={
-      objectID: searchAlgo[0].objectID,
-      followers:followers[0].followers
+    if (searchAlgo.length > 0) {
+      let obj = {
+        objectID: searchAlgo[0].objectID,
+        followers: followers[0].followers,
+      };
+      await updateAlgolia(obj, "users");
     }
-    await updateAlgolia(obj, "users");
-  }
 
-//update following in algoila
+    //update following in algoila
     let filterCurrentUserAlgolia = { search: cuid, type: "users" };
     const searchCurrentUserAlgo = await searchAlgolia(filterCurrentUserAlgolia);
-    if(searchCurrentUserAlgo.length>0)
-    {
-    let obj={
-      objectID: searchCurrentUserAlgo[0].objectID,
-      followers:followingCurrentUser[0].followingCurrentUser
+    if (searchCurrentUserAlgo.length > 0) {
+      let obj = {
+        objectID: searchCurrentUserAlgo[0].objectID,
+        followers: followingCurrentUser[0].followingCurrentUser,
+      };
+      await updateAlgolia(obj, "users");
     }
-    await updateAlgolia(obj, "users");
-  }
-  console.log("curren userisss=>>>>>>>>>>.",currentUser)
-  const followMessage = `${currentUser[0].first_name} ${currentUser[0].last_name} follow  you`;
-  
-  const notification = new Notification({
-    messages: followMessage,
-    user: fuid,
-    activity: currentUser._id,
-    notificationType: "followUser",
-  });
-  await notification.save();
-  const uid = currentUser._id.toString();
-  sendMessage("follow", likeMessage, uid);
+    const followMessage = `${currentUser[0].first_name} ${currentUser[0].last_name} follow  you`;
+    const notification = new Notification({
+      messages: followMessage,
+      user: fuid,
+      activity: currentUser._id,
+      notificationType: "followUser",
+    });
+    await notification.save();
+    const uid = currentUser._id.toString();
+    sendMessage("follow", likeMessage, uid);
     return res.json({
       status: 200,
       message: "user follow sucessfully",
       success: true,
-      data:followers
+      data: followers,
     });
-
   } catch (e) {
-    console.log('err is',e)
+    console.log("err is", e);
     return res.json({
       status: 500,
       message: e,
       success: e,
-    });  
+    });
   }
 };
 
 exports.unFollowUser = async (req, res) => {
   const { cuid, fuid } = req.params;
   try {
-    const currentUser= await User.find({ _id: cuid })
-       
-    if(!currentUser || currentUser.length<1)
-    {
+    const currentUser = await User.find({ _id: cuid });
+
+    if (!currentUser || currentUser.length < 1) {
       return res.json({
         status: 401,
         message: "invalid Login User",
         success: false,
       });
     }
-    const followUser=await User.find({_id:fuid})
-    if(!followUser || followUser.length<1)
-    {
+    const followUser = await User.find({ _id: fuid });
+    if (!followUser || followUser.length < 1) {
       return res.json({
         status: 401,
         message: "invalid following User",
         success: false,
       });
     }
-    if(followUser[0]?.followers?.length>0 && !followUser[0]?.followers?.includes(cuid))
-    {
+    if (
+      followUser[0]?.followers?.length > 0 &&
+      !followUser[0]?.followers?.includes(cuid)
+    ) {
       return res.json({
         status: 400,
         message: "User not followed",
@@ -301,83 +333,82 @@ exports.unFollowUser = async (req, res) => {
       });
     }
 
-   // console.log("follow euser is",followUser)
+    // console.log("follow euser is",followUser)
 
     // add current user's id to users followers array
-    const follow=await User.updateOne({ _id: fuid }, { $pull: { followers: cuid } },   { new: true });
-    
+    const follow = await User.updateOne(
+      { _id: fuid },
+      { $pull: { followers: cuid } },
+      { new: true }
+    );
+
     //Add users id to my followings array
-    const following=await User.updateOne({ _id: cuid }, { $pull: { following: fuid } },{ new: true } );
+    const following = await User.updateOne(
+      { _id: cuid },
+      { $pull: { following: fuid } },
+      { new: true }
+    );
 
-
-   
-// Get followers
+    // Get followers
     const followers = await User.find({ _id: fuid }).populate([
       {
         path: "followers",
         populate: { path: "User", model: User },
-      }
-    ])
+      },
+    ]);
 
-//Get following
-const followingCurrentUser= await User.find({ _id: cuid }).populate([
-  {
-    path: "following",
-    populate: { path: "User", model: User },
-  }
-])
+    //Get following
+    const followingCurrentUser = await User.find({ _id: cuid }).populate([
+      {
+        path: "following",
+        populate: { path: "User", model: User },
+      },
+    ]);
 
-
-//update follower in algolia
+    //update follower in algolia
     let filterUserAlgolia = { search: fuid, type: "users" };
     const searchAlgo = await searchAlgolia(filterUserAlgolia);
-    if(searchAlgo.length>0)
-    {
-    let obj={
-      objectID: searchAlgo[0].objectID,
-      followers:followers[0].followers
+    if (searchAlgo.length > 0) {
+      let obj = {
+        objectID: searchAlgo[0].objectID,
+        followers: followers[0].followers,
+      };
+      await updateAlgolia(obj, "users");
     }
-    await updateAlgolia(obj, "users");
-  }
 
-//update following in algoila
+    //update following in algoila
     let filterCurrentUserAlgolia = { search: cuid, type: "users" };
     const searchCurrentUserAlgo = await searchAlgolia(filterCurrentUserAlgolia);
-    if(searchCurrentUserAlgo.length>0)
-    {
-    let obj={
-      objectID: searchCurrentUserAlgo[0].objectID,
-      followers:followingCurrentUser[0].followingCurrentUser
+    if (searchCurrentUserAlgo.length > 0) {
+      let obj = {
+        objectID: searchCurrentUserAlgo[0].objectID,
+        followers: followingCurrentUser[0].followingCurrentUser,
+      };
+      await updateAlgolia(obj, "users");
     }
-    await updateAlgolia(obj, "users");
-  }
 
     return res.json({
       status: 200,
       message: "user unfollow sucessfully",
       success: true,
-      data:followers
+      data: followers,
     });
-
   } catch (e) {
     return res.json({
       status: 500,
       message: e,
       success: true,
-    });  
+    });
   }
 };
 
 exports.editProfile = async (req, res) => {
   const { id: _id } = req.params;
   try {
-    const id=req.params.id
-    const updateUser = await User.findOneAndUpdate({ _id:id }, req.body);
-    if(!updateUser)
-    {
+    const id = req.params.id;
+    const updateUser = await User.findOneAndUpdate({ _id: id }, req.body);
+    if (!updateUser) {
       return res.json({ status: 404, message: "Invalid User", success: false });
-
-
     }
     const user = await User.findById({ _id: id });
     return res.status(200).json(user);
@@ -386,28 +417,28 @@ exports.editProfile = async (req, res) => {
   }
 };
 
-
 exports.removeProfileImage = async (req, res) => {
   try {
-    const id=req.params.id
+    const id = req.params.id;
     const updateUser = await User.findOneAndUpdate(
       { _id: id },
       { $unset: { profileImage: "" } },
       { new: true } // to return the updated document
     );
-    
-    if(!updateUser)
-    {
-      return res.json({ status: 404, message: "Invalid User", success: false });
 
+    if (!updateUser) {
+      return res.json({ status: 404, message: "Invalid User", success: false });
     }
-    return res.json({ status: 200, message: "Profile image removed successfully", user: updateUser, success: true });
+    return res.json({
+      status: 200,
+      message: "Profile image removed successfully",
+      user: updateUser,
+      success: true,
+    });
   } catch (e) {
     return res.status(404).json({ error: e.message });
   }
 };
-
-
 
 exports.getFollowingVideos = async (req, res) => {
   const { cuid, fuid } = req.params;
@@ -431,53 +462,56 @@ exports.getFollowingVideos = async (req, res) => {
   }
 };
 
-exports.privacy=async (req,res)=>{
-try{
-
-  const {id,privacy}=req.body
-  const updateUser = await User.findOneAndUpdate({ _id:id }, {privacy:privacy});
-  const user = await User.findById({ _id: id });
-  return res.status(200).json(user);
-
-}
-catch(e){
-  return res.status(404).json({ error: e.message });
-
-}
-}
-exports.language=async (req,res)=>{
-  try{
-
-    const {id,language}=req.body
-    const updateUser = await User.findOneAndUpdate({ _id:id }, {language:language});
+exports.privacy = async (req, res) => {
+  try {
+    const { id, privacy } = req.body;
+    const updateUser = await User.findOneAndUpdate(
+      { _id: id },
+      { privacy: privacy }
+    );
     const user = await User.findById({ _id: id });
     return res.status(200).json(user);
-  
-  }
-  catch(e){
+  } catch (e) {
     return res.status(404).json({ error: e.message });
-  
   }
-}
-
-exports.report = async (req, res) => {
-  try{
-    let records=req.body
-    const report =new Report(records)
-    const savedReports=await report.save();
-    return res.json({ status: 200, message: "Report added Successfully", success: false,data:savedReports });
-
+};
+exports.language = async (req, res) => {
+  try {
+    const { id, language } = req.body;
+    const updateUser = await User.findOneAndUpdate(
+      { _id: id },
+      { language: language }
+    );
+    const user = await User.findById({ _id: id });
+    return res.status(200).json(user);
+  } catch (e) {
+    return res.status(404).json({ error: e.message });
   }
-  catch(err){
-    return res.json({ status: 500, message: "Something Went wrong", success: false });
-
-  }
-
 };
 
-exports.message=async (req,res)=>{
-  try{
-    const records=req.body
+exports.report = async (req, res) => {
+  try {
+    let records = req.body;
+    const report = new Report(records);
+    const savedReports = await report.save();
+    return res.json({
+      status: 200,
+      message: "Report added Successfully",
+      success: false,
+      data: savedReports,
+    });
+  } catch (err) {
+    return res.json({
+      status: 500,
+      message: "Something Went wrong",
+      success: false,
+    });
+  }
+};
+
+exports.message = async (req, res) => {
+  try {
+    const records = req.body;
     const message = new Message(records);
     const savedMessage = await message.save();
     let messageId = savedMessage._id;
@@ -494,31 +528,25 @@ exports.message=async (req,res)=>{
       success: false,
       data: savedMessage,
     });
-  }
-  catch(err)
-  {
-    console.log("error is",err)
+  } catch (err) {
+    console.log("error is", err);
     return res.json({
       status: 500,
       message: "Something Went wrong",
       success: false,
     });
   }
-}
-exports.getMessages=async(req,res)=>{
-  try{
+};
+exports.getMessages = async (req, res) => {
+  try {
     const { pid, uid } = req.params;
-    let records=await Message.find({
+    let records = await Message.find({
       $or: [
         { sender: uid, profile: pid }, // Messages sent from uid to pid
-        { sender: pid, profile: uid }, 
+        { sender: pid, profile: uid },
       ],
-    $and:[
-      { profile: { $exists: true, $ne: null } },
-    ]
-
-}
-).populate([
+      $and: [{ profile: { $exists: true, $ne: null } }],
+    }).populate([
       {
         path: "sender",
         populate: { path: "user", model: User },
@@ -534,12 +562,82 @@ exports.getMessages=async(req,res)=>{
       success: true,
       data: records,
     });
-  }
-
-  catch(err)
-  {
+  } catch (err) {
     return res.json({ status: 500, message: err, success: false });
+  }
+};
+//get all Messages
+exports.messages = async (req, res) => {  
+  try {
+    const userId = req.user._id;
+    let records = await Message.aggregate([
+      {
+        $match: {
+          $or: [{ sender: userId }, { profile: userId }],
+        },
+      },
+      {
+        $sort: { createdAt: -1 }, // Sort by created date in descending order
+      },
+      {
+        $group: {
+          _id: {
+            sender: "$sender",
+            profile: "$profile",
+          },
+          latestMessage: { $first: "$$ROOT" }, // Take the first document in each group (latest due to sort)
+        },
+      },
+      {
+        $replaceRoot: { newRoot: "$latestMessage" }, // Replace root with the latest message
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "sender",
+          foreignField: "_id",
+          as: "sender",
+        },
+      },
+      {
+        $unwind: "$sender",
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "profile",
+          foreignField: "_id",
+          as: "profile",
+        },
+      },
+      {
+        $unwind: "$profile",
+      },
+      {
+        $lookup: {
+          from: "campaigns",
+          localField: "campaign",
+          foreignField: "_id",
+          as: "campaign",
+        },
+      },
+      {
+        $unwind: { path: "$campaign", preserveNullAndEmptyArrays: true }, // Campaign may be null, preserve it
+      },
+    ]);
 
+    return res.json({
+      status: 200,
+      message: "Message records",
+      success: true,
+      data: records,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: "An error occurred",
+      success: false,
+      error: error.message,
+    });
   }
-  
-  }
+};

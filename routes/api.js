@@ -55,14 +55,18 @@ router.post(
   upload.single("Image"),
   videoController.uploadProfile
 );
-router.post("/user/message",userController.message)
+// Messages
+router.post("/user/message", userController.message)
 router.get("/user/message/:pid/:uid",userController.getMessages)
+router.get("/user/messages", validateToken, userController.messages)
+
 
 // CAMPAIGN ROUTES
-router.get("/campaigns", campaignController.index);
-router.get("/campaigns/:id", campaignController.show);
+router.get("/campaigns", campaignController.showCampaigns);
+router.get("/campaigns/:id", campaignController.showCampaign);
 router.post("/campaign/donation/:id/donate", validateToken, campaignController.donate);
-router.post("/campaign/:campaignId/participate/:participationId",validateToken, campaignController.participant);
+//apply for particiapation to the campaign participate
+router.post("/campaign/:campaignId/participate/:participationId",validateToken, campaignController.participateInCampaign);
 router.post("/campaigns", campaignController.create);
 router.post("/campaign/message", validateToken,campaignController.postMessages)
 router.get("/campaign/:id/message", validateToken,campaignController.getMessages)
@@ -108,18 +112,23 @@ router.post("/issue/report", issueController.report)
 router.post("/issue/share", issueController.share)
 router.post("/issue/:id/views", issueController.views)
 router.post("/issue/deleteOld", issueController.deleteOldIssues)
+
 //impact Routes
 router.post("/impact", impactController.create);
 router.get("/impact", impactController.index);
+
 //search
 router.get("/search", searchController.search)
+
 //hasTags
 router.post("/hashtags", hashtagsController.add)
 router.get("/content/hashtags/:tag", hashtagsController.getContent)
+
 //advocate Routes
 router.post("/advocate", validateToken, upload.single("video"),validateAdvocate,adVocateController.add)
 router.delete("/advocate/:id", validateToken, adVocateController.delete)
 router.get("/advocate", adVocateController.get)
+
 //bookmarks 
 router.post("/bookmarks", validateToken, validateBookMarks,bookMarkController.add)
 router.delete("/bookmarks/:id",validateToken, bookMarkController.delete);

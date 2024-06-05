@@ -13,6 +13,7 @@ const campaignSchema = new Schema(
     impacts: [{ type: Schema.Types.ObjectId, ref: "impact", index: true }],
     _geoloc: [],
     hashtags: { type: Array, default: [] },
+    updates: [{ type: mongoose.Schema.Types.ObjectId, ref: "notification" }]
   },
   {
     timestamps: true,
