@@ -12,4 +12,4 @@ const signedPetitionsSchema = new Schema(
     }
 );
 
-module.exports = mongoose.model("signedpetitions", signedPetitionsSchema, "signedPetitions");
+module.exports = mongoose.model("signedpetitions", signedPetitionsSchema, "campaignPetitionsSigned");

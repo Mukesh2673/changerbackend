@@ -2,7 +2,7 @@ const { Campaign, Issue, Video,Advocate } = require("../models");
 const {upload,uploadVideoThumbnail} = require("../libs/fileUpload");
 exports.add = async (req, res) => {
   try {
-    const { body: advocacy, file: filedata, query } = req;
+    const { body: advocacy, file: filedata, } = req;
     const thumbnail = await uploadVideoThumbnail(req.file);
     const videoUrl = await upload(req.file);
     const user = req.user;

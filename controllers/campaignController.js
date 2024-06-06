@@ -16,12 +16,14 @@ const {
 } = require("../models");
 const mongoose = require("mongoose");
 const { generateTags } = require("../controllers/hashtagController");
+const {upload,uploadVideoThumbnail} = require("../libs/fileUpload");
 const { endorseCampaign } = require("../libs/campaign");
 const { sendMessage } = require("../libs/webSocket");
 require("dotenv").config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { searchAlgolia, updateAlgolia, saveAlgolia, deleteAlgolia} = require("../libs/algolia");
 
+//common function to get all campaign Records
 exports.campaignRecords = async (query) => {
   const skip = query.skip !== undefined ? query.skip : 0;
   const limit = query.limit !== undefined ? query.limit : 0;
@@ -50,7 +52,7 @@ exports.campaignRecords = async (query) => {
     .limit(limit);
   return records;
 };
-
+//get all Campaign
 exports.showCampaigns = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
@@ -113,7 +115,7 @@ exports.showCampaign = async (req, res, next) => {
       { $unwind: { path: '$video', preserveNullAndEmptyArrays: true } }, // Video may be null, so preserve nulls
       {
         $lookup: {
-          from: 'impacts',
+          from: 'videos',
           localField: 'impacts',
           foreignField: '_id',
           as: 'impacts'
@@ -253,7 +255,6 @@ exports.create = async (req, res, next) => {
           message: "duplicate donation not allow",
         });
       }
-
       donationCount[0].phaseId = savePhaseId[i];
       const petitionData = Action.filter((item) => item?.name == "petition");
       if (petitionData.length > 1) {
@@ -337,7 +338,6 @@ exports.donate = async (req, res) => {
   try {
     const userId = req.user; // Assuming req.user contains the authenticated user object
     const donationId = req.params.id;
-    console.log('valueof req.params is',req.params)
     // Find the donation action added within campaign phase
     const campaignDonation = await donation.findById(donationId);
     if (!campaignDonation) {
@@ -387,15 +387,40 @@ exports.donate = async (req, res) => {
       user.karmaPoint += karmaPoints;
       await user.save();
   
-  // Add notification for karma points
-  // const karmaMessage = `You received +50 karma points for participating in the campaign ${campaign.title}`;
-  // const karmaNotification = new Notification({
-  //   messages: karmaMessage,
-  //   user: currentUser._id,
-  //   activity: campaign.user._id,
-  //   notificationType: "karmaPoint",
-  // });
-      return res.status(200).json({ message: "Success" });
+  // Add notification to user who made doanation about karma points
+   const karmaMessage = `You received +50 karma points for participating in the campaign ${campaign.title}`;
+   const karmaNotification = new Notification({
+     messages: karmaMessage,
+     user: user._id,
+     activity: campaign.user._id,
+     notificationType: "karmaPoint",
+   });
+   await karmaNotification.save();
+   sendMessage("karmaPoint", karmaMessage, user._id);
+   
+   //Add notification to user who create campaign about donation
+   const donationMessage = `${user.first_name} ${user.last_name} donate ${req.body.amount} for Campaign ${campaign.title}`;
+   const donationNotification = new Notification({
+      messages: donationMessage,
+      user: campaign.user._id,
+      activity: user._id,
+      notificationType: "campaignDonation",
+   })
+   await donationNotification.save();
+   await Campaign.findByIdAndUpdate(
+    campaign._id,
+    {
+      $push: { updates: donationNotification._id },
+    },
+    { new: true }
+    )
+
+   return res.status(200).json(
+    { 
+    status: 200,
+    message: "campaign Donation Success Fully",
+    success: true,
+  });
     } else {
       return res.status(400).json({ message: "Payment failed" });
     }
@@ -458,6 +483,7 @@ exports.participateInCampaign = async (req, res) => {
       messages: karmaMessage,
       user: currentUser._id,
       activity: campaign.user._id,
+      campaign: campaign._id,
       notificationType: "karmaPoint",
     });
     await karmaNotification.save();
@@ -469,6 +495,7 @@ exports.participateInCampaign = async (req, res) => {
       messages: participationMessage,
       user: campaign.user._id,
       activity: currentUser._id,
+      campaign: campaign._id,
       notificationType: "campaignParticipation",
     });
     await participationNotification.save();
@@ -656,3 +683,80 @@ exports.signPetitions = async (req, res) => {
     });
   }
 };
+
+//add impact video by Volunteers
+exports.campaignImpactVideos =async (req, res) =>{
+try{
+  const { campaignId } = req.params;
+  const { body, file: filedata,user, description } = req;
+  
+  //check is campaign exist or not
+  const campaignDetails = await Campaign.findById(campaignId);
+  if (!campaignDetails) {
+    return res.status(404).json({ message: "Campaign not found." });
+  }
+
+  const existingParticipation = await Volunteers.findOne({
+    campaign: campaignId,
+    user: user,
+  });
+  if (!existingParticipation) {
+    return res.status(404).json({ message: "You are not participating in this campaign.", status: 404,success: false });
+  }
+  //get user Details
+  const currentUser = await User.findById(user);
+  if (!currentUser) {
+    return res.status(404).json({ message: "User not found." });
+  }
+  const tags = await generateTags(body.description);
+  // Upload video thumbnail
+  const thumbnail = await uploadVideoThumbnail(req.file);
+   // Upload video and get URL
+  const videoUrl = await upload(req.file);
+  // Save video details in the database
+  const videos = new Video({
+    user: user,
+    location: JSON.parse(body.location),
+    campaign: campaignId,
+    description: body.description,
+    video_url: videoUrl.encodedKey,
+    type: 'IMPACT',
+    thumbnail_url:  `thumbnail${thumbnail.key}`,
+    hashtags: tags,
+  });
+  const savedVideo = await videos.save();
+  //Add Notification to Impact video
+  const impactVideoMessage = `${currentUser.first_name} ${currentUser.last_name} added a Impact video in Campaign ${campaignDetails.title}` 
+  const impactVideoNotification = new Notification({
+    messages: impactVideoMessage,
+    user: campaignDetails.user,
+    activity: currentUser._id,
+    campaign: campaignId,
+    notificationType: "campaignImpactVideo",
+  });
+  //Update Campaign about it's impact and update  
+  await impactVideoNotification.save()
+  await Campaign.findByIdAndUpdate(
+    campaignId,
+    {
+      $push: { impacts: savedVideo._id ,updates: impactVideoNotification._id}
+    },
+    { new: true }
+    );
+    sendMessage("campaignImpactVideo", impactVideoMessage, campaignDetails.user);
+    return res.status(200).json({
+      status: 200,
+      message: "Campaign impact video added successfully.",
+      success: true,
+    });
+}
+catch(err)
+{
+  return res.status(500).json({
+    status: 500,
+    message: "An error occurred while adding the campaign impact video.",
+    error: err.message,
+    success: false,
+  });
+}
+}

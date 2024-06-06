@@ -15,4 +15,4 @@ const petitionsSchema = new Schema(
   }
 );
 
-module.exports = mongoose.model("petition", petitionsSchema);
+module.exports = mongoose.model("petition", petitionsSchema, "campaignPetition");

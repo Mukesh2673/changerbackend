@@ -7,6 +7,7 @@ const notificationSchema = new Schema(
     activity: { type: Schema.Types.ObjectId, ref: "User", required: false},
     joinedIssue: [{ type: Schema.Types.ObjectId, ref: "issue", required: false}],
     notificationType: { type: String, required: false, default: ""},
+    campaign: { type: Schema.Types.ObjectId, ref: "campaign", required: false},
   },
   {
     timestamps: true,

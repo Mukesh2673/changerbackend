@@ -1,27 +1,18 @@
-const swaggerUi = require("swagger-ui-express"); 
-const userRoutes = require("./userRoutes.swagger");
-const campaignRoutes = require("./campaignRoutes.swagger");
-
 var express = require("express");
 var router = express.Router();
-const multer = require("multer");
-const fs = require("fs");
 const cron = require('node-cron');
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const path = "uploads/";
-    fs.mkdirSync(path, { recursive: true });
-    return cb(null, path);
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.originalname);
-  },
-});
-const upload = multer({ storage: storage });
+const upload = require('../libs/multerConfig')
 const auth = require("../middleware/firebaseAuth").authCheck;
 const { validateToken } = require("../middleware/auth");
-const {validateSigninRequest,validateAdvocate,validateSignupRequest,validateSignupConfirmRequest,validateSignPetitions,validateBookMarks}=require('../middleware/validations');
-
+const {
+  validateSigninRequest,
+  validateAdvocate,
+  validateSignupRequest,
+  validateSignupConfirmRequest,
+  validateSignPetitions,
+  validateBookMarks,
+  validateCampaignImpact
+}=require('../middleware/validations');
 const userController = require("../controllers/userController");
 const campaignController = require("../controllers/campaignController");
 const videoController = require("../controllers/videoController");
@@ -74,6 +65,7 @@ router.post("/campaign/:campaignId/participate/:participationId",validateToken, 
 router.post("/campaigns", campaignController.create);
 router.post("/campaign/message", validateToken,campaignController.postMessages)
 router.get("/campaign/:id/message", validateToken,campaignController.getMessages)
+router.post("/campaign/:campaignId/impactVideos",  upload.single("video"), validateToken, validateCampaignImpact, campaignController.campaignImpactVideos)
 
 // get campaing that you have voluteer
 router.get("/volunteeringForYou", validateToken, campaignController.userVolunteersCompaign);
@@ -118,8 +110,8 @@ router.post("/issue/:id/views", issueController.views)
 router.post("/issue/deleteOld", issueController.deleteOldIssues)
 
 //impact Routes
-router.post("/impact", impactController.create);
-router.get("/impact", impactController.index);
+// router.post("/impact", impactController.create);
+// router.get("/impact", impactController.index);
 
 //search
 router.get("/search", searchController.search)

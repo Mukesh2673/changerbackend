@@ -12,4 +12,4 @@ campaign: { type: mongoose.Schema.Types.ObjectId, ref: "Campaign"}
   timestamps: true
 });
 
-module.exports = mongoose.model('phase', phaseSchema);
+module.exports = mongoose.model('phase', phaseSchema, 'campaignPhase');

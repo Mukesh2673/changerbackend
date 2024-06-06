@@ -19,7 +19,7 @@ const Report = require('./models/report');
 const Notification = require('./models/notification/index');
 const Message = require('./models/message');
 const Campaign = require('./models/campaign/campaign');
-const CampaignParticipant = require('./models/campaign/campaignParticipant');
+const CampaignParticipant = require('./models/campaign/campaignParticipation');
 
 const userSchema = mongooseToSwagger(User);
 const reportSchema = mongooseToSwagger(Report);
