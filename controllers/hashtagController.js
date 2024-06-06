@@ -50,7 +50,7 @@ const update = async (model, data, type) => {
     await updateAlgolia(updateObject, type);
     obj = {
       status: 200,
-      message: "hastags added successfully",
+      message: "Hashtags added successfully!",
       success: true,
       data: records,
     };

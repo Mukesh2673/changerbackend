@@ -323,7 +323,7 @@ exports.create = async (req, res, next) => {
     await notification.save();
     return res.json({
       status: 200,
-      message: "campaign added successfully",
+      message: "Campaign added successfully!",
       success: true,
       data: records,
     });

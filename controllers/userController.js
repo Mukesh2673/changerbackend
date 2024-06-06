@@ -288,7 +288,7 @@ exports.followUser = async (req, res) => {
     sendMessage("follow", likeMessage, uid);
     return res.json({
       status: 200,
-      message: "user follow sucessfully",
+      message: "User followed sucessfully!",
       success: true,
       data: followers,
     });
@@ -524,7 +524,7 @@ exports.message = async (req, res) => {
 
     return res.json({
       status: 200,
-      message: "sent Message Successfully",
+      message: "Message sent successfully!",
       success: false,
       data: savedMessage,
     });
@@ -532,7 +532,7 @@ exports.message = async (req, res) => {
     console.log("error is", err);
     return res.json({
       status: 500,
-      message: "Something Went wrong",
+      message: "Something went wrong!",
       success: false,
     });
   }

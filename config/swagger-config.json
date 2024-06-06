@@ -1,0 +1,15 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "version": "1.0.0",
+      "title": "Changer 2",
+      "description": "API documentation for the Changer app"
+    },
+    "host": "localhost:3001",
+    "basePath": "/api",
+    "schemes": [
+      "http"
+    ],
+    "paths": {}
+  }
+  

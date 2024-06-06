@@ -1,3 +1,7 @@
+const swaggerUi = require("swagger-ui-express"); 
+const userRoutes = require("./userRoutes.swagger");
+const campaignRoutes = require("./campaignRoutes.swagger");
+
 var express = require("express");
 var router = express.Router();
 const multer = require("multer");

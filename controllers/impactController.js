@@ -39,7 +39,7 @@ exports.create = async (req, res, next) => {
     if (!auth) {
       return res.json({
         status: 401,
-        message: "invalid User",
+        message: "Invalid User",
         success: false,
       });
     }
@@ -120,7 +120,7 @@ exports.create = async (req, res, next) => {
     await updateAlgolia(obj, "campaigns");
     return res.json({
       status: 200,
-      message: "impact added successfully",
+      message: "Impact added successfully!",
       success: true,
     });
   } catch (err) {
