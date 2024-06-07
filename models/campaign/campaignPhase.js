@@ -3,9 +3,9 @@ const Schema = mongoose.Schema;
 
 const phaseSchema = new Schema({
 title: {type: String, required: false},
-donation: { type: mongoose.Schema.Types.ObjectId, ref: "donation", default: () => new mongoose.Types.ObjectId()},
-petition: { type:mongoose.Schema.Types.ObjectId, ref:"petition", default: () => new mongoose.Types.ObjectId()},
-participation: [{ type:mongoose.Schema.Types.ObjectId, ref:"participant"}],
+donation: { type: mongoose.Schema.Types.ObjectId, ref: "campaignDonation", default: () => new mongoose.Types.ObjectId()},
+petition: { type:mongoose.Schema.Types.ObjectId, ref:"campaignPetition", default: () => new mongoose.Types.ObjectId()},
+participation: [{ type:mongoose.Schema.Types.ObjectId, ref:"campaignParticipation"}],
 campaign: { type: mongoose.Schema.Types.ObjectId, ref: "Campaign"}
 }, 
 {
