@@ -17,12 +17,13 @@ const {
 const mongoose = require("mongoose");
 const { generateTags } = require("../controllers/hashtagController");
 const {upload,uploadVideoThumbnail} = require("../libs/fileUpload");
-const { endorseCampaign } = require("../libs/campaign");
 const { sendMessage } = require("../libs/webSocket");
 require("dotenv").config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-const { searchAlgolia, updateAlgolia, saveAlgolia, deleteAlgolia} = require("../libs/algolia");
-
+const {addVideoInAlgolia}=require('../algolia/videoAlgolia')
+const {updateUsersInAlgolia}=require('../algolia/userAlgolia')
+const {updateIssueInAlgolia}=require('../algolia/issueAlgolia')
+const {addCampaignInAlgolia,updateCampaignInAlgolia}=require('../algolia/campaignAlgolia');
 //common function to get all campaign Records
 exports.campaignRecords = async (query) => {
   const skip = query.skip !== undefined ? query.skip : 0;
@@ -163,7 +164,7 @@ exports.create = async (req, res, next) => {
       });
     }
     const karmaPoint = auth.karmaPoint + 100;
-    const user = await User.findByIdAndUpdate(
+    await User.findByIdAndUpdate(
       { _id: auth._id },
       {
         $set: {
@@ -172,15 +173,7 @@ exports.create = async (req, res, next) => {
       },
       { new: true }
     );
-    let filterUserAlgolia = { search: user._id, type: "users" };
-    const searchAlgo = await searchAlgolia(filterUserAlgolia);
-    if (searchAlgo.length > 0) {
-      let obj = {
-        objectID: searchAlgo[0].objectID,
-        karmaPoint: user.karmaPoint,
-      };
-      await updateAlgolia(obj, "users");
-    }
+    await updateUsersInAlgolia(auth._id)    
     const campaign = new Campaign({
       user: data.user,
       cause: data.cause,
@@ -189,7 +182,7 @@ exports.create = async (req, res, next) => {
       image: data.image,
     });
     const campaigns = await campaign.save();
-
+    await addCampaignInAlgolia(campaigns._id)
     //if campaign is created from issue
     if (mongoose.Types.ObjectId.isValid(data.issue)) {
       let issue = await Issue.findByIdAndUpdate(
@@ -202,6 +195,7 @@ exports.create = async (req, res, next) => {
           },
         }
       );
+      updateIssueInAlgolia(data.issue)
       if (!issue) {
         return res.status(400).json({
           status: 400,
@@ -234,11 +228,11 @@ exports.create = async (req, res, next) => {
       hashtags: tagsArray,
     });
     const savedVideo = await videos.save();
+    await addVideoInAlgolia(savedVideo._id)
     const videoId = savedVideo._id;
     const phaseArr = data.phase;
     const savePhaseId = [];
-    const videRecords = await Video.find({ _id: videoId });
-    await saveAlgolia(videRecords, "videos");
+    await addVideoInAlgolia(videoId)
     //save phase data to campaign Phase Collection
     for (let i = 0; i < phaseArr.length; i++) {
       const phaseItem = new campaignPhases({
@@ -310,9 +304,10 @@ exports.create = async (req, res, next) => {
           },
         }
       );
+      updateCampaignInAlgolia(campaignsId)
     }
     let records = await this.campaignRecords({ _id: campaignsId });
-    await saveAlgolia(records, "campaigns");
+
     const message = `You received +100 karma Point for good intention of creating Campaign ${records[0].title}`;
     const notification = new Notification({
       messages: message,
@@ -414,7 +409,7 @@ exports.donate = async (req, res) => {
     },
     { new: true }
     )
-
+    await updateCampaignInAlgolia(campaign._id)
    return res.status(200).json(
     { 
     status: 200,
@@ -457,7 +452,7 @@ exports.participateInCampaign = async (req, res) => {
 
     currentUser.karmaPoint += 50;
     await currentUser.save();
-
+    updateUsersInAlgolia(user._id)
     // Check if the user is already participating
     const existingParticipation = await Volunteers.findOne({
       campaign: campaign._id,
@@ -507,7 +502,7 @@ exports.participateInCampaign = async (req, res) => {
       },
       { new: true }
     );
-
+    updateCampaignInAlgolia(campaign._id)
     sendMessage("campaignParticipation", participationMessage, campaign.user._id);
 
     return res.status(200).json({
@@ -725,6 +720,7 @@ try{
     hashtags: tags,
   });
   const savedVideo = await videos.save();
+  addVideoInAlgolia(savedVideo._id)
   //Add Notification to Impact video
   const impactVideoMessage = `${currentUser.first_name} ${currentUser.last_name} added a Impact video in Campaign ${campaignDetails.title}` 
   const impactVideoNotification = new Notification({
@@ -743,6 +739,7 @@ try{
     },
     { new: true }
     );
+    updateCampaignInAlgolia(campaignId)
     sendMessage("campaignImpactVideo", impactVideoMessage, campaignDetails.user);
     return res.status(200).json({
       status: 200,

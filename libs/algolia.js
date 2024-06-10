@@ -4,18 +4,23 @@ const client = algoliasearch(
   process.env.ALGOLIA_API_KEY
 );
 exports.saveAlgolia = async (records, index) => {
-  const algoliaIndex = client.initIndex(index);
-  await algoliaIndex.saveObjects(
-    records,
-    { autoGenerateObjectIDIfNotExist: true },
-    (err, content) => {
-      if (err) {
-        console.log("error is", err);
-        return err;
+  try {
+    const algoliaIndex = client.initIndex(index);
+    return await algoliaIndex.saveObjects(
+      records,
+      { autoGenerateObjectIDIfNotExist: true },
+      (err, content) => {
+        if (err) {
+          return err;
+        }
+        return content;
       }
-    }
-  );
+    );
+  } catch (err) {
+    console.log("valeu of err", err);
+  }
 };
+
 exports.searchAlgolia = async (query) => {
   try {
     var queries = [];
@@ -76,7 +81,7 @@ exports.searchAlgolia = async (query) => {
       const records = [];
       let res = results.filter((data) => data.hits.length > 0);
       for (let i = 0; i < res.length; i++) {
-        records[i] = res[i].hits[0];
+        records.push({ indexName: queries[i].indexName, data: res[i].hits[0] });
         delete records[i]["_highlightResult"];
       }
       return records;
@@ -103,13 +108,24 @@ exports.updateAlgolia = async (objects, index) => {
     return error;
   }
 };
-exports.deleteAlgolia=async(index)=>{
-  try{
+exports.deleteAlgolia = async (index) => {
+  try {
     const algoliaIndex = client.initIndex(index);
-    return await algoliaIndex.deleteObjects(index).then((objectId)=>objectId)
+    return await algoliaIndex.deleteObjects(index).then((objectId) => objectId);
+  } catch (err) {
+    console.log("err is", err);
   }
-  catch(err)
-  {
-    console.log("err is",err)
+};
+
+exports.findObjectById = async (objectId, indexName) => {
+  try {
+    const index = client.initIndex(indexName); // Initialize the index
+
+    const object = await index.getObject(objectId); // Retrieve the object by its objectID
+
+    return [object]; // Return the object
+  } catch (error) {
+    console.log("Error:", error);
+    return error;
   }
-}
+};

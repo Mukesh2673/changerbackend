@@ -23,6 +23,7 @@ const userSchema = new Schema(
     karmaPoint: { type: Number, default: 0, required: false },
     followers: [{ type: Schema.Types.ObjectId, ref: "User", required: false }],
     following: [{ type: Schema.Types.ObjectId, ref: "User", required: false }],
+    algolia: {type: String, default: ""},
   },
   {
     timestamps: true,

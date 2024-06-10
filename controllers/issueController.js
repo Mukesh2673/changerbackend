@@ -1,13 +1,13 @@
 const { User, Video, Issue, Message, Report, Comment, Notification, Campaign, Advocate} = require("../models");
 const { generateTags } = require("./hashtagController");
 const mongoose = require("mongoose");
-const { ObjectId } = mongoose.Types;
 const moment = require("moment");
 require("dotenv").config();
 const OpenAI = require("openai");
 const { searchAlgolia, updateAlgolia, saveAlgolia, deleteAlgolia} = require("../libs/algolia");
 const user = require("../models/user");
 const { sendMessage } = require("../libs/webSocket");
+const {updateIssueInAlgolia,deleteIssueInAlgolia}=require('../algolia/issueAlgolia')
 
 exports.issueRecords = async (query) => {
   let records = await Issue.find(query).populate([
@@ -725,18 +725,7 @@ exports.update = async (req, res) => {
           },
         },
       ]);
-
-      let filterData = { search: issueId, type: "issues" };
-      const searchIssueAlgo = await searchAlgolia(filterData);
-      if (searchIssueAlgo.length > 0) {
-        let obj = {
-          objectID: searchIssueAlgo[0].objectID,
-          title: title,
-          description: description,
-          notification: notification,
-        };
-        await updateAlgolia(obj, "issues");
-      }
+      updateIssueInAlgolia(issueId)
       return res.json({
         status: 200,
         message: "issue updated successfully",
@@ -763,13 +752,8 @@ exports.deleteIssue = async (req, res) => {
   const isExist = await Issue.find({ _id: issueId });
   try {
     if (isExist.length > 0) {
-      const deletedIssue = await Issue.findByIdAndRemove(issueId);
-      let filterData = { search: issueId, type: "issues" };
-      const searchIssueAlgo = await searchAlgolia(filterData);
-      if (searchIssueAlgo.length > 0) {
-        const objectID = searchIssueAlgo.ObjectId;
-        await deleteAlgolia(objectID);
-      }
+     await Issue.findByIdAndRemove(issueId);
+     deleteIssueInAlgolia(issueId)
       return res.json({
         status: 200,
         message: "issue deleted successfully",
@@ -801,6 +785,7 @@ exports.messages = async (req, res) => {
       { $push: { messages: messageId } },
       { new: true }
     );
+    updateIssueInAlgolia(issueId)
     return res.json({
       status: 200,
       message: "sent Message Successfully",
@@ -858,16 +843,7 @@ exports.share = async (req, res) => {
 
           { new: true }
         );
-
-        let filterData = { search: issueId, type: "issues" };
-        const searchIssueAlgo = await searchAlgolia(filterData);
-        if (searchIssueAlgo.length > 0) {
-          let obj = {
-            objectID: searchIssueAlgo[0].objectID,
-            shared: issue.shared,
-          };
-          await updateAlgolia(obj, "issues");
-        }
+        updateIssueInAlgolia(issueId)     
         return res.json({
           status: 200,
           message: "issue shared successfully",
@@ -937,7 +913,15 @@ exports.deleteOldIssues = async (req, res) => {
     );
     if (issuesToDelete.length > 0) {
       await Issue.deleteMany({ _id: { $in: issuesToDelete } });
+      for(const issueId of issuesToDelete)
+      {
+        await deleteIssueInAlgolia(issueId)
+      }
       await Video.deleteMany({ issue: { $in: issuesToDelete } });
+      for(const issueId of issuesToDelete)
+      {
+        await deleteIssueInAlgolia(issueId)
+      }
     }
   } catch (error) {
     console.error("Error deleting old issues:", error);

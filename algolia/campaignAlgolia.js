@@ -4,10 +4,11 @@ const {
   updateAlgolia,
   saveAlgolia,
   deleteAlgolia,
+  findObjectById,
 } = require("../libs/algolia");
 const mongoose = require("mongoose");
 
-const   campaignRecords = async (id) => {
+const campaignRecords = async (id) => {
   try {
     const aggregationPipeline = [
       { $match: { _id: mongoose.Types.ObjectId(id) } },
@@ -112,11 +113,19 @@ const   campaignRecords = async (id) => {
 
 exports.updateCampaignInAlgolia = async (id) => {
   try {
+    
     let records = await campaignRecords(id);
     const campaign = records[0];
-    let filtercampaignAlgolia = { search: id, type: "campaigns" };
-    const searchAlgo = await searchAlgolia(filtercampaignAlgolia);
-    if (searchAlgo.length > 0) {
+    const algoliaObjectId = campaign?.algolia;
+    let searchAlgo = []
+    if (algoliaObjectId) {
+      searchAlgo = await findObjectById(algoliaObjectId, "campaigns");
+    }
+    else{
+      let filtercampaignAlgolia = { search: id, type: "campaigns" };
+      searchAlgo = await searchAlgolia(filtercampaignAlgolia);
+    }
+    if (searchAlgo?.length > 0 && searchAlgo[0]?._id == campaign?._id) {
       const campaignAlgoId = searchAlgo[0].objectID;
       const algoliaObject = {
         objectID: campaignAlgoId,
@@ -217,9 +226,14 @@ exports.updateCampaignInAlgolia = async (id) => {
               : [],    
       };
       await updateAlgolia(algoliaObject, "campaigns");
+      if (!algoliaObjectId) {
+      await Campaign.updateOne({ _id: id }, { algolia:  searchAlgo[0].objectID });
+      }
       return true;
     } else {
-      await saveAlgolia(records, "campaigns");
+      let obj=await saveAlgolia(records, "campaigns");
+      let objectID = obj.objectIDs[0];
+      await Campaign.updateOne({ _id: id }, { algolia: objectID });
       return false;
     }
   } catch (err) {
@@ -228,7 +242,7 @@ exports.updateCampaignInAlgolia = async (id) => {
   }
 };
 
-exports.addCampainInAlgolia = async (id) => {
+exports.addCampaignInAlgolia = async (id) => {
   try {
     let records = await campaignRecords(id);
     const campaign = records[0];

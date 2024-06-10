@@ -5,7 +5,10 @@ exports.search = async (req, res) => {
   try {
     const filter = {};
     const query = req.query;
-    filter.search = query.searchKey;
+    if(query.searchKey)
+    {
+      filter.search = query.searchKey;
+    }
     if (Object.keys(query).length === 0) {
       return res
         .status(500)
@@ -28,9 +31,11 @@ exports.search = async (req, res) => {
       "issues",
       "hashtags",
     ];
+    console.log("query type is",query.type)
     if (arr.includes(query.type)) {
       filter.type = query.type;
     }
+    console.log('value of filter******',filter)
     let records = await searchAlgolia(filter);
     return res.status(200).json({ message: "records", data: records });
   } catch (error) {

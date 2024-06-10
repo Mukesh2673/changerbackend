@@ -18,7 +18,8 @@ const issueSchema = new Schema(
     hashtags: { type: Array, default: [] },
     user: { type: Schema.Types.ObjectId, ref: "User" },
     joined: [{ type: Schema.Types.ObjectId, ref: "User", required: false }],
-    issueState: { type: String, default: "upVotes"}
+    issueState: { type: String, default: "upVotes"},
+    algolia: {type: String, default: ""},
   },
   {
     timestamps: true,

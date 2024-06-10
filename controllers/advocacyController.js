@@ -1,5 +1,8 @@
 const { Campaign, Issue, Video,Advocate } = require("../models");
+const { updateCampaignInAlgolia } = require('../algolia/campaignAlgolia')
+const { updateIssueInAlgolia } = require('../algolia/issueAlgolia')
 const {upload,uploadVideoThumbnail} = require("../libs/fileUpload");
+
 exports.add = async (req, res) => {
   try {
     const { body: advocacy, file: filedata, } = req;
@@ -40,12 +43,12 @@ exports.add = async (req, res) => {
 
     if (advocacy.issue) {
       await Issue.findByIdAndUpdate(advocacy.issue, { $push: { advocate: advocate._id } }, { new: true });
+      await updateIssueInAlgolia(advocacy.issue)
     }
-
     if (advocacy.campaign) {
       await Campaign.findByIdAndUpdate(advocacy.campaign, { $push: { advocate: advocate._id } }, { new: true });
+      await updateCampaignInAlgolia(advocacy.campaign)
     }
-
     res.json({ status: 200, message: "Advocate added successfully", success: true });
   } catch (error) {
     res.status(500).json({ message: error.message, status: 500 });
@@ -59,13 +62,15 @@ exports.delete = async (req, res) => {
     if (advocate) {
        await Advocate.findByIdAndRemove(advocateId);
        await Video.findByIdAndRemove(advocate.video)   
-      if(advocate.campaign)
+      
+       if(advocate.campaign)
       {
         await Campaign.findByIdAndUpdate(
           { _id: advocate.campaign },
           { $pull: { advocate: advocate._id } },
           { new: true }
         );
+        await updateCampaignInAlgolia(advocate.campaign)
       }
       if(advocate.issue)
       {
@@ -74,6 +79,8 @@ exports.delete = async (req, res) => {
           { $pull: { advocate: advocate._id } },
           { new: true }
         );
+        await updateIssueInAlgolia(advocate.issue)
+
       }
 
       return res.json({
