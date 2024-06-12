@@ -1,4 +1,5 @@
 const { User } = require("../models");
+
 const {
   searchAlgolia,
   updateAlgolia,
@@ -6,6 +7,7 @@ const {
   deleteAlgolia,
   findObjectById,
 } = require("../libs/algolia");
+
 const userRecords = async (id) => {
   try {
     return await User.find({ _id: id });
@@ -76,3 +78,19 @@ exports.addUserInAlgolia = async (id) => {
     return false;
   }
 };
+
+exports.deleteUserInAlgolia = async (id) =>{
+  let userRecord = await userRecords(id);
+  const algoliaObjectId = userRecord?.algolia;
+  let searchAlgo = [];
+  if (algoliaObjectId) {
+      searchAlgo = await findObjectById(algoliaObjectId, "users");
+  }
+  else
+  {    
+      let filterUserAlgolia = { search: id, type: "users" };
+      searchAlgo = await searchAlgolia(filterUserAlgolia);
+  }
+  const userAlgoId = searchAlgo[0].objectID;
+  await deleteAlgolia(userAlgoId);
+}

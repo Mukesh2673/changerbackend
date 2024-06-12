@@ -17,7 +17,6 @@ const userController = require("../controllers/userController");
 const campaignController = require("../controllers/campaignController");
 const videoController = require("../controllers/videoController");
 const issueController = require("../controllers/issueController");
-const impactController = require("../controllers/impactController");
 const searchController=require("../controllers/searchController")
 const hashtagsController=require("../controllers/hashtagController")
 const adVocateController=require("../controllers/advocacyController")
@@ -60,13 +59,16 @@ router.get("/user/messages", validateToken, userController.messages)
 router.get("/campaigns", campaignController.showCampaigns);
 router.get("/campaigns/:id", campaignController.showCampaign);
 router.post("/campaign/donation/:id/donate", validateToken, campaignController.donate);
+router.post("/campaign/report",validateToken, campaignController.report)
+
 //apply for particiapation to the campaign participate
 router.post("/campaign/:campaignId/participate/:participationId",validateToken, campaignController.participateInCampaign);
 router.post("/campaigns", campaignController.create);
 router.post("/campaign/message", validateToken,campaignController.postMessages)
 router.get("/campaign/:id/message", validateToken,campaignController.getMessages)
 router.post("/campaign/:campaignId/impactVideos",  upload.single("video"), validateToken, validateCampaignImpact, campaignController.campaignImpactVideos)
-
+//get Volunteers add condition to get  volunteers on map
+router.get("/campaign/volunteers", campaignController.volunteers)
 // get campaing that you have voluteer
 router.get("/volunteeringForYou", validateToken, campaignController.userVolunteersCompaign);
 router.post("/uploadImage", upload.single("Image"), videoController.uploadImages);
@@ -81,10 +83,8 @@ router.post("/video/location", videoController.location)
 router.post("/thumbnail", upload.single("video"), videoController.thumbnail);
 router.post("/upload", upload.single("video"), videoController.upload);
 router.get("/videos/likes/:vid/:uid", videoController.getVideoLikes);
-
 router.post("/videos", videoController.store);
 router.post("/videos/like/:vid/:uid", videoController.likeVideo);
-
 router.post("/video/comment", videoController.commentVideo);
 router.post("/video/comment/like", videoController.commentLikes);
 router.post("/video/comment/reply/like", videoController.replyCommentLikes);

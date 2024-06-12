@@ -1,18 +1,7 @@
-const {
-  User,
-  Report,
-  Message,
-  Notification,
-  Issue,
-  Campaign,
-} = require("../models");
-const {
-  saveAlgolia,
-  searchAlgolia,
-  updateAlgolia,
-} = require("../libs/algolia");
+const { User, Report, Message, Notification, Issue } = require("../models");
 const { sendMessage } = require("../libs/webSocket");
 const moment = require("moment");
+const { addUserInAlgolia, updateUserInAlgolia } = require("./userController");
 
 exports.notification = async (req, res) => {
   try {
@@ -162,8 +151,7 @@ exports.createUser = async (req, res, next) => {
   try {
     const savedUser = await user.save();
     const userId = savedUser._id;
-    const records = await User.find({ _id: userId });
-    saveAlgolia(records, "users");
+    await addUserInAlgolia(userId);
     return res.status(200).json(savedUser);
   } catch (error) {
     console.log(error);
@@ -176,7 +164,8 @@ exports.cause = async (req, res, next) => {
   try {
     const existingUser = await User.findById(uid);
     if (existingUser) {
-      let result = await User.updateOne({ _id: uid }, { cause: cause });
+      await User.updateOne({ _id: uid }, { cause: cause });
+      updateUserInAlgolia(uid);
       return res.status(200).json({ message: "cause added" });
     } else {
       return res.status(403).json({ message: "username not exists" });
@@ -189,7 +178,8 @@ exports.cause = async (req, res, next) => {
 exports.delete = async (req, res) => {
   try {
     let cognitoId = req.params.uid;
-    await User.deleteOne({ cognitoUsername: cognitoId });
+    const user = await User.deleteOne({ cognitoUsername: cognitoId });
+    await deleteAlgolia(user._id);
     return res.json({ success: "User Deleted" });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -239,6 +229,9 @@ exports.followUser = async (req, res) => {
       { _id: cuid },
       { $push: { following: fuid } }
     );
+    await updateUserInAlgolia(fuid);
+    await updateUserInAlgolia(cuid);
+
     // Get followers
     const followers = await User.find({ _id: fuid }).populate([
       {
@@ -247,35 +240,6 @@ exports.followUser = async (req, res) => {
       },
     ]);
 
-    //Get following
-    const followingCurrentUser = await User.find({ _id: cuid }).populate([
-      {
-        path: "following",
-        populate: { path: "User", model: User },
-      },
-    ]);
-
-    //update follower in algolia
-    let filterUserAlgolia = { search: fuid, type: "users" };
-    const searchAlgo = await searchAlgolia(filterUserAlgolia);
-    if (searchAlgo.length > 0) {
-      let obj = {
-        objectID: searchAlgo[0].objectID,
-        followers: followers[0].followers,
-      };
-      await updateAlgolia(obj, "users");
-    }
-
-    //update following in algoila
-    let filterCurrentUserAlgolia = { search: cuid, type: "users" };
-    const searchCurrentUserAlgo = await searchAlgolia(filterCurrentUserAlgolia);
-    if (searchCurrentUserAlgo.length > 0) {
-      let obj = {
-        objectID: searchCurrentUserAlgo[0].objectID,
-        followers: followingCurrentUser[0].followingCurrentUser,
-      };
-      await updateAlgolia(obj, "users");
-    }
     const followMessage = `${currentUser[0].first_name} ${currentUser[0].last_name} follow  you`;
     const notification = new Notification({
       messages: followMessage,
@@ -341,14 +305,14 @@ exports.unFollowUser = async (req, res) => {
       { $pull: { followers: cuid } },
       { new: true }
     );
-
     //Add users id to my followings array
     const following = await User.updateOne(
       { _id: cuid },
       { $pull: { following: fuid } },
       { new: true }
     );
-
+    await updateUserInAlgolia(fuid);
+    await updateUserInAlgolia(cuid);
     // Get followers
     const followers = await User.find({ _id: fuid }).populate([
       {
@@ -364,28 +328,6 @@ exports.unFollowUser = async (req, res) => {
         populate: { path: "User", model: User },
       },
     ]);
-
-    //update follower in algolia
-    let filterUserAlgolia = { search: fuid, type: "users" };
-    const searchAlgo = await searchAlgolia(filterUserAlgolia);
-    if (searchAlgo.length > 0) {
-      let obj = {
-        objectID: searchAlgo[0].objectID,
-        followers: followers[0].followers,
-      };
-      await updateAlgolia(obj, "users");
-    }
-
-    //update following in algoila
-    let filterCurrentUserAlgolia = { search: cuid, type: "users" };
-    const searchCurrentUserAlgo = await searchAlgolia(filterCurrentUserAlgolia);
-    if (searchCurrentUserAlgo.length > 0) {
-      let obj = {
-        objectID: searchCurrentUserAlgo[0].objectID,
-        followers: followingCurrentUser[0].followingCurrentUser,
-      };
-      await updateAlgolia(obj, "users");
-    }
 
     return res.json({
       status: 200,
@@ -407,6 +349,7 @@ exports.editProfile = async (req, res) => {
   try {
     const id = req.params.id;
     const updateUser = await User.findOneAndUpdate({ _id: id }, req.body);
+    await updateUserInAlgolia(_id);
     if (!updateUser) {
       return res.json({ status: 404, message: "Invalid User", success: false });
     }
@@ -425,7 +368,7 @@ exports.removeProfileImage = async (req, res) => {
       { $unset: { profileImage: "" } },
       { new: true } // to return the updated document
     );
-
+    await updateUserInAlgolia(_id);
     if (!updateUser) {
       return res.json({ status: 404, message: "Invalid User", success: false });
     }
@@ -445,9 +388,7 @@ exports.getFollowingVideos = async (req, res) => {
   try {
     const user = await User.findById({ _id: cuid });
     let hasfollowed = false;
-
     //  const followers = user.followers.length;
-
     if (user.followers.includes(fuid)) {
       hasfollowed = true;
 
@@ -470,11 +411,13 @@ exports.privacy = async (req, res) => {
       { privacy: privacy }
     );
     const user = await User.findById({ _id: id });
+    await updateUserInAlgolia(_id);
     return res.status(200).json(user);
   } catch (e) {
     return res.status(404).json({ error: e.message });
   }
 };
+
 exports.language = async (req, res) => {
   try {
     const { id, language } = req.body;
@@ -483,6 +426,7 @@ exports.language = async (req, res) => {
       { language: language }
     );
     const user = await User.findById({ _id: id });
+    updateUserInAlgolia(_id);
     return res.status(200).json(user);
   } catch (e) {
     return res.status(404).json({ error: e.message });
@@ -520,8 +464,8 @@ exports.message = async (req, res) => {
       { $push: { messages: messageId } },
       { new: true }
     );
+    await updateUserInAlgolia(_id);
     sendMessage("message", message, records.profile);
-
     return res.json({
       status: 200,
       message: "Message sent successfully!",
@@ -537,6 +481,7 @@ exports.message = async (req, res) => {
     });
   }
 };
+
 exports.getMessages = async (req, res) => {
   try {
     const { pid, uid } = req.params;
@@ -566,8 +511,9 @@ exports.getMessages = async (req, res) => {
     return res.json({ status: 500, message: err, success: false });
   }
 };
+
 //get all Messages
-exports.messages = async (req, res) => {  
+exports.messages = async (req, res) => {
   try {
     const userId = req.user._id;
     let records = await Message.aggregate([

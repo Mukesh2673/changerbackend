@@ -21,8 +21,9 @@ const {
   uploadVideoThumbnail,
   uploadImage,
 } = require("../libs/fileUpload");
-const { saveAlgolia } = require("../libs/algolia");
+const {addVideoInAlgolia, updateVideosInAlgolia, deleteVideosInAlgolia } = require("../algolia/videoAlgolia")
 const { sendMessage } = require("../libs/webSocket");
+
 exports.index = async (req, res, next) => {
   try {
     const {
@@ -115,6 +116,7 @@ exports.index = async (req, res, next) => {
     return res.json([]);
   }
 };
+
 exports.videosData = async (id) => {
   return await Video.find({ _id: new ObjectId(id) })
     .sort({ createdAt: "desc" })
@@ -166,6 +168,7 @@ exports.videosData = async (id) => {
       },
     ]);
 };
+
 exports.location = async (req, res, next) => {
   try {
     const longitude = req.body.lng;
@@ -229,14 +232,12 @@ exports.store = async (req, res, next) => {
   try {
     const savedVideo = await video.save();
     const videoId = savedVideo._id;
-    const videoRecords = await Video.find({ _id: videoId });
-    saveAlgolia(videoRecords, "videos");
+    await addVideoInAlgolia(videoId)
     if (req.body.campaign) {
       await endorseCampaign(user, req.body.campaign);
     }
-
     return res.status(200).json(savedVideo);
-  } catch (error) {
+  }catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
@@ -251,6 +252,7 @@ exports.likeVideo = async (req, res) => {
     if (video.likes.includes(uid)) {
       // remove like
       await Video.updateOne({ _id: vid }, { $pull: { likes: uid } });
+      await updateVideosInAlgolia(vid)
       hasLiked = false;
       const updatedVideo = await Video.findById({ _id: vid });
       const likes = updatedVideo.likes.length;
@@ -260,7 +262,7 @@ exports.likeVideo = async (req, res) => {
         { _id: vid },
         { $push: { likes: uid } }
       );
-
+      await updateVideosInAlgolia(vid); 
       const result = await Video.find({ _id: data._id })
         .sort()
         .populate([
@@ -315,15 +317,11 @@ exports.getVideoLikes = async (req, res) => {
   }
 };
 
-exports.update = async (req, res, next) => {};
 
 exports.delete = async (req, res, next) => {
   try {
-    // TODO: delete video from AZURE
-    // TODO: delete video encoding from BITMOVIN
-
     await Video.deleteOne({ _id: req.params.id });
-
+    await deleteVideosInAlgolia(req.params.id)
     return res.json({ success: "Video deleted" });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -381,6 +379,7 @@ exports.uploadImages = async (req, res) => {
     return res.status(500).json({ message: error.message, status: 500 });
   }
 };
+
 exports.uploadProfile = async (req, res) => {
   try {
     const thumbnail = await uploadImage(req.file, "profile");
@@ -402,6 +401,7 @@ exports.commentVideo = async (req, res) => {
       { $push: { comments: messageId } },
       { new: true }
     );
+    await updateVideosInAlgolia(records.video)
     const userPostedVideo = await Video.find({ _id: result._id })
       .sort()
       .populate([
@@ -439,6 +439,7 @@ exports.commentVideo = async (req, res) => {
     });
   }
 };
+
 exports.replyCommentVideo = async (req, res) => {
   try {
     let records = req.body;
@@ -545,6 +546,7 @@ exports.commentLikes = async (req, res) => {
     });
   }
 };
+
 exports.replyCommentLikes = async (req, res) => {
   try {
     let records = req.body;

@@ -27,6 +27,7 @@ const signup = async (req, res) => {
     res.status(400).send({ success: false, message: error.message, error });
   }
 };
+
 const signupConfirm = async (req, res) => {
   const { email, code } = req.body;
   const cognitoParams = {

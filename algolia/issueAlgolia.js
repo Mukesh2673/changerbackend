@@ -1,5 +1,5 @@
 const { Issue} = require("../models");
-const { ObjectId } = require("mongodb");
+
 const {
   searchAlgolia,
   updateAlgolia,
@@ -7,6 +7,7 @@ const {
   deleteAlgolia,
   findObjectById,
 } = require("../libs/algolia");
+
 const issueRecords = async (id) => {
   try {
     const issueId = id;

@@ -1,3 +1,4 @@
+require("dotenv").config();
 const {
   Campaign,
   CampaignParticipant,
@@ -12,18 +13,22 @@ const {
   Message,
   SignedPetitions,
   Issue,
-  Notification
+  Notification,
+  Report
 } = require("../models");
+
 const mongoose = require("mongoose");
 const { generateTags } = require("../controllers/hashtagController");
-const {upload,uploadVideoThumbnail} = require("../libs/fileUpload");
+const { upload, uploadVideoThumbnail } = require("../libs/fileUpload");
 const { sendMessage } = require("../libs/webSocket");
-require("dotenv").config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-const {addVideoInAlgolia}=require('../algolia/videoAlgolia')
-const {updateUsersInAlgolia}=require('../algolia/userAlgolia')
-const {updateIssueInAlgolia}=require('../algolia/issueAlgolia')
-const {addCampaignInAlgolia,updateCampaignInAlgolia}=require('../algolia/campaignAlgolia');
+const { addVideoInAlgolia } = require("../algolia/videoAlgolia");
+const { updateUsersInAlgolia } = require("../algolia/userAlgolia");
+const { updateIssueInAlgolia } = require("../algolia/issueAlgolia");
+const {
+  addCampaignInAlgolia,
+  updateCampaignInAlgolia,
+} = require("../algolia/campaignAlgolia");
 //common function to get all campaign Records
 exports.campaignRecords = async (query) => {
   const skip = query.skip !== undefined ? query.skip : 0;
@@ -82,54 +87,54 @@ exports.showCampaign = async (req, res, next) => {
       { $match: { _id: mongoose.Types.ObjectId(id) } },
       {
         $lookup: {
-          from: 'users',
-          localField: 'user',
-          foreignField: '_id',
-          as: 'user'
-        }
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
+        },
       },
-      { $unwind: '$user' },
+      { $unwind: "$user" },
       {
         $lookup: {
-          from: 'advocates',
-          localField: 'advocate',
-          foreignField: '_id',
-          as: 'advocate'
-        }
-      },
-      {
-        $lookup: {
-          from: 'phases',
-          localField: 'phases',
-          foreignField: '_id',
-          as: 'phases'
-        }
+          from: "advocates",
+          localField: "advocate",
+          foreignField: "_id",
+          as: "advocate",
+        },
       },
       {
         $lookup: {
-          from: 'videos',
-          localField: 'video',
-          foreignField: '_id',
-          as: 'video'
-        }
-      },
-      { $unwind: { path: '$video', preserveNullAndEmptyArrays: true } }, // Video may be null, so preserve nulls
-      {
-        $lookup: {
-          from: 'videos',
-          localField: 'impacts',
-          foreignField: '_id',
-          as: 'impacts'
-        }
+          from: "phases",
+          localField: "phases",
+          foreignField: "_id",
+          as: "phases",
+        },
       },
       {
         $lookup: {
-          from: 'notifications',
-          localField: 'updates',
-          foreignField: '_id',
-          as: 'updates'
-        }
-      }
+          from: "videos",
+          localField: "video",
+          foreignField: "_id",
+          as: "video",
+        },
+      },
+      { $unwind: { path: "$video", preserveNullAndEmptyArrays: true } }, // Video may be null, so preserve nulls
+      {
+        $lookup: {
+          from: "videos",
+          localField: "impacts",
+          foreignField: "_id",
+          as: "impacts",
+        },
+      },
+      {
+        $lookup: {
+          from: "notifications",
+          localField: "updates",
+          foreignField: "_id",
+          as: "updates",
+        },
+      },
     ]);
 
     if (campaign.length > 0) {
@@ -173,7 +178,7 @@ exports.create = async (req, res, next) => {
       },
       { new: true }
     );
-    await updateUsersInAlgolia(auth._id)    
+    await updateUsersInAlgolia(auth._id);
     const campaign = new Campaign({
       user: data.user,
       cause: data.cause,
@@ -182,7 +187,7 @@ exports.create = async (req, res, next) => {
       image: data.image,
     });
     const campaigns = await campaign.save();
-    await addCampaignInAlgolia(campaigns._id)
+    await addCampaignInAlgolia(campaigns._id);
     //if campaign is created from issue
     if (mongoose.Types.ObjectId.isValid(data.issue)) {
       let issue = await Issue.findByIdAndUpdate(
@@ -195,7 +200,7 @@ exports.create = async (req, res, next) => {
           },
         }
       );
-      updateIssueInAlgolia(data.issue)
+      updateIssueInAlgolia(data.issue);
       if (!issue) {
         return res.status(400).json({
           status: 400,
@@ -212,7 +217,7 @@ exports.create = async (req, res, next) => {
       tagsArray = arr.filter(
         (value, index, self) => self.indexOf(value) === index
       );
-    }else {
+    } else {
       tagsArray = tags;
     }
     //save campaign video to video collection
@@ -228,11 +233,11 @@ exports.create = async (req, res, next) => {
       hashtags: tagsArray,
     });
     const savedVideo = await videos.save();
-    await addVideoInAlgolia(savedVideo._id)
+    await addVideoInAlgolia(savedVideo._id);
     const videoId = savedVideo._id;
     const phaseArr = data.phase;
     const savePhaseId = [];
-    await addVideoInAlgolia(videoId)
+    await addVideoInAlgolia(videoId);
     //save phase data to campaign Phase Collection
     for (let i = 0; i < phaseArr.length; i++) {
       const phaseItem = new campaignPhases({
@@ -304,7 +309,7 @@ exports.create = async (req, res, next) => {
           },
         }
       );
-      updateCampaignInAlgolia(campaignsId)
+      updateCampaignInAlgolia(campaignsId);
     }
     let records = await this.campaignRecords({ _id: campaignsId });
 
@@ -339,21 +344,25 @@ exports.donate = async (req, res) => {
       return res.status(404).json({ message: "Campaign donation not found" });
     }
     // check is  donation  exist in campaign phase
-    const campaignPhase= await campaignPhases.findOne({
-      donation:donationId
-    })
+    const campaignPhase = await campaignPhases.findOne({
+      donation: donationId,
+    });
 
     if (!campaignPhase) {
-      return res.status(404).json({ message: "Donation is  not exist on phase" });
+      return res
+        .status(404)
+        .json({ message: "Donation is  not exist on phase" });
     }
 
-    // check is campaign phase exist in campaign  
-    const campaign= await Campaign.findOne({
-      phases: { $in: [mongoose.Types.ObjectId(campaignPhase._id)] }
-    })
+    // check is campaign phase exist in campaign
+    const campaign = await Campaign.findOne({
+      phases: { $in: [mongoose.Types.ObjectId(campaignPhase._id)] },
+    });
 
     if (!campaign) {
-      return res.status(404).json({ message: "Donation and phase not exist in campaign" });
+      return res
+        .status(404)
+        .json({ message: "Donation and phase not exist in campaign" });
     }
 
     // Find the user and update karma points
@@ -381,41 +390,40 @@ exports.donate = async (req, res) => {
       const karmaPoints = Math.round(req.body.amount * 10);
       user.karmaPoint += karmaPoints;
       await user.save();
-  
-  // Add notification to user who made doanation about karma points
-   const karmaMessage = `You received +50 karma points for participating in the campaign ${campaign.title}`;
-   const karmaNotification = new Notification({
-     messages: karmaMessage,
-     user: user._id,
-     activity: campaign.user._id,
-     notificationType: "karmaPoint",
-   });
-   await karmaNotification.save();
-   sendMessage("karmaPoint", karmaMessage, user._id);
-   
-   //Add notification to user who create campaign about donation
-   const donationMessage = `${user.first_name} ${user.last_name} donate ${req.body.amount} for Campaign ${campaign.title}`;
-   const donationNotification = new Notification({
-      messages: donationMessage,
-      user: campaign.user._id,
-      activity: user._id,
-      notificationType: "campaignDonation",
-   })
-   await donationNotification.save();
-   await Campaign.findByIdAndUpdate(
-    campaign._id,
-    {
-      $push: { updates: donationNotification._id },
-    },
-    { new: true }
-    )
-    await updateCampaignInAlgolia(campaign._id)
-   return res.status(200).json(
-    { 
-    status: 200,
-    message: "campaign Donation Success Fully",
-    success: true,
-  });
+
+      // Add notification to user who made doanation about karma points
+      const karmaMessage = `You received +50 karma points for participating in the campaign ${campaign.title}`;
+      const karmaNotification = new Notification({
+        messages: karmaMessage,
+        user: user._id,
+        activity: campaign.user._id,
+        notificationType: "karmaPoint",
+      });
+      await karmaNotification.save();
+      sendMessage("karmaPoint", karmaMessage, user._id);
+
+      //Add notification to user who create campaign about donation
+      const donationMessage = `${user.first_name} ${user.last_name} donate ${req.body.amount} for Campaign ${campaign.title}`;
+      const donationNotification = new Notification({
+        messages: donationMessage,
+        user: campaign.user._id,
+        activity: user._id,
+        notificationType: "campaignDonation",
+      });
+      await donationNotification.save();
+      await Campaign.findByIdAndUpdate(
+        campaign._id,
+        {
+          $push: { updates: donationNotification._id },
+        },
+        { new: true }
+      );
+      await updateCampaignInAlgolia(campaign._id);
+      return res.status(200).json({
+        status: 200,
+        message: "campaign Donation Success Fully",
+        success: true,
+      });
     } else {
       return res.status(400).json({ message: "Payment failed" });
     }
@@ -436,8 +444,8 @@ exports.participateInCampaign = async (req, res) => {
 
     // Find the campaign
     const campaign = await Campaign.findById(campaignId).populate({
-      path: 'user',
-      populate: { path: 'user', model: User }
+      path: "user",
+      populate: { path: "user", model: User },
     });
 
     if (!campaign) {
@@ -452,7 +460,7 @@ exports.participateInCampaign = async (req, res) => {
 
     currentUser.karmaPoint += 50;
     await currentUser.save();
-    updateUsersInAlgolia(user._id)
+    updateUsersInAlgolia(user._id);
     // Check if the user is already participating
     const existingParticipation = await Volunteers.findOne({
       campaign: campaign._id,
@@ -461,7 +469,9 @@ exports.participateInCampaign = async (req, res) => {
     });
 
     if (existingParticipation) {
-      return res.status(422).json({ message: "You are already participating in this campaign." });
+      return res
+        .status(422)
+        .json({ message: "You are already participating in this campaign." });
     }
 
     // Create a new participation record
@@ -502,8 +512,12 @@ exports.participateInCampaign = async (req, res) => {
       },
       { new: true }
     );
-    updateCampaignInAlgolia(campaign._id)
-    sendMessage("campaignParticipation", participationMessage, campaign.user._id);
+    updateCampaignInAlgolia(campaign._id);
+    sendMessage(
+      "campaignParticipation",
+      participationMessage,
+      campaign.user._id
+    );
 
     return res.status(200).json({
       status: 200,
@@ -565,6 +579,7 @@ exports.userVolunteersCompaign = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
 //send message to the campaign
 exports.postMessages = async (req, res) => {
   try {
@@ -680,80 +695,258 @@ exports.signPetitions = async (req, res) => {
 };
 
 //add impact video by Volunteers
-exports.campaignImpactVideos =async (req, res) =>{
-try{
-  const { campaignId } = req.params;
-  const { body, file: filedata,user, description } = req;
-  
-  //check is campaign exist or not
-  const campaignDetails = await Campaign.findById(campaignId);
-  if (!campaignDetails) {
-    return res.status(404).json({ message: "Campaign not found." });
-  }
+exports.campaignImpactVideos = async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+    const { body, file: filedata, user, description } = req;
 
-  const existingParticipation = await Volunteers.findOne({
-    campaign: campaignId,
-    user: user,
-  });
-  if (!existingParticipation) {
-    return res.status(404).json({ message: "You are not participating in this campaign.", status: 404,success: false });
-  }
-  //get user Details
-  const currentUser = await User.findById(user);
-  if (!currentUser) {
-    return res.status(404).json({ message: "User not found." });
-  }
-  const tags = await generateTags(body.description);
-  // Upload video thumbnail
-  const thumbnail = await uploadVideoThumbnail(req.file);
-   // Upload video and get URL
-  const videoUrl = await upload(req.file);
-  // Save video details in the database
-  const videos = new Video({
-    user: user,
-    location: JSON.parse(body.location),
-    campaign: campaignId,
-    description: body.description,
-    video_url: videoUrl.encodedKey,
-    type: 'IMPACT',
-    thumbnail_url:  `thumbnail${thumbnail.key}`,
-    hashtags: tags,
-  });
-  const savedVideo = await videos.save();
-  addVideoInAlgolia(savedVideo._id)
-  //Add Notification to Impact video
-  const impactVideoMessage = `${currentUser.first_name} ${currentUser.last_name} added a Impact video in Campaign ${campaignDetails.title}` 
-  const impactVideoNotification = new Notification({
-    messages: impactVideoMessage,
-    user: campaignDetails.user,
-    activity: currentUser._id,
-    campaign: campaignId,
-    notificationType: "campaignImpactVideo",
-  });
-  //Update Campaign about it's impact and update  
-  await impactVideoNotification.save()
-  await Campaign.findByIdAndUpdate(
-    campaignId,
-    {
-      $push: { impacts: savedVideo._id ,updates: impactVideoNotification._id}
-    },
-    { new: true }
+    //check is campaign exist or not
+    const campaignDetails = await Campaign.findById(campaignId);
+    if (!campaignDetails) {
+      return res.status(404).json({ message: "Campaign not found." });
+    }
+
+    const existingParticipation = await Volunteers.findOne({
+      campaign: campaignId,
+      user: user,
+    });
+    if (!existingParticipation) {
+      return res
+        .status(404)
+        .json({
+          message: "You are not participating in this campaign.",
+          status: 404,
+          success: false,
+        });
+    }
+    //get user Details
+    const currentUser = await User.findById(user);
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    const tags = await generateTags(body.description);
+    // Upload video thumbnail
+    const thumbnail = await uploadVideoThumbnail(req.file);
+    // Upload video and get URL
+    const videoUrl = await upload(req.file);
+    // Save video details in the database
+    const videos = new Video({
+      user: user,
+      location: JSON.parse(body.location),
+      campaign: campaignId,
+      description: body.description,
+      video_url: videoUrl.encodedKey,
+      type: "IMPACT",
+      thumbnail_url: `thumbnail${thumbnail.key}`,
+      hashtags: tags,
+    });
+    const savedVideo = await videos.save();
+    addVideoInAlgolia(savedVideo._id);
+    //Add Notification to Impact video
+    const impactVideoMessage = `${currentUser.first_name} ${currentUser.last_name} added a Impact video in Campaign ${campaignDetails.title}`;
+    const impactVideoNotification = new Notification({
+      messages: impactVideoMessage,
+      user: campaignDetails.user,
+      activity: currentUser._id,
+      campaign: campaignId,
+      notificationType: "campaignImpactVideo",
+    });
+    //Update Campaign about it's impact and update
+    await impactVideoNotification.save();
+    await Campaign.findByIdAndUpdate(
+      campaignId,
+      {
+        $push: {
+          impacts: savedVideo._id,
+          updates: impactVideoNotification._id,
+        },
+      },
+      { new: true }
     );
-    updateCampaignInAlgolia(campaignId)
-    sendMessage("campaignImpactVideo", impactVideoMessage, campaignDetails.user);
+    updateCampaignInAlgolia(campaignId);
+    sendMessage(
+      "campaignImpactVideo",
+      impactVideoMessage,
+      campaignDetails.user
+    );
     return res.status(200).json({
       status: 200,
       message: "Campaign impact video added successfully.",
       success: true,
     });
-}
-catch(err)
-{
-  return res.status(500).json({
-    status: 500,
-    message: "An error occurred while adding the campaign impact video.",
-    error: err.message,
-    success: false,
-  });
-}
-}
+  } catch (err) {
+    return res.status(500).json({
+      status: 500,
+      message: "An error occurred while adding the campaign impact video.",
+      error: err.message,
+      success: false,
+    });
+  }
+};
+
+//get Volunters based on Location, cause and filter on map
+exports.volunteers = async (req, res) => {
+  try {
+    let pipline = [
+      {
+        $lookup: {
+          from: "campaigns",
+          localField: "campaign",
+          foreignField: "_id",
+          as: "campaign",
+        },
+      },
+      {
+        $unwind: "$campaign",
+      },
+      {
+        $lookup: {
+          from: "campaignParticipation",
+          localField: "participation",
+          foreignField: "_id",
+          as: "participationDetails",
+        },
+      },
+      {
+        $unwind: "$participationDetails",
+      },
+
+      {
+        $lookup: {
+          from: "campaignVolunteers",
+          localField: "campaign._id",
+          foreignField: "campaign",
+          as: "usersParticipated",
+        },
+      },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "usersParticipated.user",
+          foreignField: "_id",
+          as: "campaignParticipated",
+        },
+      },
+    ];
+    if (req.query.cause) {
+      let causeToFilter = req.query.cause.toLowerCase();
+      pipline.push({
+        $match: {
+          $expr: {
+            $eq: [{ $toLower: "$campaign.cause" }, causeToFilter],
+          },
+        },
+      });
+    }
+    if (req.query.location) {
+      const query = [];
+      const location = JSON.parse(decodeURIComponent(req.query.location));
+      const longitude = parseFloat(location[0]);
+      const latitude = parseFloat(location[1]);
+      const coordinates = [longitude, latitude];
+      const distance = 1; // in kilometers
+      const unitValue = 1000; // 1 km in meters
+      // Find users near the given location
+      query.push({
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: coordinates,
+          },
+          maxDistance: distance * unitValue,
+          distanceField: "distance",
+          spherical: true,
+          key: "location",
+        },
+      });
+
+      // Project to extract user IDs
+      query.push({
+        $project: {
+          _id: 0,
+          user: "$_id",
+        },
+      });
+      const usersNearLocation = await CampaignParticipant.aggregate(query);
+      const userIds = usersNearLocation.map((user) => user.user);
+      const userParticipations = await Volunteers.aggregate([
+        ...pipline,
+        {
+          $match: {
+            "participation._id": { $in: userIds },
+          },
+        },
+      ]);
+      return res.status(200).json(userParticipations);
+    }
+
+    if (req.query.skill) {
+      let skillToFilter = req.query.skill.toLowerCase();
+      pipline.push({
+        $match: {
+          $expr: {
+            $in: [
+              skillToFilter,
+              {
+                $map: {
+                  input: "$participationDetails.skills",
+                  as: "skill",
+                  in: { $toLower: "$$skill.skill" },
+                },
+              },
+            ],
+          },
+        },
+      });
+    }
+    pipline.push({
+      $project: {
+        _id: "$_id",
+        campaign: "$campaign",
+        participation: "$participationDetails",
+        campaignVolunteers: {
+          $map: {
+            input: "$campaignParticipated",
+            as: "volunteer",
+            in: {
+              first_name: "$$volunteer.first_name",
+              last_name: "$$volunteer.last_name",
+              username: "$$volunteer.username",
+              profileImage: "$$volunteer.profileImage",
+            },
+          },
+        },
+      },
+    });
+    const userParticipations = await Volunteers.aggregate([...pipline]);
+    return res.status(200).json(userParticipations);
+  } catch (error) {
+    console.error("Error retrieving participation and volunteers:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+//add user report
+exports.report = async (req, res) => {
+  try {
+    const userId = req.user;
+    let records = req.body;
+    records.reportedBy=userId
+    const report = new Report(records);
+    const savedReports = await report.save();
+    return res.json({
+      status: 200,
+      message: "Report added Successfully",
+      success: false,
+      data: savedReports,
+    });
+  } catch (err) {
+    console.log("erris",err)
+    return res.json({
+      status: 500,
+      message: "Something Went wrong",
+      success: false,
+    });
+  }
+};

@@ -3,11 +3,10 @@ const {
   searchAlgolia,
   updateAlgolia,
   saveAlgolia,
-  deleteAlgolia,
   findObjectById,
 } = require("../libs/algolia");
-const mongoose = require("mongoose");
 
+const mongoose = require("mongoose");
 const campaignRecords = async (id) => {
   try {
     const aggregationPipeline = [

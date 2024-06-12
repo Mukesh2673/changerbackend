@@ -22,5 +22,5 @@ const campaignParticipationSchema = new Schema(
     timestamps: true,
   }
 );
-campaignParticipationSchema.index({ coordinates: "2dsphere" });
+campaignParticipationSchema.index({ location: "2dsphere" });
 module.exports = mongoose.model("participation", campaignParticipationSchema,'campaignParticipation');

@@ -4,11 +4,10 @@ const mongoose = require("mongoose");
 const moment = require("moment");
 require("dotenv").config();
 const OpenAI = require("openai");
-const { searchAlgolia, updateAlgolia, saveAlgolia, deleteAlgolia} = require("../libs/algolia");
-const user = require("../models/user");
 const { sendMessage } = require("../libs/webSocket");
-const {updateIssueInAlgolia,deleteIssueInAlgolia}=require('../algolia/issueAlgolia')
-
+const {updateIssueInAlgolia, deleteIssueInAlgolia, addIssueInAlgolia}=require('../algolia/issueAlgolia')
+const { updateUserInAlgolia } = require("../algolia/userAlgolia")
+const {addVideoInAlgolia } = require("../algolia/videoAlgolia")
 exports.issueRecords = async (query) => {
   let records = await Issue.find(query).populate([
     {
@@ -22,6 +21,7 @@ exports.issueRecords = async (query) => {
   ]);
   return records;
 };
+
 exports.index = async (req, res, next) => {
   try {
     const query = [];
@@ -33,7 +33,7 @@ exports.index = async (req, res, next) => {
       query.push({ $skip: skip });
       query.push({ $limit: pageSize });
     }
-    if (req.query.location) {
+    if(req.query.location) {
       const location = JSON.parse(decodeURIComponent(req.query.location));
       const longitude = location[0];
       const latitude = location[1];
@@ -116,6 +116,7 @@ exports.index = async (req, res, next) => {
     return res.json({ status: 400, data: [], success: false, message: error });
   }
 };
+
 exports.create = async (req, res, next) => {
   try {
     const data = req.body;
@@ -146,15 +147,7 @@ exports.create = async (req, res, next) => {
       },
       { new: true }
     );
-    let filterUserAlgolia = { search: user._id, type: "users" };
-    const searchAlgo = await searchAlgolia(filterUserAlgolia);
-    if (searchAlgo.length > 0) {
-      let obj = {
-        objectID: searchAlgo[0].objectID,
-        karmaPoint: user.karmaPoint,
-      };
-      await updateAlgolia(obj, "users");
-    }
+    await updateUserInAlgolia(auth._id)
     const issue = new Issue({
       title: data.title,
       user: data.user,
@@ -164,7 +157,7 @@ exports.create = async (req, res, next) => {
       joined: [user._id],
     });
     const savedIssue = await issue.save();
-
+    await addIssueInAlgolia(savedIssue._id)
     let issueTags = savedIssue?.hashtags;
     var tagsArray = [];
     if (issueTags?.length > 0) {
@@ -187,14 +180,10 @@ exports.create = async (req, res, next) => {
       hashtags: tagsArray,
     });
     const savedVideo = await videos.save();
+    
     const videoId = savedVideo._id;
-    const videoRecords = await Video.find({ _id: videoId }).populate([
-      {
-        path: "issue",
-        populate: { path: "issues", model: Issue },
-      },
-    ]);
-    saveAlgolia(videoRecords, "videos");
+    await addVideoInAlgolia(videoId)
+
     await Issue.findByIdAndUpdate(
       { _id: issueId },
       {
@@ -204,8 +193,7 @@ exports.create = async (req, res, next) => {
         },
       }
     );
-    const issueRecord = await this.issueRecords({ _id: issueId });
-    saveAlgolia(issueRecord, "issues");
+    await updateIssueInAlgolia(issueId)
     const message = `you received +100 karma for good intention of creating Problem of  ${savedIssue.title}`;
     const notification = new Notification({
       messages: message,
@@ -226,6 +214,7 @@ exports.create = async (req, res, next) => {
     return res.json({ status: 500, message: err, success: false });
   }
 };
+
 exports.location = async (req, res, next) => {
   try {
     let cause = req.body.cause;
@@ -316,6 +305,7 @@ exports.location = async (req, res, next) => {
     return res.json({ status: 500, message: err, success: false });
   }
 };
+
 exports.generate = async (req, res, next) => {
   try {
     let text = req.body.idea;
@@ -339,6 +329,7 @@ exports.generate = async (req, res, next) => {
     return res.json({ status: 500, message: err, success: false });
   }
 };
+
 exports.upvotes = async (req, res, next) => {
   try {
     const { uid, issueId } = req.body;
@@ -359,12 +350,14 @@ exports.upvotes = async (req, res, next) => {
         { $pull: { votes: uid } },
         { new: true }
       );
+      await updateIssueInAlgolia(issueId)
       if (issue.votes.length < 3) {
         await Issue.findByIdAndUpdate(
           { _id: issueId },
           { issueState: "upVotes" },
           { new: true }
         );
+        await updateIssueInAlgolia(issueId)
       }
       return res.json({
         status: 200,
@@ -378,6 +371,7 @@ exports.upvotes = async (req, res, next) => {
         { $push: { votes: uid } },
         { new: true }
       );
+      await updateIssueInAlgolia(issueId)
       var message = "";
       var notificationType = "";
       if (issue.votes.length < 3) {
@@ -391,6 +385,8 @@ exports.upvotes = async (req, res, next) => {
           { issueState: "discussion" },
           { new: true }
         );
+       await updateIssueInAlgolia(issueId)
+
       }
       const notification = new Notification({
         messages: message,
@@ -414,6 +410,7 @@ exports.upvotes = async (req, res, next) => {
     return res.json({ status: 500, message: err, success: false });
   }
 };
+
 exports.userIssues = async (req, res) => {
   try {
     const uid = req.params.uid;
@@ -442,6 +439,7 @@ exports.userIssues = async (req, res) => {
     return res.json({ status: 500, message: err, success: false });
   }
 };
+
 exports.joinIssue = async (req, res) => {
   const issueId = req.body.issueId;
   const userId = req.body.userId;
@@ -481,27 +479,14 @@ exports.joinIssue = async (req, res) => {
       },
       { new: true }
     );
-    let filterUserAlgolia = { search: user._id, type: "users" };
-    const userSearchAlgo = await searchAlgolia(filterUserAlgolia);
-    if (userSearchAlgo.length > 0) {
-      let obj = {
-        objectID: userSearchAlgo[0].objectID,
-        karmaPoint: user.karmaPoint,
-      };
-      await updateAlgolia(obj, "users");
-    }
+    
     const issue = await Issue.findByIdAndUpdate(
       { _id: issueId },
       { $push: { joined: userId } },
       { new: true }
     );
-    // const issueRecords=await Issue.find({_id:issue._id}).populate([
-    //   {
-    //     path:"joined",
-    //     model:User
-    //   }
-    // ]);
-
+    await updateUserInAlgolia(auth._id)
+    await updateIssueInAlgolia(issueId)
     const message = `joined your issue discussion ${result.title}`;
     const notification = new Notification({
       messages: message,
@@ -522,13 +507,7 @@ exports.joinIssue = async (req, res) => {
     await karmaPointnotification.save();
     sendMessage("karmaPoint", message, auth._id);
     let filterData = { search: result._id, type: "issues" };
-    const searchAlgo = await searchAlgolia(filterData);
-    updateObject = {
-      objectID: searchAlgo[0].objectID,
-      joined: issue.joined,
-    };
-    let updateAlgo = await updateAlgolia(updateObject, "issues");
-    return res.json({
+     return res.json({
       status: 200,
       message: "issue joined successfully",
       success: true,
@@ -541,11 +520,11 @@ exports.joinIssue = async (req, res) => {
     });
   }
 };
+
 exports.leaveIssue = async (req, res) => {
   const issueId = req.body.issueId;
   const userId = req.body.userId;
   const result = await Issue.findById({ _id: issueId });
-  let filterData = { search: result._id, type: "issues" };
   if (result) {
     const auth = await User.findById({ _id: userId });
     if (!auth) {
@@ -576,7 +555,7 @@ exports.leaveIssue = async (req, res) => {
         sendMessage("leaveIssue", message, auth._id);
 
         const karmaPoint = auth.karmaPoint - 50;
-        const user = await User.findByIdAndUpdate(
+       await User.findByIdAndUpdate(
           { _id: auth._id },
           {
             $set: {
@@ -585,22 +564,8 @@ exports.leaveIssue = async (req, res) => {
           },
           { new: true }
         );
-        let filterUserAlgolia = { search: user._id, type: "users" };
-        const searchUserAlgo = await searchAlgolia(filterUserAlgolia);
-        if (searchUserAlgo.length > 0) {
-          let obj = {
-            objectID: searchUserAlgo[0].objectID,
-            karmaPoint: user.karmaPoint,
-          };
-          await updateAlgolia(obj, "users");
-        }
-        let filterData = { search: result._id, type: "issues" };
-        const searchAlgo = await searchAlgolia(filterData);
-        updateObject = {
-          objectID: searchAlgo[0].objectID,
-          joined: issue.joined,
-        };
-        await updateAlgolia(updateObject, "issues");
+        await updateUserInAlgolia(auth._id)
+        await updateIssueInAlgolia(issueId)
         return res.json({
           status: 200,
           message: "issue Leave successfully",
@@ -628,6 +593,7 @@ exports.leaveIssue = async (req, res) => {
     });
   }
 };
+
 exports.issueDetails = async (req, res) => {
   try {
     const issueId = req.params.id;
@@ -679,6 +645,7 @@ exports.issueDetails = async (req, res) => {
     return res.json({ status: 500, message: err, success: false });
   }
 };
+
 exports.update = async (req, res) => {
   try {
     const issueId = req.params.id;
@@ -725,7 +692,7 @@ exports.update = async (req, res) => {
           },
         },
       ]);
-      updateIssueInAlgolia(issueId)
+      await updateIssueInAlgolia(issueId)
       return res.json({
         status: 200,
         message: "issue updated successfully",
@@ -747,13 +714,14 @@ exports.update = async (req, res) => {
     });
   }
 };
+
 exports.deleteIssue = async (req, res) => {
   const issueId = req.params.id;
   const isExist = await Issue.find({ _id: issueId });
   try {
     if (isExist.length > 0) {
      await Issue.findByIdAndRemove(issueId);
-     deleteIssueInAlgolia(issueId)
+     await deleteIssueInAlgolia(issueId)
       return res.json({
         status: 200,
         message: "issue deleted successfully",
@@ -774,6 +742,7 @@ exports.deleteIssue = async (req, res) => {
     });
   }
 };
+
 exports.messages = async (req, res) => {
   try {
     let records = req.body;
@@ -785,7 +754,7 @@ exports.messages = async (req, res) => {
       { $push: { messages: messageId } },
       { new: true }
     );
-    updateIssueInAlgolia(issueId)
+    await updateIssueInAlgolia(issueId)
     return res.json({
       status: 200,
       message: "sent Message Successfully",
@@ -801,6 +770,7 @@ exports.messages = async (req, res) => {
     });
   }
 };
+
 exports.report = async (req, res) => {
   try {
     let records = req.body;
@@ -820,6 +790,7 @@ exports.report = async (req, res) => {
     });
   }
 };
+
 exports.share = async (req, res) => {
   try {
     const { id, uid } = req.body;
@@ -843,7 +814,7 @@ exports.share = async (req, res) => {
 
           { new: true }
         );
-        updateIssueInAlgolia(issueId)     
+        await updateIssueInAlgolia(issueId)     
         return res.json({
           status: 200,
           message: "issue shared successfully",
@@ -866,6 +837,7 @@ exports.share = async (req, res) => {
     });
   }
 };
+
 //add views of issue
 exports.views = async (req, res) => {
   try {
@@ -891,6 +863,7 @@ exports.views = async (req, res) => {
     });
   }
 };
+
 //delete the issue by cron job if there is not interaction since a month
 exports.deleteOldIssues = async (req, res) => {
   try {

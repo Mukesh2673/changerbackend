@@ -6,6 +6,7 @@ const userSchema = new Schema(
   {
     first_name: { type: String, required: true },
     last_name: { type: String, required: true },
+    location: { type: { type: String, default: "Point", enum: "Point"}, coordinates: { type: [Number], default: [0, 0]}},
     email: { type: String, required: false },
     username: { type: String, required: true },
     uid: { type: String, required: false },
@@ -30,4 +31,5 @@ const userSchema = new Schema(
   }
 );
 
+userSchema.index({ location: "2dsphere" });
 module.exports = mongoose.model("User", userSchema);

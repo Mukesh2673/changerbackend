@@ -7,6 +7,7 @@ const {
   deleteAlgolia,
   findObjectById,
 } = require("../libs/algolia");
+
 const videosRecords = async (id) => {
     return await Video.find({ _id: new ObjectId(id) })
       .sort({ createdAt: "desc" })
@@ -58,6 +59,7 @@ const videosRecords = async (id) => {
         },
       ]);
 };
+
 exports.updateVideosInAlgolia = async (id) => {
   try {
     let videoRecord = await videosRecords(id);

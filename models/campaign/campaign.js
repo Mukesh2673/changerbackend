@@ -11,15 +11,15 @@ const campaignSchema = new Schema(
     image: { type: String, required: false },
     video: { type: Schema.Types.ObjectId, ref: "Video", index: true },
     impacts: [{ type: Schema.Types.ObjectId, ref: "impact", index: true }],
-    _geoloc: [],  
+    location: { type: { type: String, default: "Point", enum: "Point"}, coordinates: { type: [Number], default: [0, 0]}},
     hashtags: { type: Array, default: [] },
     updates: [{ type: mongoose.Schema.Types.ObjectId, ref: "notification" }],
     algolia: {type: String, default: ""},
-
   },
   {
     timestamps: true,
   }
 );
 
+campaignSchema.index({ location: "2dsphere" });
 module.exports = mongoose.model("campaign", campaignSchema);

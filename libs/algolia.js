@@ -3,6 +3,7 @@ const client = algoliasearch(
   process.env.ALGOLIA_APP_ID,
   process.env.ALGOLIA_API_KEY
 );
+
 exports.saveAlgolia = async (records, index) => {
   try {
     const algoliaIndex = client.initIndex(index);
@@ -77,15 +78,15 @@ exports.searchAlgolia = async (query) => {
         delete queries[i].query;
       }
     }
-    return await client.multipleQueries(queries).then(({ results }) => {
-      const records = [];
-      let res = results.filter((data) => data.hits.length > 0);
-      for (let i = 0; i < res.length; i++) {
-        records.push({ indexName: queries[i].indexName, data: res[i].hits[0] });
-        delete records[i]["_highlightResult"];
-      }
-      return records;
-    });
+    const { results } = await client.multipleQueries(queries);
+    return results
+    .filter(result => result.hits.length > 0)
+    .map((result, index) => ({
+      data: result.hits.map(hit => {
+        delete hit._highlightResult;
+        return hit;
+      }),
+    }));
   } catch (error) {
     console.log("err is", error);
     return error;
