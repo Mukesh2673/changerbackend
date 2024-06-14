@@ -363,19 +363,19 @@ exports.getUser = async (req, res, next) => {
 
       {
         $project: {
-          // _id: "$_id",
-          // first_name: "$first_name",
-          // last_name: "$last_name",
-          // email: "$email",
-          // username: "$username",
-          // uid: "$uid",
-          // dob: "$dob",
-          // karmaPoint: "$karmaPoint",
-          // following: "$following",
-          // followers: "$followers",
-          // supportedCampaigns: {
-          //   $concatArrays: ["$userCampaings", "$volunteerCampaigns"],
-          // },
+          _id: "$_id",
+          first_name: "$first_name",
+          last_name: "$last_name",
+          email: "$email",
+          username: "$username",
+          uid: "$uid",
+          dob: "$dob",
+          karmaPoint: "$karmaPoint",
+          following: "$following",
+          followers: "$followers",
+          supportedCampaigns: {
+            $concatArrays: ["$userCampaings", "$volunteerCampaigns"],
+          },
           volunteeringExperience: "$campaignParticipation",
           impacts: "$impacts",
           advocacy: "$advocacy",
