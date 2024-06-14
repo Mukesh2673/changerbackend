@@ -27,7 +27,8 @@ const notificationSchema = mongooseToSwagger(Notification);
 const messageSchema = mongooseToSwagger(Message);
 const campaignSchema = mongooseToSwagger(Campaign);
 const campaignParticipantSchema = mongooseToSwagger(CampaignParticipant);
-
+const runSeeders = require('./seeders');
+runSeeders();
 const swaggerOptions = {
   swaggerDefinition: {
     info: {
@@ -52,7 +53,6 @@ const swaggerOptions = {
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
-
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 const PORT = process.env.PORT || 3001;

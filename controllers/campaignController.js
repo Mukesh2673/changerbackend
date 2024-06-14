@@ -860,7 +860,6 @@ exports.volunteers = async (req, res) => {
           key: "location",
         },
       });
-
       // Project to extract user IDs
       query.push({
         $project: {

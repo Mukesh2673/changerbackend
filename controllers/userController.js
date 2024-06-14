@@ -2,6 +2,8 @@ const { User, Report, Message, Notification, Issue } = require("../models");
 const { sendMessage } = require("../libs/webSocket");
 const moment = require("moment");
 const { addUserInAlgolia, updateUserInAlgolia } = require("./userController");
+const mongoose = require("mongoose");
+const { ObjectId } = require("mongodb");
 
 exports.notification = async (req, res) => {
   try {
@@ -83,16 +85,305 @@ exports.notification = async (req, res) => {
 
 exports.getUser = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id).populate([
+    let userId = req.params.id;
+    if (!ObjectId.isValid(userId)) {
+      return res.status(500).json({ message: "Invalid User Id" });
+    }
+    let pipeLine = [
+      { $match: { _id: mongoose.Types.ObjectId(userId) } },
       {
-        path: "followers",
-        populate: { path: "User", model: User },
+        $lookup: {
+          from: "users",
+          localField: "followers",
+          foreignField: "_id",
+          as: "followers", //match records with impact video to display impact records
+          pipeline: [
+            {
+              $lookup: {
+                from: "videos",
+                let: { userId: "$_id" },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [
+                          { $eq: ["$user", "$$userId"] },
+                          { $eq: ["$type", "IMPACT"] }, // Add your condition here
+                        ],
+                      },
+                    },
+                  },
+                ],
+                as: "impacts",
+                pipeline: [{ $project: { _id: 1 } }],
+              },
+            },
+
+            {
+              $project: {
+                _id: 1,
+                username: 1,
+                profileImage: 1,
+                followers: 1,
+                first_name: 1,
+                last_name: 1,
+                impacts: 1,
+              },
+            },
+          ],
+        },
       },
       {
-        path: "following",
-        populate: { path: "User", model: User },
+        $lookup: {
+          from: "users",
+          localField: "following",
+          foreignField: "_id",
+          as: "following",
+          pipeline: [
+            {
+              $lookup: {
+                from: "videos",
+                let: { userId: "$_id" },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [
+                          { $eq: ["$user", "$$userId"] },
+                          { $eq: ["$type", "IMPACT"] }, // Add your condition here
+                        ],
+                      },
+                    },
+                  },
+                ],
+                as: "impacts",
+                pipeline: [{ $project: { _id: 1 } }],
+              },
+            },
+
+            {
+              $project: {
+                _id: 1,
+                username: 1,
+                profileImage: 1,
+                followers: 1,
+                first_name: 1,
+                last_name: 1,
+                impacts: 1,
+              },
+            },
+          ],
+        },
       },
-    ]);
+      {
+        $lookup: {
+          from: "users",
+          localField: "following",
+          foreignField: "_id",
+          as: "following",
+        },
+      },
+      {
+        $lookup: {
+          from: "campaignVolunteers",
+          localField: "_id",
+          foreignField: "user",
+          as: "volunteering",
+        },
+      },
+      {
+        $lookup: {
+          from: "campaigns",
+          localField: "volunteering.campaign",
+          foreignField: "_id",
+          as: "volunteerCampaigns",
+        },
+      },
+      {
+        $lookup: {
+          from: "campaignParticipation",
+          localField: "volunteering.participation",
+          foreignField: "_id",
+          as: "campaignParticipation", //add join to the volunters that is relate to the participant
+          pipeline: [
+            {
+              $lookup: {
+                from: "campaignPhase",
+                localField: "campaignParticipation.phaseId",
+                foreignField: "_id",
+                as: "campaingPhase",
+              },
+            },
+
+            {
+              $lookup: {
+                from: "campaignVolunteers",
+                localField: "_id",
+                foreignField: "participation",
+                as: "endorsed",
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "endorsed.user",
+                foreignField: "_id",
+                as: "endorsed.user",
+              },
+            },
+
+            // {$project: { _id: 1, roleTitle: 1, createdAt: 1, endorsed: 1 } }
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "campaigns",
+          localField: "_id",
+          foreignField: "user",
+          as: "userCampaings",
+        },
+      },
+      {
+        $lookup: {
+          from: "videos",
+          let: { userId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$user", "$$userId"] },
+                    { $eq: ["$type", "IMPACT"] }, // Add your condition here
+                  ],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: "campaigns",
+                localField: "campaign",
+                foreignField: "_id",
+                as: "campaignDetails",
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "userDetails",
+              },
+            },
+          ],
+          as: "impacts",
+        },
+      },
+      {
+        $lookup: {
+          from: "advocates",
+          localField: "_id",
+          foreignField: "user",
+          as: "advocacy",
+          pipeline: [
+            {
+              $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user",
+                pipeline: [
+                  {
+                    $project: {
+                      _id: 1,
+                      first_name: 1,
+                      last_name: 1,
+                      username: 1,
+                      profileImage: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $lookup: {
+                from: "videos",
+                localField: "video",
+                foreignField: "_id",
+                as: "video",
+                pipeline: [
+                  { $project: { _id: 1, video_url: 1, thumbnail_url: 1 } },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "issues",
+          localField: "_id",
+          foreignField: "user",
+          as: "issues",
+          pipeline: [
+            {
+              $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user",
+                pipeline: [{ $project: { _id: 1, username: 1 } }],
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "joined",
+                foreignField: "_id",
+                as: "joined",
+                pipeline: [
+                  { $project: { _id: 1, username: 1, profileImage: 1 } },
+                ],
+              },
+            },
+            {
+              $project: {
+                shared: 0,
+                views: 0,
+                notification: 0,
+                messages: 0,
+                hashtags: 0,
+                __v: 0,
+                video: 0,
+              },
+            }, //hide issue fields
+          ],
+        },
+      },
+
+      {
+        $project: {
+          // _id: "$_id",
+          // first_name: "$first_name",
+          // last_name: "$last_name",
+          // email: "$email",
+          // username: "$username",
+          // uid: "$uid",
+          // dob: "$dob",
+          // karmaPoint: "$karmaPoint",
+          // following: "$following",
+          // followers: "$followers",
+          // supportedCampaigns: {
+          //   $concatArrays: ["$userCampaings", "$volunteerCampaigns"],
+          // },
+          volunteeringExperience: "$campaignParticipation",
+          impacts: "$impacts",
+          advocacy: "$advocacy",
+          issues: "$issues",
+        },
+      },
+    ];
+    const user = await User.aggregate(pipeLine);
     return res.json(user);
   } catch (error) {
     return res.status(500).json({ message: error.message });

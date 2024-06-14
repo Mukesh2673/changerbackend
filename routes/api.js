@@ -67,10 +67,9 @@ router.post("/campaigns", campaignController.create);
 router.post("/campaign/message", validateToken,campaignController.postMessages)
 router.get("/campaign/:id/message", validateToken,campaignController.getMessages)
 router.post("/campaign/:campaignId/impactVideos",  upload.single("video"), validateToken, validateCampaignImpact, campaignController.campaignImpactVideos)
-//get Volunteers add condition to get  volunteers on map
-router.get("/campaign/volunteers", campaignController.volunteers)
-// get campaing that you have voluteer
-router.get("/volunteeringForYou", validateToken, campaignController.userVolunteersCompaign);
+
+router.get("/campaign/volunteers", campaignController.volunteers)//get Volunteers based Location
+router.get("/volunteeringForYou", validateToken, campaignController.userVolunteersCompaign); //get campaing that you have voluteer
 router.post("/uploadImage", upload.single("Image"), videoController.uploadImages);
 router.post("/signPetition", validateToken, validateSignPetitions, campaignController.signPetitions)
 
@@ -78,8 +77,7 @@ router.post("/signPetition", validateToken, validateSignPetitions, campaignContr
 // VIDEO ROUTES
 router.get("/videos/:id", videoController.show);
 router.delete("/videos/:id", videoController.delete);
-router.get("/videos", videoController.index);
-router.post("/video/location", videoController.location)
+router.get("/videos", videoController.getVideos);
 router.post("/thumbnail", upload.single("video"), videoController.thumbnail);
 router.post("/upload", upload.single("video"), videoController.upload);
 router.get("/videos/likes/:vid/:uid", videoController.getVideoLikes);
@@ -109,13 +107,8 @@ router.post("/issue/share", issueController.share)
 router.post("/issue/:id/views", issueController.views)
 router.post("/issue/deleteOld", issueController.deleteOldIssues)
 
-//impact Routes
-// router.post("/impact", impactController.create);
-// router.get("/impact", impactController.index);
-
 //search
 router.get("/search", searchController.search)
-
 //hasTags
 router.post("/hashtags", hashtagsController.add)
 router.get("/content/hashtags/:tag", hashtagsController.getContent)

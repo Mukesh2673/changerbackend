@@ -15,7 +15,6 @@ const userSchema = new Schema(
     premium: { type: Boolean, required: false },
     bio: { type: String, default: "" },
     cognitoUsername: { type: String, required: true },
-    endorsed_campaigns: { type: [String], default: [], required: false },
     cause: { type: [], default: [], required: false },
     privacy: { type: Boolean, required: false, default: false },
     messages: [ { type: mongoose.Schema.Types.ObjectId, ref: "message", required: false }],

@@ -20,5 +20,6 @@ module.exports = {
   donation: require("./campaign/campaignDonation"),
   Donated: require("./campaign/campaignDonated"),
   petitions: require("./campaign/campaignPetition"),
-  
+  Skills: require("./skills/skill"),
+  College: require("./colleges"), 
 };

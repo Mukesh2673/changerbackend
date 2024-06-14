@@ -13,6 +13,7 @@ const {
   Notification,
   RepliesComment,
   CommentsLikes,
+  Volunteers
 } = require("../models");
 const { endorseCampaign } = require("../libs/campaign");
 const { deleteFile } = require("../libs/utils");
@@ -24,92 +25,175 @@ const {
 const {addVideoInAlgolia, updateVideosInAlgolia, deleteVideosInAlgolia } = require("../algolia/videoAlgolia")
 const { sendMessage } = require("../libs/webSocket");
 
-exports.index = async (req, res, next) => {
+// get Impact videos
+exports.getVideos = async (req, res, next) => {
   try {
-    const {
-      page = 1,
-      campaign,
-      user,
-      type = VideoType.IMPACT,
-      tab,
-      pageSize = 10,
-    } = req.query;
-    var query = {};
-    const displayPage = parseInt(page);
-    const skip = (displayPage - 1) * pageSize;
-    if (!!type) {
-      query = {
-        $or: [{ type: "IMPACT" }, { type: "actionVideo" }],
-      };
-    }
-    if (!!campaign) {
-      query["campaign"] = campaign;
-    }
-
-    if (!!user) {
-      query["user"] = user;
-    }
-
-    if (tab === "following" && req.user) {
-      const following = req.user.following.map((_id) => new ObjectId(_id));
-
-      query["user"] = { $in: following };
-    }
-    const result = await Video.find(query)
-      .sort({ createdAt: "desc" })
-      .populate([
-        {
-          path: "comments",
-          populate: [
+    const { page = 1, userId, tab, pageSize = 10, location} = req.query;
+    let users = []
+    let  campaigns = []
+    let issues = []
+    let query = [] 
+    let pipLine=[
+      {
+        $lookup: {
+          from: 'comments',
+          localField: 'comments',
+          foreignField: '_id',
+          as: 'comments',
+          pipeline: [
             {
-              path: "sender",
-              model: "User",
+              $lookup: {
+                from: 'users',
+                localField: 'sender',
+                foreignField: '_id',
+                as: 'sender'
+              }
             },
             {
-              path: "likes",
-              model: "commentsLikes",
+              $unwind: '$sender'
             },
             {
-              path: "replies",
-              populate: [
-                {
-                  path: "sender", // Assuming "sender" is the field referencing the user who posted the reply
-                  model: "User",
-                },
-                {
-                  path: "likes",
-                  model: "commentsLikes",
-                },
-              ],
-
-              model: "RepliesComments",
+              $lookup: {
+                from: 'commentsLikes',
+                localField: 'likes',
+                foreignField: '_id',
+                as: 'likes'
+              }
             },
-          ],
-
-          model: Comment,
+            {
+              $lookup: {
+                from: 'repliesComments',
+                localField: 'replies',
+                foreignField: '_id',
+                as: 'replies',
+                pipeline: [
+                  {
+                    $lookup: {
+                      from: 'users',
+                      localField: 'sender',
+                      foreignField: '_id',
+                      as: 'sender'
+                    }
+                  },
+                  {
+                    $unwind: '$sender'
+                  },
+                  {
+                    $lookup: {
+                      from: 'commentsLikes',
+                      localField: 'likes',
+                      foreignField: '_id',
+                      as: 'likes'
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'issues',
+          localField: 'issue',
+          foreignField: '_id',
+          as: 'issue'
+        }
+      },
+      {
+        $unwind: {
+          path: '$issue',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'issue.user',
+          foreignField: '_id',
+          as: 'issue.user'
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'issue.joined',
+          foreignField: '_id',
+          as: 'issue.joined'
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'issue.votes',
+          foreignField: '_id',
+          as: 'issue.votes'
+        }
+      },
+     
+    ]
+    if(location)
+    {
+      const location = JSON.parse(decodeURIComponent(req.query.location));
+      const longitude = parseFloat(location[0]);
+      const latitude = parseFloat(location[1]);
+      const coordinates = [longitude, latitude];
+      const distance = 1; 
+      const unitValue = 1000;
+      pipLine.unshift({
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: coordinates,
+          },
+          maxDistance: distance * unitValue,
+          distanceField: "distance",
+          spherical: true,
+          key: "location",
         },
-
+      }); 
+    }
+    if(userId)
+    {
+      if(ObjectId.isValid(userId))
+      {
+        let user=  await User.findOne({ _id: userId}, 'following');
+        users.push(user.following)
+        if(users.length > 0)
         {
-          path: "issue",
-          populate: [
-            {
-              path: "user",
-              model: User,
-            },
-            {
-              path: "joined",
-              model: User,
-            },
-            {
-              path: "votes",
-              model: User,
-            },
-          ],
-          model: Issue,
-        },
-      ])
-      .skip(skip)
-      .limit(pageSize);
+          query.push({user: { $in: user.following }})
+        }  
+        if(!user)
+        {
+          return res.status(400).json({ message: "User Not found", status:400});
+        }
+        // get the campaign that user Participated
+        let campaingVolunters= await Volunteers.find({user: userId}, 'campaign')
+         campaigns =campaingVolunters.length>0?campaingVolunters?.map(volunteer => volunteer.campaign):[];
+        if(campaigns.length > 0)
+        {
+          query.push({ campaign: { $in: campaigns } });
+        }         
+        //get the issue that user JOined
+        let issue=await Issue.find({'joined':{$in: userId}},'_id');
+        issues =issue.length>0?issue?.map(issue => issue._id):[];
+        if(issues.length > 0)
+        {
+        query.push({issue: { $in: issues } });
+        }
+      
+        pipLine=[...pipLine,{ $match: { $or: query } }]
+        }
+      else{
+        return res.status(400).json({ message: "Invalid User Id"});
+      }
+    }
+    if(tab=='supporting' && !userId)
+    {
+      return res.status(400).json({ message: "User Id required For Supporting Tab"});
+    }
+    pipLine=[...pipLine,{ $skip: (page - 1) * pageSize },{ $limit: pageSize }]
+    const result = await Video.aggregate(pipLine)
     return res.json(result);
   } catch (error) {
     console.log("err is", error);
@@ -169,37 +253,6 @@ exports.videosData = async (id) => {
     ]);
 };
 
-exports.location = async (req, res, next) => {
-  try {
-    const longitude = req.body.lng;
-    const latitude = req.body.lat;
-    const coordinates = [parseFloat(longitude), parseFloat(latitude)];
-    const distance = 1;
-    const unitValue = 10000000;
-    const query = [];
-    query.push({
-      $geoNear: {
-        near: {
-          type: "Point",
-          coordinates: coordinates,
-        },
-        maxDistance: distance * unitValue,
-        distanceField: "distance",
-        distanceMultiplier: 1 / unitValue,
-        key: "location",
-      },
-    });
-    const result = await Video.aggregate(query);
-    return res.json({
-      status: 200,
-      success: true,
-      data: result,
-    });
-  } catch (err) {
-    console.log("value of err is", err);
-    return res.json({ status: 500, message: err, success: false });
-  }
-};
 exports.show = async (req, res, next) => {
   try {
     const video = await Video.findById(req.params.id);

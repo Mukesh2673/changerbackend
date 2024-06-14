@@ -13,4 +13,4 @@ const videoMessageSchema = new Schema(
   }
 );
 
-module.exports = mongoose.model("Comments", videoMessageSchema);
+module.exports = mongoose.model("comments", videoMessageSchema);
