@@ -8,6 +8,7 @@ const donationSchema = new Schema(
     amount: { type: String, required: false },
     description: { type: String, required: false },
     karmaPoint: { type: String, required: false },
+    karmaUnit: { type: String, required: false },
     phaseId: { type: mongoose.Schema.Types.ObjectId, ref: "campaignPhases" },
   },
   {

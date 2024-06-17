@@ -208,31 +208,41 @@ exports.getUser = async (req, res, next) => {
           pipeline: [
             {
               $lookup: {
-                from: "campaignPhase",
-                localField: "campaignParticipation.phaseId",
-                foreignField: "_id",
-                as: "campaingPhase",
-              },
-            },
-
-            {
-              $lookup: {
-                from: "campaignVolunteers",
+                from: "campaignVolunteers",//display how many voluteers apply this participation
                 localField: "_id",
                 foreignField: "participation",
                 as: "endorsed",
+                pipeline:[
+                  {
+                    $lookup: {
+                      from: "users",
+                      localField: "user",
+                      foreignField: "_id",
+                      as: "user",
+                      pipeline: [{ $project: { username: 1, first_name:1, last_name:1 } }],
+
+                    },
+                  },
+                  {
+                    $project: { user: 1 }
+                  }
+                ]  
               },
             },
             {
               $lookup: {
-                from: "users",
-                localField: "endorsed.user",
-                foreignField: "_id",
-                as: "endorsed.user",
+                from: "campaigns",
+                localField: "phaseId",
+                foreignField: "phases",
+                as: "campaign",
+                pipeline: [{ $project: { cause: 1, title:1} }],
               },
             },
+            {
+              $unwind: "$campaign",
+            },
+            { $project: { roleTitle: 1, createdAt: 1, endorsed: 1, campaign: 1} },
 
-            // {$project: { _id: 1, roleTitle: 1, createdAt: 1, endorsed: 1 } }
           ],
         },
       },
@@ -360,26 +370,35 @@ exports.getUser = async (req, res, next) => {
           ],
         },
       },
-
+      {
+        $lookup: {
+          from: "usersSkills",
+          localField: "skills",
+          foreignField: "_id",
+          as: "skills",
+          pipeline: [{ $project: { name: 1 } }]         
+        },
+      },
       {
         $project: {
           _id: "$_id",
-          first_name: "$first_name",
-          last_name: "$last_name",
-          email: "$email",
-          username: "$username",
-          uid: "$uid",
-          dob: "$dob",
-          karmaPoint: "$karmaPoint",
-          following: "$following",
-          followers: "$followers",
-          supportedCampaigns: {
-            $concatArrays: ["$userCampaings", "$volunteerCampaigns"],
-          },
+           first_name: "$first_name",
+           last_name: "$last_name",
+           email: "$email",
+           username: "$username",
+           uid: "$uid",
+           dob: "$dob",
+           karmaPoint: "$karmaPoint",
+           following: "$following",
+           followers: "$followers",
+           supportedCampaigns: {
+             $concatArrays: ["$userCampaings", "$volunteerCampaigns"],
+           },
           volunteeringExperience: "$campaignParticipation",
-          impacts: "$impacts",
-          advocacy: "$advocacy",
-          issues: "$issues",
+           impacts: "$impacts",
+           advocacy: "$advocacy",
+           issues: "$issues",
+           skills: "$skills"
         },
       },
     ];
@@ -466,6 +485,7 @@ exports.cause = async (req, res, next) => {
   }
   // const cause=req.body.cause
 };
+
 exports.delete = async (req, res) => {
   try {
     let cognitoId = req.params.uid;

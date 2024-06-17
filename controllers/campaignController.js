@@ -74,7 +74,7 @@ exports.showCampaigns = async (req, res, next) => {
       success: true,
     });
   } catch (error) {
-    console.log("err irs", error);
+    console.log("err", error);
     return res.json({ status: 400, data: [], success: false, message: error });
   }
 };
@@ -152,6 +152,7 @@ exports.showCampaign = async (req, res, next) => {
 exports.create = async (req, res, next) => {
   try {
     const data = req.body;
+    return
     const tags = await generateTags(data.title);
     if (!mongoose.Types.ObjectId.isValid(data.user)) {
       return res.status(400).json({
@@ -441,7 +442,12 @@ exports.participateInCampaign = async (req, res) => {
   try {
     const { user } = req;
     const { campaignId, participationId } = req.params;
-
+    //check is participation exist or not
+    const participant = await CampaignParticipant.findById(participationId);
+    if (!participant) {
+      return res.status(404).json({ message: "Participant not found." });
+    }
+    const {phaseId}=participant
     // Find the campaign
     const campaign = await Campaign.findById(campaignId).populate({
       path: "user",
@@ -451,18 +457,14 @@ exports.participateInCampaign = async (req, res) => {
     if (!campaign) {
       return res.status(404).json({ message: "Campaign not found." });
     }
+    const {phases}=campaign
+    if(!phases.includes(phaseId))
+    {
+      return res.status(404).json({ message: "Invalid campaign: campaign does not correspond to the participation" });
 
-    // Update Karma Points for the user's profile
-    const currentUser = await User.findById(user._id);
-    if (!currentUser) {
-      return res.status(404).json({ message: "User not found." });
     }
-
-    currentUser.karmaPoint += 50;
-    await currentUser.save();
-    updateUsersInAlgolia(user._id);
     // Check if the user is already participating
-    const existingParticipation = await Volunteers.findOne({
+     const existingParticipation = await Volunteers.findOne({
       campaign: campaign._id,
       user: user._id,
       participation: participationId,
@@ -473,7 +475,16 @@ exports.participateInCampaign = async (req, res) => {
         .status(422)
         .json({ message: "You are already participating in this campaign." });
     }
+    // Update Karma Points for the user's profile
+    const currentUser = await User.findById(user._id);
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found." });
+    }
 
+    currentUser.karmaPoint += 50;
+    await currentUser.save();
+    updateUsersInAlgolia(user._id);
+   
     // Create a new participation record
     const newVolunteer = new Volunteers({
       user: user._id,
@@ -518,7 +529,6 @@ exports.participateInCampaign = async (req, res) => {
       participationMessage,
       campaign.user._id
     );
-
     return res.status(200).json({
       status: 200,
       message: "Successfully participated in the campaign.",

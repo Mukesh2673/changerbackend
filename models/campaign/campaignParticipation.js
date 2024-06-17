@@ -16,6 +16,7 @@ const campaignParticipationSchema = new Schema(
     requirements: { type: Array, default: []},
     provides: { type: Array, default: []},
     karmaPoint: { type: String, default: ""},
+    karmaUnit: { type: String, required: false },
     phaseId: { type: mongoose.Schema.Types.ObjectId, ref: "campaignPhases"},
   },
   {

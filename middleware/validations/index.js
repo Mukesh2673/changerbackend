@@ -6,6 +6,7 @@ const validateAdvocate = require('./validationAdvocate')
 const validateSignPetitions=require("./validateSignedPetitions")
 const validateBookMarks=require("./validateBookMarks")
 const validateCampaignImpact= require('./validateCampaignImpact')
+const ValidateCampaign=require('./validateCampaign')
 module.exports=  {
   validateCampaignImpact,
   validateAdvocate,
@@ -13,5 +14,6 @@ module.exports=  {
   validateSignupConfirmRequest,
   validateSigninRequest,
   validateBookMarks,
-  validateSignPetitions
+  validateSignPetitions,
+  ValidateCampaign
 };

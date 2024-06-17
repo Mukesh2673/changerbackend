@@ -11,17 +11,19 @@ const {
   validateSignupConfirmRequest,
   validateSignPetitions,
   validateBookMarks,
-  validateCampaignImpact
+  validateCampaignImpact,
+  ValidateCampaign
 }=require('../middleware/validations');
 const userController = require("../controllers/userController");
 const campaignController = require("../controllers/campaignController");
 const videoController = require("../controllers/videoController");
 const issueController = require("../controllers/issueController");
-const searchController=require("../controllers/searchController")
-const hashtagsController=require("../controllers/hashtagController")
-const adVocateController=require("../controllers/advocacyController")
-const authController =require("../controllers/authController")
-const bookMarkController=require("../controllers/bookMarksController")
+const searchController = require("../controllers/searchController")
+const hashtagsController = require("../controllers/hashtagController")
+const adVocateController = require("../controllers/advocacyController")
+const authController = require("../controllers/authController")
+const bookMarkController = require("../controllers/bookMarksController")
+const skillController = require("../controllers/skillController") 
 cron.schedule('0 0 * * *',  issueController.deleteOldIssues);
 
 // USER ROUTES
@@ -43,12 +45,14 @@ router.post("/user/profile/remove/:id", userController.removeProfileImage)
 router.post("/signin", validateSigninRequest, authController.signin)
 router.post("/signup", validateSignupRequest, authController.signup)
 router.post("/signupConfirm", validateSignupConfirmRequest, authController.signupConfirm)
-router.get("/user/notification/:id",userController.notification)
-router.post(
-  "/upload/profile",
-  upload.single("Image"),
-  videoController.uploadProfile
-);
+router.get("/user/notification/:id", userController.notification)
+router.post("/upload/profile", upload.single("Image"), videoController.uploadProfile);
+
+//Skills Routes
+router.get("/skills",skillController.skills)
+router.post("/skills/:id", validateToken, skillController.addUserSkill)
+router.delete("/skills/:id", validateToken, skillController.removeUserSkill)
+
 // Messages
 router.post("/user/message", userController.message)
 router.get("/user/message/:pid/:uid",userController.getMessages)
@@ -56,6 +60,7 @@ router.get("/user/messages", validateToken, userController.messages)
 
 
 // CAMPAIGN ROUTES
+router.post("/campaigns", ValidateCampaign, campaignController.create);
 router.get("/campaigns", campaignController.showCampaigns);
 router.get("/campaigns/:id", campaignController.showCampaign);
 router.post("/campaign/donation/:id/donate", validateToken, campaignController.donate);
@@ -63,11 +68,9 @@ router.post("/campaign/report",validateToken, campaignController.report)
 
 //apply for particiapation to the campaign participate
 router.post("/campaign/:campaignId/participate/:participationId",validateToken, campaignController.participateInCampaign);
-router.post("/campaigns", campaignController.create);
 router.post("/campaign/message", validateToken,campaignController.postMessages)
 router.get("/campaign/:id/message", validateToken,campaignController.getMessages)
 router.post("/campaign/:campaignId/impactVideos",  upload.single("video"), validateToken, validateCampaignImpact, campaignController.campaignImpactVideos)
-
 router.get("/campaign/volunteers", campaignController.volunteers)//get Volunteers based Location
 router.get("/volunteeringForYou", validateToken, campaignController.userVolunteersCompaign); //get campaing that you have voluteer
 router.post("/uploadImage", upload.single("Image"), videoController.uploadImages);

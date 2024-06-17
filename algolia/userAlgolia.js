@@ -29,27 +29,28 @@ exports.updateUsersInAlgolia = async (id) => {
       let filteruserAlgolia = { search: id, type: "users" };
       searchAlgo = await searchAlgolia(filteruserAlgolia);
     }
-    if (searchAlgo?.length > 0 && searchAlgo[0]?._id == users?._id) {
+    if (searchAlgo?.length > 0 && searchAlgo[0]?._id == users[0]?._id) {
       const userAlgoId = searchAlgo[0].objectID;
+      console.log('searchAlgo is',searchAlgo)
+      console.log("value of usersisfdsf",users)
       const algoliaObject = {
         objectID: userAlgoId,
-        first_name: users?.first_name,
-        last_name: users?.last_name,
-        email: users?.email,
-        username: users?.username,
-        uid: users?.uid,
-        dob: users?.dob,
-        profileImage: users?.profileImage,
-        karmaPoint: users?.karmaPoint,
-        _id: users?._id,
-        uid: users?.uid,
-        followers: users?.followers,
-        following: users?.following,
-        updatedAt: users?.updatedAt,
-        language: users?.language,
-        privacy: users?.privacy,
-        cause: users?.cause,
-        endorsed_campaigns: users?.endorsed_campaigns,
+        first_name: users[0]?.first_name,
+        last_name: users[0]?.last_name,
+        email: users[0]?.email,
+        username: users[0]?.username,
+        uid: users[0]?.uid,
+        dob: users[0]?.dob,
+        profileImage: users[0]?.profileImage,
+        karmaPoint: users[0]?.karmaPoint,
+        _id: users[0]?._id,
+        uid: users[0]?.uid || users[0]?.cognitoUsername,
+        followers: users[0]?.followers,
+        following: users[0]?.following,
+        updatedAt: users[0]?.updatedAt,
+        language: users[0]?.language,
+        privacy: users[0]?.privacy,
+        cause: users[0]?.cause,
       };
       await updateAlgolia(algoliaObject, "users");
       if (!algoliaObjectId) {
