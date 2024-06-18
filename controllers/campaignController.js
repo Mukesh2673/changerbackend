@@ -874,16 +874,16 @@ exports.volunteers = async (req, res) => {
       query.push({
         $project: {
           _id: 0,
-          user: "$_id",
+          particiapation: "$_id",
         },
       });
       const usersNearLocation = await CampaignParticipant.aggregate(query);
-      const userIds = usersNearLocation.map((user) => user.user);
+      const userIds = usersNearLocation.map((particiapation) => particiapation.particiapation);
       const userParticipations = await Volunteers.aggregate([
         ...pipline,
         {
           $match: {
-            "participation._id": { $in: userIds },
+            "participation": { $in: userIds },
           },
         },
       ]);

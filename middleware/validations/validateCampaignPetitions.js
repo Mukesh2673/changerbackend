@@ -14,4 +14,4 @@ const petitionValidators = [
     .isInt({ min: 0 }).withMessage('KarmaPoint must be a non-negative integer'),
 ];
 
-module.exports = petitionValidators;
+module.exports = {petitionValidators};

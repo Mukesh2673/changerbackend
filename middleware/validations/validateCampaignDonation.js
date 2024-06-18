@@ -16,4 +16,4 @@ const donationValidators = [
    .isInt({ min: 0 }).withMessage('Donation KarmaPoint must be a non-negative integer'),
 ];
 
-module.exports = donationValidators;
+module.exports = {donationValidators};
