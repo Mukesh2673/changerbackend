@@ -1,5 +1,35 @@
 /**
  * @swagger
+ * /signin:
+ *   post:
+ *     summary: Sign in to the user Account
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - name: body
+ *         in: body
+ *         description: Sign in User Account By Email Address and Password
+ *         required: true
+ *         schema:
+ *           type: object
+ *           required:
+ *             - email
+ *             - password
+ *           properties:
+ *             email:
+ *               type: string
+ *             password:
+ *               type: string
+ *     responses:
+ *       200:
+ *         description: Loging Access Token
+ *       404:
+ *         description: User not found
+ */
+
+
+/**
+ * @swagger
  * /users:
  *   get:
  *     summary: Retrieve a list of all users.
@@ -578,5 +608,6 @@
  *       500:
  *         description: Internal server error
  */
+
 
 module.exports = {}; 

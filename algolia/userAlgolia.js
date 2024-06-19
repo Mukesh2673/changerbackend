@@ -31,8 +31,6 @@ exports.updateUsersInAlgolia = async (id) => {
     }
     if (searchAlgo?.length > 0 && searchAlgo[0]?._id == users[0]?._id) {
       const userAlgoId = searchAlgo[0].objectID;
-      console.log('searchAlgo is',searchAlgo)
-      console.log("value of usersisfdsf",users)
       const algoliaObject = {
         objectID: userAlgoId,
         first_name: users[0]?.first_name,

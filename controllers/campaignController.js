@@ -78,6 +78,7 @@ exports.showCampaigns = async (req, res, next) => {
     return res.json({ status: 400, data: [], success: false, message: error });
   }
 };
+
 //get Campaing by Id
 exports.showCampaign = async (req, res, next) => {
   try {
@@ -151,17 +152,17 @@ exports.showCampaign = async (req, res, next) => {
 //create a campaign
 exports.create = async (req, res, next) => {
   try {
+    const userId=req.user
     const data = req.body;
-    return
     const tags = await generateTags(data.title);
-    if (!mongoose.Types.ObjectId.isValid(data.user)) {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({
         status: 400,
         error: "Invalid User ID format",
         success: false,
       });
     }
-    const auth = await User.findById({ _id: data.user });
+    const auth = await User.findById({ _id: userId });
     if (!auth) {
       return res.json({
         status: 401,
@@ -181,14 +182,14 @@ exports.create = async (req, res, next) => {
     );
     await updateUsersInAlgolia(auth._id);
     const campaign = new Campaign({
-      user: data.user,
+      user:  userId,
       cause: data.cause,
       title: data.title,
       story: data.story,
       image: data.image,
     });
     const campaigns = await campaign.save();
-    await addCampaignInAlgolia(campaigns._id);
+    
     //if campaign is created from issue
     if (mongoose.Types.ObjectId.isValid(data.issue)) {
       let issue = await Issue.findByIdAndUpdate(
@@ -213,7 +214,7 @@ exports.create = async (req, res, next) => {
     //add hastags to the campaign that are unique to each other
     let campaignTag = campaigns?.hashtags;
     var tagsArray = [];
-    if (campaignTag?.length > 0) {
+    if (campaignTag?.length > 0){
       let arr = [...campaignTag, ...tags];
       tagsArray = arr.filter(
         (value, index, self) => self.indexOf(value) === index
@@ -221,24 +222,27 @@ exports.create = async (req, res, next) => {
     } else {
       tagsArray = tags;
     }
+
     //save campaign video to video collection
     const campaignsId = campaigns._id;
     const videos = new Video({
-      user: req.body.user,
+      user: userId,
       campaign: campaignsId,
       description: req.body.campaignStory,
       title: req.body.title,
       video_url: req.body.video.videoUrl,
       type: req.body.video.type,
-      thumbnail_url: req.body.thumbnailUrl,
+      thumbnail_url: req.body.video.thumbnailUrl,
       hashtags: tagsArray,
     });
     const savedVideo = await videos.save();
-    await addVideoInAlgolia(savedVideo._id);
     const videoId = savedVideo._id;
-    const phaseArr = data.phase;
     const savePhaseId = [];
+    const phaseArr = data.phase;
+    //update Records in Algolia
+    await addVideoInAlgolia(savedVideo._id);
     await addVideoInAlgolia(videoId);
+    await addCampaignInAlgolia(campaigns._id);
     //save phase data to campaign Phase Collection
     for (let i = 0; i < phaseArr.length; i++) {
       const phaseItem = new campaignPhases({
@@ -247,27 +251,18 @@ exports.create = async (req, res, next) => {
       });
       const savePhaseItem = await phaseItem.save();
       savePhaseId[i] = savePhaseItem._id;
+      
       const Action = req.body.phase[i].action;
       const donationCount = Action.filter((item) => item?.name == "donation");
-      if (donationCount.length > 1) {
-        return res.json({
-          status: 400,
-          message: "duplicate donation not allow",
-        });
-      }
-      donationCount[0].phaseId = savePhaseId[i];
+  
+      donationCount[0].phaseId = savePhaseId[i];//update donation payload with phaseId
       const petitionData = Action.filter((item) => item?.name == "petition");
-      if (petitionData.length > 1) {
-        return res.json({
-          status: 400,
-          message: "duplicate petition not allow",
-        });
-      }
-
-      petitionData[0].phaseId = savePhaseId[i];
+      
+      petitionData[0].phaseId = savePhaseId[i]; ////update petition payload with phaseId
       const participation = Action.filter(
         (item) => item?.name == "participation"
       );
+      
       const participantionsId = [];
       const location = [];
       for (let j = 0; j < participation.length; j++) {
@@ -287,7 +282,8 @@ exports.create = async (req, res, next) => {
       const DonationId = savedDonation._id;
       const petition = new petitions(petitionData[0]);
       const savedPetitions = await petition.save();
-      const petitionId = savedPetitions._id;
+      const petitionId = savedPetitions._id;     
+      //save campaignPhases
       await campaignPhases.findByIdAndUpdate(
         { _id: savePhaseId[i] },
         {
@@ -299,6 +295,7 @@ exports.create = async (req, res, next) => {
         },
         { new: true }
       );
+      //update Campaign  
       await Campaign.findByIdAndUpdate(
         { _id: campaignsId },
         {
@@ -312,8 +309,8 @@ exports.create = async (req, res, next) => {
       );
       updateCampaignInAlgolia(campaignsId);
     }
-    let records = await this.campaignRecords({ _id: campaignsId });
 
+    let records = await this.campaignRecords({ _id: campaignsId });
     const message = `You received +100 karma Point for good intention of creating Campaign ${records[0].title}`;
     const notification = new Notification({
       messages: message,

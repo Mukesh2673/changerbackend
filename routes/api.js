@@ -50,8 +50,8 @@ router.post("/upload/profile", upload.single("Image"), videoController.uploadPro
 
 //Skills Routes
 router.get("/skills",skillController.skills)
-router.post("/skills/:id", validateToken, skillController.addUserSkill)
-router.delete("/skills/:id", validateToken, skillController.removeUserSkill)
+router.post("/skill/:id", validateToken, skillController.addUserSkill)
+router.delete("/skill/:id", validateToken, skillController.removeUserSkill)
 
 // Messages
 router.post("/user/message", userController.message)
@@ -60,7 +60,7 @@ router.get("/user/messages", validateToken, userController.messages)
 
 
 // CAMPAIGN ROUTES
-router.post("/campaigns", ValidateCampaign, campaignController.create);
+router.post("/campaigns",validateToken, ValidateCampaign, campaignController.create);
 router.get("/campaigns", campaignController.showCampaigns);
 router.get("/campaigns/:id", campaignController.showCampaign);
 router.post("/campaign/donation/:id/donate", validateToken, campaignController.donate);
@@ -68,7 +68,7 @@ router.post("/campaign/report",validateToken, campaignController.report)
 
 //apply for particiapation to the campaign participate
 router.post("/campaign/:campaignId/participate/:participationId",validateToken, campaignController.participateInCampaign);
-router.post("/campaign/message", validateToken,campaignController.postMessages)
+router.post("/campaign/message", validateToken, campaignController.postMessages)
 router.get("/campaign/:id/message", validateToken,campaignController.getMessages)
 router.post("/campaign/:campaignId/impactVideos",  upload.single("video"), validateToken, validateCampaignImpact, campaignController.campaignImpactVideos)
 router.get("/campaign/volunteers", campaignController.volunteers)//get Volunteers based Location

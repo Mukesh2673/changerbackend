@@ -10,6 +10,7 @@ const   validateToken = async (req, res, next) => {
 
     if (!req.headers.authorization) {
       const respData = {
+        status: 403,
         success: false,
         message: "No Authorization Token",
       };

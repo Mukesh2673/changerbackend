@@ -1,8 +1,5 @@
 const { body, validationResult, oneOf } = require("express-validator");
 
-const isValidObjectId = (value) => {
-  return /^[0-9a-fA-F]{24}$/.test(value);
-};
 const validateBooleanObject = (timeObject, fieldName) => {
   if (!timeObject || typeof timeObject !== "object") {
     throw new Error(`${fieldName} must be an object and required`);
@@ -45,6 +42,9 @@ const validateDonationAction = (action) => {
     if (!action.description || typeof action.description !== "string") {
       throw new Error("Donation description must be a string");
     }
+    if (!action.karmaUnit || typeof action.karmaUnit !== "string") {
+      throw new Error("karmaUnit must be a required string");
+    }
     if (
       !action.karmaPoint ||
       typeof action.karmaPoint !== "number" ||
@@ -59,15 +59,15 @@ const validateDonationAction = (action) => {
 const validatePetitions = (action) => {
   if (action.name === "petition") {
     if (
-      !action.signature ||
-      typeof action.signature !== "number" ||
-      action.signature < 0
+      !action.numberOfSignature ||
+      typeof action.numberOfSignature !== "number" ||
+      action.numberOfSignature < 0
     ) {
       throw new Error(
         "Number of Signatures to petitions must be a non-negative number"
       );
     }
-    if (!action.description || typeof action.description !== "string") {
+    if (!action.neededSignaturesFor || typeof action.neededSignaturesFor !== "string") {
       throw new Error("Description about Need of Signature must be a string");
     }
     if (
@@ -95,6 +95,15 @@ const validateParticipationAction = (action) => {
     if (!action.startDate || typeof action.startDate !== "string") {
       throw new Error("The start date must be a valid string.");
     }
+
+    if(
+      !action.numberOfDays ||
+      typeof action.numberOfDays !== "number" ||
+      action.numberOfDays < 0
+    ) {
+      throw new Error("Participant Number of Days must be a non-negative number");
+    }
+
     if (!action.roleTitle || typeof action.roleTitle !== "string") {
       throw new Error("The role title must be a non-empty string.");
     }
@@ -129,7 +138,9 @@ const validateParticipationAction = (action) => {
     if (longitude < -180 || longitude > 180) {
       throw new Error("Longitude must be between -180 and 180.");
     }
-    validateArrayField(action.skills, "Skill");
+    if (action.skills.length==0) {
+      throw new Error("Skills should be non empty array");
+    }
     validateArrayField(action.requirements, "Requirements");
     validateArrayField(action.provides, "Provide");
     validateArrayField(action.responsibilities, "Responsibilities");
@@ -143,11 +154,6 @@ const validateParticipationAction = (action) => {
 
 const validateRecords = [
   // Validate root level fields
-  body("user")
-    .notEmpty()
-    .withMessage("User ID is required")
-    .custom(isValidObjectId)
-    .withMessage("Invalid User ID format"),
 
   body("title")
     .notEmpty()
