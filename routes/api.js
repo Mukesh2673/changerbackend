@@ -65,28 +65,27 @@ router.get("/campaigns", campaignController.showCampaigns);
 router.get("/campaigns/:id", campaignController.showCampaign);
 router.post("/campaign/donation/:id/donate", validateToken, campaignController.donate);
 router.post("/campaign/report",validateToken, campaignController.report)
-
 //apply for particiapation to the campaign participate
 router.post("/campaign/:campaignId/participate/:participationId",validateToken, campaignController.participateInCampaign);
 router.post("/campaign/message", validateToken, campaignController.postMessages)
 router.get("/campaign/:id/message", validateToken,campaignController.getMessages)
-router.post("/campaign/:campaignId/impactVideos",  upload.single("video"), validateToken, validateCampaignImpact, campaignController.campaignImpactVideos)
+router.post("/campaign/:campaignId/impactVideo",  upload.single("video"), validateToken, validateCampaignImpact, campaignController.campaignImpactVideos)
 router.get("/campaign/volunteers", campaignController.volunteers)//get Volunteers based Location
-router.get("/volunteeringForYou", validateToken, campaignController.userVolunteersCompaign); //get campaing that you have voluteer
-router.post("/uploadImage", upload.single("Image"), videoController.uploadImages);
-router.post("/signPetition", validateToken, validateSignPetitions, campaignController.signPetitions)
+router.get("/campaign/volunteers/forYou", validateToken, campaignController.userVolunteersCompaign); //get campaing that you have voluteer
+router.post("/campaign/signPetition", validateToken, validateSignPetitions, campaignController.signPetitions)
 
 
 // VIDEO ROUTES
-router.get("/videos/:id", videoController.show);
-router.delete("/videos/:id", videoController.delete);
+router.get("/video/:id", videoController.show);
+router.post("/uploadImage", upload.single("Image"), videoController.uploadImages);
+router.delete("/video/:id", videoController.delete);
 router.get("/videos", videoController.getVideos);
 router.post("/thumbnail", upload.single("video"), videoController.thumbnail);
 router.post("/upload", upload.single("video"), videoController.upload);
 router.get("/videos/likes/:vid/:uid", videoController.getVideoLikes);
 router.post("/videos", videoController.store);
-router.post("/videos/like/:vid/:uid", videoController.likeVideo);
-router.post("/video/comment", videoController.commentVideo);
+router.post("/video/:id/like",validateToken, videoController.likeVideo);
+router.post("/video/:id/comment", validateToken, videoController.commentVideo);
 router.post("/video/comment/like", videoController.commentLikes);
 router.post("/video/comment/reply/like", videoController.replyCommentLikes);
 router.post("/video/comment/reply", videoController.replyCommentVideo);

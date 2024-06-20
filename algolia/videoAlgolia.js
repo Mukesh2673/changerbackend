@@ -120,7 +120,7 @@ exports.deleteVideosInAlgolia = async (id) =>{
       let filterIssueAlgolia = { search: id, type: "videos" };
       searchAlgo = await searchAlgolia(filterIssueAlgolia);
   }
-  const videoAlgoId = searchAlgo[0].objectID;
+  const videoAlgoId = searchAlgo[0]?.objectID;
   await deleteAlgolia(videoAlgoId);
 }
 

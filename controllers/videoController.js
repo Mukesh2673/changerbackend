@@ -258,7 +258,7 @@ exports.show = async (req, res, next) => {
     const video = await Video.findById(req.params.id);
 
     if (!!video) {
-      return res.json(video);
+      return res.json({message:"Video records retrieved successfully.", data: video, status: 200 });
     }
 
     return res.status(404).json({ message: "Video not found." });
@@ -269,7 +269,6 @@ exports.show = async (req, res, next) => {
 
 exports.store = async (req, res, next) => {
   const user = req.user;
-
   const video = new Video({
     user: user?._id,
     campaign: req.body.campaign,
@@ -296,8 +295,9 @@ exports.store = async (req, res, next) => {
 };
 
 exports.likeVideo = async (req, res) => {
-  const { vid, uid } = req.params;
   try {
+    const { vid } = req.params;
+    const uid = req.user
     const video = await Video.findById({ _id: vid });
     let hasLiked = false;
     const sender = await User.findById({ _id: uid });
@@ -341,7 +341,7 @@ exports.likeVideo = async (req, res) => {
       const updatedVideo = await Video.findById({ _id: vid });
       const likes = updatedVideo.likes.length;
       sendMessage("likedVideo", message, uid);
-      return res.status(200).json({ likedVideo: hasLiked, likes });
+      return res.status(200).json({ success: hasLiked, NumberofLikes: likes, message: "The video has been liked successfully." });
     }
   } catch (e) {
     return res.status(404).json({ error: e.message });
@@ -373,9 +373,10 @@ exports.getVideoLikes = async (req, res) => {
 
 exports.delete = async (req, res, next) => {
   try {
+    console.log("delete is is",req.params.id)
     await Video.deleteOne({ _id: req.params.id });
     await deleteVideosInAlgolia(req.params.id)
-    return res.json({ success: "Video deleted" });
+    return res.json({ success: true ,message: "The video has been deleted successfully.", status:200 });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -446,6 +447,9 @@ exports.uploadProfile = async (req, res) => {
 exports.commentVideo = async (req, res) => {
   try {
     let records = req.body;
+    records.sender=req.user
+    records.video=req.params.id
+    console.log('records arrrww',records)
     const message = new Comment(records);
     const savedMessage = await message.save();
     let messageId = savedMessage._id;
@@ -463,23 +467,28 @@ exports.commentVideo = async (req, res) => {
           model: User,
         },
       ]);
-    const issueId = result.issue;
-    const issueRecords = await Issue.findById({ _id: issueId });
     const sender = await User.findById({ _id: records.sender });
-    const notificationMessage = `${sender.first_name} ${sender.last_name} commented your action video for ${issueRecords.title}`;
-    const notification = new Notification({
-      messages: notificationMessage,
-      user: userPostedVideo[0].user._id,
-      activity: sender._id,
-      notificationType: "commentVideo",
-    });
-    await notification.save();
+    //add Message to the user regarding to the campaign
+    if(result.issue)
+    {
+      const issueId = result.issue;
+      const issueRecords = await Issue.findById({ _id: issueId });
+      const notificationMessage = `${sender.first_name} ${sender.last_name} commented your action video for ${issueRecords.title}`;
+      const notification = new Notification({
+        messages: notificationMessage,
+        user: userPostedVideo[0].user._id,
+        activity: sender._id,
+        notificationType: "commentVideo",
+      });
+      await notification.save();
+      sendMessage("commentVideo", notificationMessage, uid);
+  
+    }  
     const uid = result?.user?._id.toString();
     const newRecords = await exports.videosData(records.video);
-    sendMessage("commentVideo", notificationMessage, uid);
-    return res.json({
+     return res.json({
       status: 200,
-      message: "Sent message successfully",
+      message: "Comment added successfully.",
       success: false,
       data: newRecords,
     });

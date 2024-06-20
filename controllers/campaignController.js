@@ -426,7 +426,6 @@ exports.donate = async (req, res) => {
       return res.status(400).json({ message: "Payment failed" });
     }
   } catch (err) {
-    console.log("valueof erro is", err);
     if (err.type === "StripeCardError") {
       return res.status(401).json({ message: "Card error" });
     }
@@ -442,7 +441,7 @@ exports.participateInCampaign = async (req, res) => {
     //check is participation exist or not
     const participant = await CampaignParticipant.findById(participationId);
     if (!participant) {
-      return res.status(404).json({ message: "Participant not found." });
+      return res.status(404).json({status:404, message: "Participant not found."});
     }
     const {phaseId}=participant
     // Find the campaign
@@ -452,7 +451,7 @@ exports.participateInCampaign = async (req, res) => {
     });
 
     if (!campaign) {
-      return res.status(404).json({ message: "Campaign not found." });
+      return res.status(404).json({status:404, message: "Campaign not found." });
     }
     const {phases}=campaign
     if(!phases.includes(phaseId))
@@ -598,14 +597,14 @@ exports.postMessages = async (req, res) => {
     sendMessage("campaignMessage", message, records.profile);
     return res.json({
       status: 200,
-      message: "sent Message Successfully",
+      message: "Message sent successfully.",
       success: false,
       data: savedMessage,
     });
   } catch (err) {
     return res.json({
       status: 500,
-      message: "Something Went wrong",
+      message: "Internal server error",
       success: false,
     });
   }
@@ -641,7 +640,7 @@ exports.getMessages = async (req, res) => {
     ]);
     return res.json({
       status: 200,
-      message: "messages records",
+      message: "Message records retrieved successfully.",
       success: true,
       data: records,
     });
@@ -742,6 +741,7 @@ exports.campaignImpactVideos = async (req, res) => {
       location: JSON.parse(body.location),
       campaign: campaignId,
       description: body.description,
+      address: body.address,
       video_url: videoUrl.encodedKey,
       type: "IMPACT",
       thumbnail_url: `thumbnail${thumbnail.key}`,
@@ -793,8 +793,9 @@ exports.campaignImpactVideos = async (req, res) => {
 
 //get Volunters based on Location, cause and filter on map
 exports.volunteers = async (req, res) => {
+  
   try {
-    let pipline = [
+    let pipeline = [
       {
         $lookup: {
           from: "campaigns",
@@ -838,7 +839,7 @@ exports.volunteers = async (req, res) => {
     ];
     if (req.query.cause) {
       let causeToFilter = req.query.cause.toLowerCase();
-      pipline.push({
+      pipeline.push({
         $match: {
           $expr: {
             $eq: [{ $toLower: "$campaign.cause" }, causeToFilter],
@@ -876,20 +877,16 @@ exports.volunteers = async (req, res) => {
       });
       const usersNearLocation = await CampaignParticipant.aggregate(query);
       const userIds = usersNearLocation.map((particiapation) => particiapation.particiapation);
-      const userParticipations = await Volunteers.aggregate([
-        ...pipline,
-        {
+      pipeline.push({
           $match: {
             "participation": { $in: userIds },
-          },
-        },
-      ]);
-      return res.status(200).json(userParticipations);
+          }
+      })
     }
 
     if (req.query.skill) {
       let skillToFilter = req.query.skill.toLowerCase();
-      pipline.push({
+      pipeline.push({
         $match: {
           $expr: {
             $in: [
@@ -906,7 +903,7 @@ exports.volunteers = async (req, res) => {
         },
       });
     }
-    pipline.push({
+    pipeline.push({
       $project: {
         _id: "$_id",
         campaign: "$campaign",
@@ -925,8 +922,13 @@ exports.volunteers = async (req, res) => {
         },
       },
     });
-    const userParticipations = await Volunteers.aggregate([...pipline]);
-    return res.status(200).json(userParticipations);
+    const userParticipations = await Volunteers.aggregate([...pipeline]);
+    if(userParticipations.length==0)
+    {
+      return res.status(200).json({status: 200,message: "No Volunteers records found", data: userParticipations, success: false});
+
+    }
+    return res.status(200).json({status: 200,message: "Volunteers records retrieved successfully.", data: userParticipations, success: true});
   } catch (error) {
     console.error("Error retrieving participation and volunteers:", error);
     return res.status(500).json({ error: "Internal Server Error" });

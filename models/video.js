@@ -18,6 +18,7 @@ const videoSchema = new Schema(
     location:{type: {type: String, default: "Point", enum: "Point",},coordinates: {type: [Number],default: [0, 0]}},
     hashtags:{ type: Array, default: []},
     algolia: {type: String, default: ""},
+    address: { type: String, required: false },
   },
   {
     timestamps: true,

@@ -57,38 +57,87 @@
  *         description: Something went wrong
  */
 
+
+
 /**
  * @swagger
- * /campaign/{id}/participate/:
+ * /campaign/report:
  *   post:
- *     summary: Participate in a campaign
+ *     summary: Report to The Campaign
  *     tags:
  *       - Campaigns
  *     parameters:
- *       - name: id
- *         in: path
- *         description: ID of the campaign to participate in
- *         required: true
- *         type: string
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token        
  *       - name: body
  *         in: body
- *         description: User details
+ *         description: Report the Campaign by Campaign Id
  *         required: true
  *         schema:
- *           $ref: '#/components/schemas/User'
+ *           type: object
+ *           required:
+ *             - reportSubject
+ *             - details
+ *             - campaign 
+ *           properties:
+ *             reportSubject:
+ *               type: string
+ *             details:
+ *               type: string
+ *             campaign:
+ *               type: string   
  *     responses:
  *       200:
- *         description: CampaignParticipant schema details
- *         schema:
- *           $ref: '#/components/schemas/CampaignParticipant'
- *       404:
- *         description: Campaign not found
- *       422:
- *         description: Already participating in the campaign
+ *         description: Report Added Successfully
+ *       403:
+ *         description: Correct  Authorization Token Required!
  *       500:
  *         description: Internal server error
  */
 
+/**
+ * @swagger
+ * /campaign/{campaignId}/participate/{participationId}:
+ *   post:
+ *     summary: Participate in The Campaign for the Volunteers
+ *     tags:
+ *       - Campaigns
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token        
+ *       - name: campaignId
+ *         in: path
+ *         description: Campaing Id you Want to participate
+ *         required: true
+ *       - name: participationId
+ *         in: path
+ *         description: Campaing Participation Id from campaign Phase
+ *         required: true 
+ *         schema:
+ *           type: object
+ *           required:
+ *             - reportSubject
+ *             - details
+ *             - campaign 
+ *           properties:
+ *             reportSubject:
+ *               type: string
+ *             details:
+ *               type: string
+ *             campaign:
+ *               type: string   
+ *     responses:
+ *       200:
+ *         description: You successfully participated in the campaign.
+ *       500:
+ *         description: Internal server error
+ *       401:
+ *         description: Correct  Authorization Token Required!
+ *       404:
+ *         description: campaign does not correspond to the participation
+ */
 
 
 /**
@@ -210,10 +259,267 @@
  *      
  */
 
+/**
+ * @swagger
+ * /campaign/message:
+ *   post:
+ *     summary: Post the messages for the campaign-related user within campaigns.
+ *     tags:
+ *       - Campaigns
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token        
+ *       - name: body
+ *         in: body
+ *         description: Message to a particular user who is a part of the campaign by user ID and campaign ID.
+ *         required: true
+ *         schema:
+ *           type: object
+ *           required:
+ *             - profile
+ *             - campaign
+ *             - message 
+ *           properties:
+ *             profile:
+ *               type: string
+ *             campaign:
+ *               type: string
+ *             message:
+ *               type: string   
+ *     responses:
+ *       200:
+ *         description: Message sent successfully.
+ *       403:
+ *         description: Correct  Authorization Token Required!
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /campaign/{campaignId}/message:
+ *   get:
+ *     summary: Get the messages of a user in a particular campaign.
+ *     tags:
+ *       - Campaigns
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token        
+ *       - name: campaignId
+ *         in: path
+ *         description: Get the Message of users in a perticular campaign by campaign Id 
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Message records retrieved successfully.
+ *       403:
+ *         description: Correct  Authorization Token Required!
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /campaign/{campaignId}/message:
+ *   get:
+ *     summary: Get the messages of a user in a particular campaign.
+ *     tags:
+ *       - Campaigns
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token        
+ *       - name: campaignId
+ *         in: path
+ *         description: Get the Message of users in a perticular campaign by campaign Id 
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Message records retrieved successfully.
+ *       403:
+ *         description: Correct  Authorization Token Required!
+ *       500:
+ *         description: Internal server error
+ */
 
 
+/**
+ * @swagger
+ * /campaign/volunteers:
+ *   get:
+ *     summary: Retrieve the list of all volunteers along with their corresponding campaigns.
+ *     tags:
+ *       - Campaigns
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token        
+ *       - name: location
+ *         in: query
+ *         description: Add the location to find volunteers located in the given location.
+ *         required: false
+ *       - name: skill
+ *         in: query
+ *         description: Add the Skills to find volunteers related to the given skill.
+ *         required: false
+ *       - name: cause
+ *         in: query
+ *         description: Add the Cause to find volunteers related to the given cause.
+ *         required: false
+ *     responses:
+ *       200:
+ *         description: Volunteers records retrieved successfully.
+ *       403:
+ *         description: Correct  Authorization Token Required!
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /campaign/volunteers:
+ *   get:
+ *     summary: Retrieve the list of all volunteers along with their corresponding campaigns.
+ *     tags:
+ *       - Campaigns
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token        
+ *       - name: location
+ *         in: query
+ *         description: Add the location to find volunteers located in the given location.
+ *         required: false
+ *       - name: skill
+ *         in: query
+ *         description: Add the Skills to find volunteers related to the given skill.
+ *         required: false
+ *       - name: cause
+ *         in: query
+ *         description: Add the Cause to find volunteers related to the given cause.
+ *         required: false
+ *     responses:
+ *       200:
+ *         description: Volunteers records retrieved successfully.
+ *       403:
+ *         description: Correct  Authorization Token Required!
+ *       500:
+ *         description: Internal server error
+ */
 
 
+/**
+ * @swagger
+ * /campaign/volunteers/forYou:
+ *   get:
+ *     summary: Retrieve the list of all campaign that user voluntered.
+ *     tags:
+ *       - Campaigns
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token        
+ *       - name: page
+ *         in: query
+ *         description: Add Number of Page.
+ *         required: false
+ *       - name: PageSize
+ *         in: query
+ *         description: Describe the number of records in Page.
+ *         required: false
+ *     responses:
+ *       200:
+ *         description: campaign  records retrieved successfully.
+ *       403:
+ *         description: Correct  Authorization Token Required!
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /campaign/{campaignId}/impactVideo:
+ *   post:
+ *     summary: Add impact to the campaign by uploading a video.
+ *     tags:
+ *       - Campaigns
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - name: campaignId
+ *         in: path
+ *         description: ID of the campaign to add impact videos to.
+ *         required: true
+ *       - name: location
+ *         in: formData
+ *         description: Add the Geo location of the Video in  
+ *         required: true
+ *       - name: address
+ *         in: formData
+ *         description: Add the address corresponding to the map location
+ *         required: true
+ *       - name: description
+ *         in: formData
+ *         description: Report the Campaign by Campaign Id
+ *         required: true
+ *       - name: video
+ *         in: formData
+ *         type: file
+ *         description: Report the Campaign by Campaign Id
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Campaign impact video added successfully.
+ *       403:
+ *         description: Correct Authorization Token Required!
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /campaign/signPetition:
+ *   post:
+ *     summary: Sign the Petition of Campaign
+ *     tags:
+ *       - Campaigns
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - name: body
+ *         in: body
+ *         description: Save the signed petition for the campaign identified by the campaign petition ID.
+ *         required: true
+ *         schema:
+ *           type: object
+ *           required:
+ *              - petition
+ *              - location 
+ *           properties: 
+ *              petition:
+ *                type: string
+ *                example: 66727f3d7c01ff8098c967a5
+ *              location:
+ *                type: Object
+ *                example: {"type": "Point", "coordinates": [80.9462, 12.83]}          
+ *     responses:
+ *       200:
+ *         description: Petition Signed successfully.
+ *       403:
+ *         description: Correct Authorization Token Required!
+ *       500:
+ *         description: Internal server error
+ */
 
 
 module.exports = {}; 
