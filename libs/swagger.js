@@ -9,6 +9,7 @@ const Message = require('../models/message');
 const Campaign = require('../models/campaign/campaign');
 const CampaignParticipant = require('../models/campaign/campaignParticipation');
 const BookMarks = require("../models/bookmarks")
+const Video = require("../models/video")
 const userSchema = mongooseToSwagger(User);
 const reportSchema = mongooseToSwagger(Report);
 const notificationSchema = mongooseToSwagger(Notification);
@@ -16,6 +17,7 @@ const messageSchema = mongooseToSwagger(Message);
 const campaignSchema = mongooseToSwagger(Campaign);
 const campaignParticipantSchema = mongooseToSwagger(CampaignParticipant);
 const bookmarksSchema = mongooseToSwagger(BookMarks);
+const videosSchema = mongooseToSwagger(Video);
 
 const swaggerOptions = {
     swaggerDefinition: {
@@ -34,7 +36,8 @@ const swaggerOptions = {
           Message: messageSchema, 
           Campaign: campaignSchema, 
           CampaignParticipant: campaignParticipantSchema, 
-          BookMarks: bookmarksSchema
+          BookMarks: bookmarksSchema,
+          Video: videosSchema
         },
       },
     },

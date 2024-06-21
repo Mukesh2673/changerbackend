@@ -114,7 +114,8 @@ exports.get = async (req, res) => {
     return res.json({
       status: 200,
       success: true,
-      data: advocate
+      data: advocate,
+      message: "Advocate records retrieved successfully." 
     });
     } 
     catch (error) {

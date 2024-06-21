@@ -373,7 +373,6 @@ exports.getVideoLikes = async (req, res) => {
 
 exports.delete = async (req, res, next) => {
   try {
-    console.log("delete is is",req.params.id)
     await Video.deleteOne({ _id: req.params.id });
     await deleteVideosInAlgolia(req.params.id)
     return res.json({ success: true ,message: "The video has been deleted successfully.", status:200 });
@@ -449,7 +448,6 @@ exports.commentVideo = async (req, res) => {
     let records = req.body;
     records.sender=req.user
     records.video=req.params.id
-    console.log('records arrrww',records)
     const message = new Comment(records);
     const savedMessage = await message.save();
     let messageId = savedMessage._id;
@@ -504,7 +502,21 @@ exports.commentVideo = async (req, res) => {
 
 exports.replyCommentVideo = async (req, res) => {
   try {
-    let records = req.body;
+    const records={
+      sender:req.user,
+      video: req.params.vid,
+      comment: req.params.cid,
+      message: req.body.message
+    }
+    const comment=await Comment.find({_id: records.comment})
+    if(comment.length==0)
+    {
+      return res.json({
+        status: 400,
+        message: "Invalid Comment Id",
+        success: false,
+      });
+    }
     const commentReplies = new RepliesComment(records);
     const saveReplies = await commentReplies.save();
     let result = await Comment.findByIdAndUpdate(
@@ -546,9 +558,20 @@ exports.replyCommentVideo = async (req, res) => {
 
 exports.commentLikes = async (req, res) => {
   try {
-    console.log("valueo fo requparams is",req.params)
-    return;
-    let records = req.body;
+    const records={
+      comments: req.params.cid,
+      user: req.user,
+      video: req.params.vid
+    }  
+    const comment=await Comment.find({_id: records.comments})
+    if(comment.length==0)
+    {
+      return res.json({
+        status: 400,
+        message: "Invalid Comment Id",
+        success: false,
+      });
+    }
     const isLiked = await CommentsLikes.find({
       comments: new ObjectId(records.comments),
       user: new ObjectId(records.user),
@@ -592,13 +615,12 @@ exports.commentLikes = async (req, res) => {
       const uid = result.sender.toString();
       sendMessage("like", likeMessage, uid);
     }
-
     //
     const newRecords = await exports.videosData(records.video);
     return res.json({
       status: 200,
       message: responseMessage,
-      success: false,
+      success: true,
       data: newRecords,
     });
   } catch (err) {
@@ -613,7 +635,21 @@ exports.commentLikes = async (req, res) => {
 
 exports.replyCommentLikes = async (req, res) => {
   try {
-    let records = req.body;
+    const records={
+      repliesComments: req.params.repliesCommentId,
+      user: req.user,
+      video: req.params.vid
+    } 
+    const comment=await RepliesComment.find({_id: records.repliesComments})
+    if(comment.length==0)
+    {
+      return res.json({
+        status: 400,
+        message: "Invalid  reply Comment Id",
+        success: false,
+      });
+    }
+
     const isLiked = await CommentsLikes.find({
       repliesComments: new ObjectId(records.repliesComments),
       user: new ObjectId(records.user),

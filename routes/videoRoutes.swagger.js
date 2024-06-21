@@ -129,7 +129,71 @@
  * @swagger
  * /video/{videoId}/comment/{commentId}/like:
  *   post:
- *     summary: Add Comment to the Videos
+ *     summary: Like Comment of video
+ *     tags:
+ *       - Videos
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token    
+ *       - name: videoId
+ *         in: path
+ *         description: ID of the video to add Like to Comment 
+ *         required: true
+ *         type: string
+ *       - name: commentId
+ *         in: path
+ *         description: ID of the comment of Comment 
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Liked Comment/unLiked Comment
+ *       404:
+ *         description: Video not found
+ *       500:
+ *         description: Something went wrong
+ */
+
+/**
+ * @swagger
+ * /video/{videoId}/comment/reply/{repliesCommentId}/like:
+ *   post:
+ *     summary: Add like to the reply Comment
+ *     tags:
+ *       - Videos
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token    
+ *       - name: videoId
+ *         in: path
+ *         description: ID of the video to like Comment 
+ *         required: true
+ *         type: string
+ *       - name: repliesCommentId
+ *         in: path
+ *         description: ID of the repliesCommentId of  Comment 
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: video
+ *         schema:
+ *          type: array
+ *          items:
+ *           $ref: '#/components/schemas/Video'  
+ *       400:
+ *         description: Invalid  reply Comment Id
+ *       500:
+ *         description: Something went wrong
+ */
+
+/**
+ * @swagger
+ * /video/{videoId}/comment/{commentId}/reply:
+ *   post:
+ *     summary: Reply to the comment
  *     tags:
  *       - Videos
  *     parameters:
@@ -141,16 +205,32 @@
  *         description: ID of the video to Comment 
  *         required: true
  *         type: string
- *       - name: CommentId
+ *       - name: commentId
  *         in: path
- *         description: ID of the video to Comment 
+ *         description: ID of the Comment to reply 
  *         required: true
  *         type: string
+ *       - name: body
+ *         in: body
+ *         description: Add Messages text
+ *         required: true
+ *         schema:
+ *          type: object
+ *          required:
+ *              -message
+ *          properties:
+ *            message:
+ *               type: string
+ *               example: nice Videos
  *     responses:
  *       200:
- *         description: Comment added successfully.
- *       404:
- *         description: Video not found
+ *         description: video
+ *         schema:
+ *          type: array
+ *          items:
+ *           $ref: '#/components/schemas/Video'  
+ *       400:
+ *         description: Invalid Comment Id
  *       500:
  *         description: Something went wrong
  */
