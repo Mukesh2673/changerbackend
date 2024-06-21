@@ -123,3 +123,34 @@
  *       500:
  *         description: Something went wrong
  */
+
+
+/**
+ * @swagger
+ * /video/{videoId}/comment/{commentId}/like:
+ *   post:
+ *     summary: Add Comment to the Videos
+ *     tags:
+ *       - Videos
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token    
+ *       - name: videoId
+ *         in: path
+ *         description: ID of the video to Comment 
+ *         required: true
+ *         type: string
+ *       - name: CommentId
+ *         in: path
+ *         description: ID of the video to Comment 
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Comment added successfully.
+ *       404:
+ *         description: Video not found
+ *       500:
+ *         description: Something went wrong
+ */

@@ -120,6 +120,7 @@ exports.index = async (req, res, next) => {
 exports.create = async (req, res, next) => {
   try {
     const data = req.body;
+    console.log('data is',data)
     const tags = await generateTags(data.title);
     if (!mongoose.Types.ObjectId.isValid(data.user)) {
       return res.status(400).json({

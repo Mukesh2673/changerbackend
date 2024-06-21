@@ -546,6 +546,8 @@ exports.replyCommentVideo = async (req, res) => {
 
 exports.commentLikes = async (req, res) => {
   try {
+    console.log("valueo fo requparams is",req.params)
+    return;
     let records = req.body;
     const isLiked = await CommentsLikes.find({
       comments: new ObjectId(records.comments),

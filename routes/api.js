@@ -86,7 +86,7 @@ router.get("/videos/likes/:vid/:uid", videoController.getVideoLikes);
 router.post("/videos", videoController.store);
 router.post("/video/:id/like",validateToken, videoController.likeVideo);
 router.post("/video/:id/comment", validateToken, videoController.commentVideo);
-router.post("/video/comment/like", videoController.commentLikes);
+router.post("/video/:vid/comment/:cid/like", validateToken, videoController.commentLikes);
 router.post("/video/comment/reply/like", videoController.replyCommentLikes);
 router.post("/video/comment/reply", videoController.replyCommentVideo);
 
