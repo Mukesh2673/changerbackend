@@ -66,3 +66,40 @@
  *       404:
  *         description: Skill not found
  */
+
+
+/**
+ * @swagger
+ * /skills/add:
+ *   post:
+ *     summary: publish a new Skill.
+ *     tags:
+ *       - Skills
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - name: body
+ *         in: body
+ *         description: Add Skill publish  
+ *         required: true
+ *         schema :
+ *          type: object
+ *          required: 
+ *              -skill
+ *          properties:
+ *           name:
+ *              type: string
+ *              example: 'full Stack'
+ 
+ *     responses:
+ *       200:
+ *         description: Skill  published successfully.
+ *       403:
+ *         description: Correct Authorization Token Required!
+ *       500:
+ *         description: Internal server error
+ */

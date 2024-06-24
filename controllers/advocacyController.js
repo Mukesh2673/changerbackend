@@ -57,8 +57,9 @@ exports.add = async (req, res) => {
 
 exports.delete = async (req, res) => {
   try {
+    const user = req.user;
     const advocateId = req.params.id;
-    const  advocate = await Advocate.findOne({ _id: advocateId });
+    const  advocate = await Advocate.findOne({ _id: advocateId, user:user });
     if (advocate) {
        await Advocate.findByIdAndRemove(advocateId);
        await Video.findByIdAndRemove(advocate.video)   
@@ -103,13 +104,14 @@ exports.delete = async (req, res) => {
 exports.get = async (req, res) => {
   try {
     const advocateId = req.query.id; 
+    const user =req.user
     let advocate=[]
     if(advocateId)
     {
-      advocate = await Advocate.findOne({ _id: advocateId });
+      advocate = await Advocate.findOne({ _id: advocateId, user: user  });
     }
     else{
-      advocate = await Advocate.find();
+      advocate = await Advocate.find({user: user});
     }     
     return res.json({
       status: 200,

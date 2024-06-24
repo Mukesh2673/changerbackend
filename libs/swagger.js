@@ -10,6 +10,9 @@ const Campaign = require('../models/campaign/campaign');
 const CampaignParticipant = require('../models/campaign/campaignParticipation');
 const BookMarks = require("../models/bookmarks")
 const Video = require("../models/video")
+const Issue = require("../models/issue/issue")
+
+const IssueSchema=mongooseToSwagger(Issue);
 const userSchema = mongooseToSwagger(User);
 const reportSchema = mongooseToSwagger(Report);
 const notificationSchema = mongooseToSwagger(Notification);
@@ -37,11 +40,12 @@ const swaggerOptions = {
           Campaign: campaignSchema, 
           CampaignParticipant: campaignParticipantSchema, 
           BookMarks: bookmarksSchema,
-          Video: videosSchema
+          Video: videosSchema,
+          Issue:IssueSchema
         },
       },
     },
-    apis: ['./routes/*.js'] 
+    apis: ['./routes/swaggerRoutes/*.js'] 
   };
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 module.exports= {swaggerDocs}

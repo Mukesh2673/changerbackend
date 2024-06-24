@@ -14,9 +14,10 @@ const issueRecords = async (id) => {
     let records = await Issue.find({ _id: issueId });
     return records;
   } catch (err) {
-    console.log("valeu of issue error is", err);
+    console.log("err", err);
   }
 };
+
 exports.updateIssueInAlgolia = async (id) => {
   try {
     let issueRecord = await issueRecords(id);
@@ -33,8 +34,8 @@ exports.updateIssueInAlgolia = async (id) => {
       const issueAlgoId = searchAlgo[0].objectID;
       const algoliaObject = {
         objectID: issueAlgoId,
-        location: issues.location,
-        description: issues.description,
+        location: issues?.location,
+        description: issues?.description,
         views: issues?.views,
         notification: issues?.notification,
         campaign: issues?.campaign,
@@ -81,7 +82,7 @@ exports.deleteIssueInAlgolia = async (id) =>{
         let filterIssueAlgolia = { search: id, type: "issues" };
         searchAlgo = await searchAlgolia(filterIssueAlgolia);
     }
-    const issueAlgoId = searchAlgo[0].objectID;
+    const issueAlgoId = searchAlgo[0]?.objectID;
     await deleteAlgolia(issueAlgoId);
 }
 

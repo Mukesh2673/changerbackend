@@ -78,6 +78,19 @@
  *     summary: Get  the Advocate Records.
  *     tags:
  *       - Advocate
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - name: id
+ *         in: query
+ *         description: Either add id in query to get single else get all records
+ *         required: true
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Advocate records retrieved successfully..

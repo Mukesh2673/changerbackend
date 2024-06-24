@@ -6,7 +6,7 @@ require("dotenv").config();
 const OpenAI = require("openai");
 const { sendMessage } = require("../libs/webSocket");
 const {updateIssueInAlgolia, deleteIssueInAlgolia, addIssueInAlgolia}=require('../algolia/issueAlgolia')
-const { updateUserInAlgolia } = require("../algolia/userAlgolia")
+const { updateUsersInAlgolia } = require("../algolia/userAlgolia")
 const {addVideoInAlgolia } = require("../algolia/videoAlgolia")
 exports.issueRecords = async (query) => {
   let records = await Issue.find(query).populate([
@@ -119,8 +119,8 @@ exports.index = async (req, res, next) => {
 
 exports.create = async (req, res, next) => {
   try {
-    const data = req.body;
-    console.log('data is',data)
+    let data = req.body;
+    data.user= req.user
     const tags = await generateTags(data.title);
     if (!mongoose.Types.ObjectId.isValid(data.user)) {
       return res.status(400).json({
@@ -137,7 +137,6 @@ exports.create = async (req, res, next) => {
         success: false,
       });
     }
-
     const karmaPoint = auth.karmaPoint + 100;
     const user = await User.findByIdAndUpdate(
       { _id: auth._id },
@@ -148,7 +147,7 @@ exports.create = async (req, res, next) => {
       },
       { new: true }
     );
-    await updateUserInAlgolia(auth._id)
+    await updateUsersInAlgolia(auth._id)
     const issue = new Issue({
       title: data.title,
       user: data.user,
@@ -313,7 +312,6 @@ exports.generate = async (req, res, next) => {
     const openai = new OpenAI({
       apiKey: process.env.PUBLIC_OPEN_AI,
     });
-
     const chatCompletion = await openai.chat.completions.create({
       messages: [{ role: "user", content: text }],
       model: "gpt-3.5-turbo-0125",
@@ -321,7 +319,7 @@ exports.generate = async (req, res, next) => {
     const response = chatCompletion.choices[0].message.content;
     return res.json({
       status: 200,
-      message: "prompt generated successfully",
+      message: "Prompt generated successfully",
       success: true,
       text: response,
     });
@@ -333,7 +331,8 @@ exports.generate = async (req, res, next) => {
 
 exports.upvotes = async (req, res, next) => {
   try {
-    const { uid, issueId } = req.body;
+    const issueId = req.body.issue;
+    const uid= req.user
     const auth = await User.findById({ _id: uid });
     if (!auth) {
       return res.json({
@@ -400,7 +399,7 @@ exports.upvotes = async (req, res, next) => {
       sendMessage("discussion", message, issue.user);
       return res.json({
         status: 200,
-        message: "voted",
+        message: "Issue voted successfully",
         success: true,
         voted: true,
         data: issue,
@@ -414,7 +413,7 @@ exports.upvotes = async (req, res, next) => {
 
 exports.userIssues = async (req, res) => {
   try {
-    const uid = req.params.uid;
+    const uid=req.user
     let records = await Issue.find({ user: uid }).populate([
       {
         path: "video",
@@ -431,7 +430,7 @@ exports.userIssues = async (req, res) => {
     ]);
     return res.json({
       status: 200,
-      message: "issue records",
+      message: "Issue records retrieved successfully.",
       success: true,
       data: records,
     });
@@ -443,7 +442,7 @@ exports.userIssues = async (req, res) => {
 
 exports.joinIssue = async (req, res) => {
   const issueId = req.body.issueId;
-  const userId = req.body.userId;
+  const userId = req.user;
   const result = await Issue.findById({ _id: issueId }).populate([
     {
       path: "user",
@@ -465,7 +464,7 @@ exports.joinIssue = async (req, res) => {
       if (exist) {
         return res.json({
           status: 400,
-          message: "issue already Joined",
+          message: "Issue already Joined",
           success: true,
         });
       }
@@ -486,7 +485,7 @@ exports.joinIssue = async (req, res) => {
       { $push: { joined: userId } },
       { new: true }
     );
-    await updateUserInAlgolia(auth._id)
+    await updateUsersInAlgolia(auth._id)
     await updateIssueInAlgolia(issueId)
     const message = `joined your issue discussion ${result.title}`;
     const notification = new Notification({
@@ -510,7 +509,7 @@ exports.joinIssue = async (req, res) => {
     let filterData = { search: result._id, type: "issues" };
      return res.json({
       status: 200,
-      message: "issue joined successfully",
+      message: "Issue joined successfully",
       success: true,
     });
   } else {
@@ -524,14 +523,14 @@ exports.joinIssue = async (req, res) => {
 
 exports.leaveIssue = async (req, res) => {
   const issueId = req.body.issueId;
-  const userId = req.body.userId;
+  const userId = req.user;
   const result = await Issue.findById({ _id: issueId });
   if (result) {
     const auth = await User.findById({ _id: userId });
     if (!auth) {
       return res.json({
         status: 401,
-        message: "invalid User",
+        message: "Invalid User",
         success: false,
       });
     }
@@ -565,31 +564,31 @@ exports.leaveIssue = async (req, res) => {
           },
           { new: true }
         );
-        await updateUserInAlgolia(auth._id)
+        await updateUsersInAlgolia(auth._id)
         await updateIssueInAlgolia(issueId)
         return res.json({
           status: 200,
-          message: "issue Leave successfully",
+          message: "Issue Leave successfully",
           success: true,
         });
       } else {
         return res.json({
           status: 401,
-          message: "issue Not Joined",
+          message: "Issue Not Joined",
           success: false,
         });
       }
     } else {
       return res.json({
         status: 401,
-        message: "issue Not exist",
+        message: "Issue Not exist",
         success: false,
       });
     }
   } else {
     return res.json({
       status: 401,
-      message: "invalid Issue",
+      message: "Invalid Issue",
       success: false,
     });
   }
@@ -637,12 +636,12 @@ exports.issueDetails = async (req, res) => {
     ]);
     return res.json({
       status: 200,
-      message: "issue records",
+      message: "Issue Details Record retrieved successfully",
       success: true,
       data: records,
     });
   } catch (err) {
-    console.log("valeu of issue error is",err)
+    console.log("err",err)
     return res.json({ status: 500, message: err, success: false });
   }
 };
@@ -651,7 +650,8 @@ exports.update = async (req, res) => {
   try {
     const issueId = req.params.id;
     const { title, description, notification } = req.body;
-    const isExist = await Issue.find({ _id: issueId });
+    const user=req.user
+    const isExist = await Issue.find({ _id: issueId,user:user });
     if (isExist) {
       const issue = await Issue.findByIdAndUpdate(
         { _id: issueId },
@@ -696,21 +696,21 @@ exports.update = async (req, res) => {
       await updateIssueInAlgolia(issueId)
       return res.json({
         status: 200,
-        message: "issue updated successfully",
+        message: "Issue updated successfully",
         success: true,
         data: records,
       });
     } else {
       return res.json({
         status: 500,
-        message: "invalid issue",
+        message: "Invalid Issue",
         success: false,
       });
     }
   } catch (err) {
     return res.json({
       status: 500,
-      message: "some thing went wrong",
+      message: "Internal server error",
       success: false,
     });
   }
@@ -718,14 +718,15 @@ exports.update = async (req, res) => {
 
 exports.deleteIssue = async (req, res) => {
   const issueId = req.params.id;
-  const isExist = await Issue.find({ _id: issueId });
+  const user= req.user
+  const isExist = await Issue.find({ _id: issueId, user:user });
   try {
     if (isExist.length > 0) {
      await Issue.findByIdAndRemove(issueId);
      await deleteIssueInAlgolia(issueId)
       return res.json({
         status: 200,
-        message: "issue deleted successfully",
+        message: "Issue deleted successfully",
         success: true,
       });
     } else {
@@ -736,9 +737,10 @@ exports.deleteIssue = async (req, res) => {
       });
     }
   } catch (err) {
+    console.log('err irD',err)
     return res.json({
       status: 500,
-      message: "some thing went wrong",
+      message: "Internal server error",
       success: false,
     });
   }
@@ -747,26 +749,37 @@ exports.deleteIssue = async (req, res) => {
 exports.messages = async (req, res) => {
   try {
     let records = req.body;
+    const user=req.user
+    records.sender=user
+    const updatedIssue=await Issue.findById( records.issueId)
+    if(!updatedIssue)
+    {
+      return res.json({
+        status: 400,
+        message: "Invalid Issue id",
+        success: false,
+      });
+    }
     const message = new Message(records);
     const savedMessage = await message.save();
     let messageId = savedMessage._id;
     await Issue.findByIdAndUpdate(
-      { _id: records.issues },
+      { _id: records.issueId },
       { $push: { messages: messageId } },
       { new: true }
     );
-    await updateIssueInAlgolia(issueId)
+
+    await updateIssueInAlgolia(records.issues)
     return res.json({
       status: 200,
-      message: "sent Message Successfully",
+      message: "Message sent successfully",
       success: false,
       data: savedMessage,
     });
   } catch (err) {
-    console.log("erero ", err);
     return res.json({
       status: 500,
-      message: "Something Went wrong",
+      message: "Internal Server Error",
       success: false,
     });
   }
@@ -775,6 +788,17 @@ exports.messages = async (req, res) => {
 exports.report = async (req, res) => {
   try {
     let records = req.body;
+    const user=req.user;
+    records.reportedBy=user
+    const issue=await Issue.findById( records.issues)
+    if(!issue)
+    {
+      return res.json({
+        status: 400,
+        message: "Invalid Issue id",
+        success: false,
+      });
+    }
     const report = new Report(records);
     const savedReports = await report.save();
     return res.json({
@@ -794,10 +818,10 @@ exports.report = async (req, res) => {
 
 exports.share = async (req, res) => {
   try {
-    const { id, uid } = req.body;
+    const uid =req.user
+    const id = req.body.issue;
     const issueId = id;
-    const isExist = await Issue.find({ _id: issueId });
-
+    const isExist = await Issue.find({ _id: issueId ,user:uid });
     if (isExist) {
       const shared = isExist[0].shared;
 
@@ -818,7 +842,7 @@ exports.share = async (req, res) => {
         await updateIssueInAlgolia(issueId)     
         return res.json({
           status: 200,
-          message: "issue shared successfully",
+          message: "Issue shared successfully",
           success: true,
           data: issue,
         });
@@ -831,6 +855,7 @@ exports.share = async (req, res) => {
       });
     }
   } catch (err) {
+    console.log('uerrror',err)
     return res.json({
       status: 500,
       message: "some thing went wrong",
@@ -853,7 +878,7 @@ exports.views = async (req, res) => {
     }
     issue.views.push(userId);
     await issue.save();
-    res.status(200).json({ message: "View added successfully", success: true });
+    res.status(200).json({ message: "Issue View  successfully", success: true });
   }
   catch(err)
   {

@@ -52,12 +52,12 @@ router.post("/upload/profile", upload.single("Image"), videoController.uploadPro
 router.get("/skills",skillController.skills)
 router.post("/skill/:id", validateToken, skillController.addUserSkill)
 router.delete("/skill/:id", validateToken, skillController.removeUserSkill)
+router.post("/skills/add", validateToken, skillController.add)
 
 // Messages
 router.post("/user/message", userController.message)
 router.get("/user/message/:pid/:uid",userController.getMessages)
 router.get("/user/messages", validateToken, userController.messages)
-
 
 // CAMPAIGN ROUTES
 router.post("/campaigns",validateToken, ValidateCampaign, campaignController.create);
@@ -92,21 +92,21 @@ router.post("/video/:vid/comment/reply/:repliesCommentId/like", validateToken, v
 
 
 //issue Routes
-router.post("/issue", issueController.create);
+router.post("/issue", validateToken, issueController.create);
 router.get("/issue", issueController.index);
 router.post("/issue/location", issueController.location);
 router.post("/issue/generate", issueController.generate);
-router.post("/issue/upvotes", issueController.upvotes)
-router.get("/user/issue/:uid", issueController.userIssues);
-router.post("/issue/join", issueController.joinIssue)
-router.post("/issue/leave", issueController.leaveIssue)
+router.post("/issue/upvotes", validateToken, issueController.upvotes)
+router.get("/issue/user", validateToken, issueController.userIssues);
+router.post("/issue/join", validateToken, issueController.joinIssue)
+router.post("/issue/leave", validateToken, issueController.leaveIssue)
 router.get("/issue/:id", issueController.issueDetails)
-router.patch("/issue/:id", issueController.update)
-router.delete("/issue/:id", issueController.deleteIssue)
-router.post("/issue/message", issueController.messages)
-router.post("/issue/report", issueController.report)
-router.post("/issue/share", issueController.share)
-router.post("/issue/:id/views", issueController.views)
+router.patch("/issue/:id", validateToken, issueController.update)
+router.delete("/issue/:id", validateToken, issueController.deleteIssue)
+router.post("/issue/message",validateToken, issueController.messages)
+router.post("/issue/report", validateToken, issueController.report)
+router.post("/issue/share", validateToken, issueController.share)
+router.post("/issue/:id/views",validateToken, issueController.views)
 router.post("/issue/deleteOld", issueController.deleteOldIssues)
 
 //search
@@ -118,7 +118,7 @@ router.get("/content/hashtags/:tag", hashtagsController.getContent)
 //advocate Routes
 router.post("/advocate", validateToken, upload.single("video"),validateAdvocate,adVocateController.add)
 router.delete("/advocate/:id", validateToken, adVocateController.delete)
-router.get("/advocate", adVocateController.get)
+router.get("/advocate", validateToken, adVocateController.get)
 
 //bookmarks 
 router.post("/bookmarks", validateToken, validateBookMarks,bookMarkController.add)

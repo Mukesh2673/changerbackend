@@ -38,16 +38,18 @@ exports.add = async (req, res) => {
 };
 exports.delete = async (req, res) => {
   try {
+    const user = req.user;
     const bookMarkId = req.params.id;
-    const bookMarks = await BookMarks.findOne({ _id: bookMarkId });
+    const bookMarks = await BookMarks.findOne({ _id: bookMarkId, user:user });
+    
     if (bookMarks) {
-      await BookMarks.findByIdAndRemove(bookMarkId);
+      await BookMarks.findByIdAndRemove({ _id: bookMarkId, user: user });
       return res.json({
         status: 200,
         message: "Book Mark removed successfully",
         success: true,
       });
-    } else {
+    }else {
       return res.json({
         status: 500,
         message: "Invalid Book Mark Id",

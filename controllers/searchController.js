@@ -68,6 +68,7 @@ exports.search = async (req, res) => {
           impact: videos,
           users: users,
         },
+        message:'Records retrieved View successfully.'
       });
     }
     let records = await searchAlgolia(filter);

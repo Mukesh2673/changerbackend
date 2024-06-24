@@ -3,10 +3,12 @@ const Schema = mongoose.Schema;
 const skillSchema = new Schema(
   {
     name: { type: String, required: false },
-    user: { type: Schema.Types.ObjectId, ref: "User", index: true }
+    users: [{ type: Schema.Types.ObjectId, ref: "User", index: true }],
+    appearances: { type: Number, required: false ,default:1},
+    verified: {type: Boolean, default: false}
   },
   {
     timestamps: true,
   }
 );
-module.exports = mongoose.model("userskills", skillSchema,"usersSkills");
+module.exports = mongoose.model("skills", skillSchema);
