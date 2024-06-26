@@ -102,7 +102,7 @@
  *   post:
  *     summary: Participate in The Campaign for the Volunteers
  *     tags:
- *       - Campaigns
+ *       - Volunteering
  *     parameters:
  *       - name: Authorization
  *         in: header
@@ -181,11 +181,11 @@
  *                   action:
  *                       type: array
  *                       example:
-  *                       - name: donation
+ *                       - name: donation
  *                         amount: 30
  *                         description: Fundraise for educational materials and online campaign tools.
  *                         karmaPoint: 10
- *                         karmaUnit: 10$
+ *                         karmaUnit: 10
  *                       - name: petition
  *                         numberOfSignature: 10
  *                         neededSignaturesFor: To share awareness about wildlife conservation
@@ -230,12 +230,21 @@
  *                           - name: Ongoing support and guidance from our experienced team
  *                           - name: Ongoing support and guidance from our experienced team
  *                         karmaPoint: 2000
-*             story:
+ *             story:
  *               type: string
  *               example: Join us for a day of mental health awareness and advocacy! Our
  *             image:
  *              type: string
  *              example: thumbnail/1717285896269.png
+ *             address:
+ *              type: string
+ *              example: chandigarh Mohali
+ *             location:
+ *              type: object
+ *              example: 
+ *                       type: Point
+ *                       coordinates : [80.9462, 12.83]
+ *                            
  *             video:
  *               type: object
  *               properties:
@@ -351,7 +360,7 @@
  *   get:
  *     summary: Retrieve the list of all volunteers along with their corresponding campaigns.
  *     tags:
- *       - Campaigns
+ *       - Volunteering
  *     parameters:
  *       - name: Authorization
  *         in: header
@@ -383,7 +392,7 @@
  *   get:
  *     summary: Retrieve the list of all volunteers along with their corresponding campaigns.
  *     tags:
- *       - Campaigns
+ *       - Volunteering
  *     parameters:
  *       - name: Authorization
  *         in: header
@@ -416,7 +425,7 @@
  *   get:
  *     summary: Retrieve the list of all campaign that user voluntered.
  *     tags:
- *       - Campaigns
+ *       - Volunteering
  *     parameters:
  *       - name: Authorization
  *         in: header
@@ -509,6 +518,9 @@
  *              petition:
  *                type: string
  *                example: 66727f3d7c01ff8098c967a5
+ *              address:
+ *                type: string
+ *                example: Chandigarh
  *              location:
  *                type: Object
  *                example: {"type": "Point", "coordinates": [80.9462, 12.83]}          
@@ -521,5 +533,108 @@
  *         description: Internal server error
  */
 
+
+/**
+ * @swagger
+ * /campaign/{campaignId}/participation/{appliedParticipationId}/approved:
+ *   post:
+ *     summary: Approve participant to Volunteer the campaign
+ *     tags:
+ *       - Volunteering
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - name: campaignId
+ *         in: path
+ *         description: Add the campaign Id
+ *         required: true 
+ *       - name: appliedParticipationId
+ *         in: path
+ *         description: Add the applied participation  id to Approve
+ *         required: true 
+ *     responses:
+ *       200:
+ *         description: Participaitn approved.
+ *       403:
+ *         description: Correct Authorization Token Required!
+ *       500:
+ *         description: Internal server error
+ *       400: 
+ *         description: Invalid Campaign You are not Admin to this campaign 
+ */
+
+/**
+ * @swagger
+ * /campaign/donation/{donationId}/donate:
+ *   post:
+ *     summary: Approve participant to Volunteer the campaign
+ *     tags:
+ *       - Donation
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - name: donationId
+ *         in: path
+ *         description: Add the donation Id
+ *         required: true 
+ *       - name: body
+ *         in: body
+ *         description: Make Donation to the campaign
+ *         required: true
+ *         schema:
+ *          type: object
+ *          required:
+ *              - amount
+ *              - source
+ *          properties:
+ *              amount:
+ *               type: number   
+ *               example: 100
+ *              source:
+ *               type: string
+ *               example: tok_1PVYTbIdZnRVQ8NumHEEXYEA
+ *     responses:
+ *       200:
+ *         description: Participation approved.
+ *       403:
+ *         description: Correct Authorization Token Required!
+ *       500:
+ *         description: Internal server error
+ *       400: 
+ *         description: Invalid Campaign You are not Admin to this campaign 
+ */
+
+/**
+ * @swagger
+ * /campaign/participation/history:
+ *   get:
+ *     summary: Get the participation history of User
+ *     tags:
+ *       - Volunteering
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Participation records retrieved successfully.
+ *       403:
+ *         description: Correct Authorization Token Required!
+ *       500:
+ *         description: Internal server error
+ *       400: 
+ *         description: Participation records Not found
+ */
 
 module.exports = {}; 

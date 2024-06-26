@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 const signedPetitionsSchema = new Schema(
   { 
     location: { type: { type: String, default: "Point", enum: "Point"}, coordinates: { type: [Number], default: [0, 0]}},
+    address: { type: String, required: false,default:"" },
     petition: { type: mongoose.Schema.Types.ObjectId, ref: "petitions" },  
     user: { type: Schema.Types.ObjectId, ref:"User"},
     },
@@ -12,4 +13,4 @@ const signedPetitionsSchema = new Schema(
     }
 );
 
-module.exports = mongoose.model("signedpetitions", signedPetitionsSchema, "campaignPetitionsSigned");
+module.exports = mongoose.model("signedpetitions", signedPetitionsSchema, "campaignSignedPetition");

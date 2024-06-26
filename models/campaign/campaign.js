@@ -12,6 +12,7 @@
       video: { type: Schema.Types.ObjectId, ref: "Video", index: true },
       impacts: [{ type: Schema.Types.ObjectId, ref: "impact", index: true }],
       location: { type: { type: String, default: "Point", enum: "Point"}, coordinates: { type: [Number], default: [0, 0]}},
+      address: { type: String, required: false },
       hashtags: { type: Array, default: [] },
       updates: [{ type: mongoose.Schema.Types.ObjectId, ref: "notification" }],
       algolia: {type: String, default: ""},

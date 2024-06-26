@@ -73,7 +73,8 @@ router.post("/campaign/:campaignId/impactVideo",  upload.single("video"), valida
 router.get("/campaign/volunteers", campaignController.volunteers)//get Volunteers based Location
 router.get("/campaign/volunteers/forYou", validateToken, campaignController.userVolunteersCompaign); //get campaing that you have voluteer
 router.post("/campaign/signPetition", validateToken, validateSignPetitions, campaignController.signPetitions)
-
+router.post("/campaign/:campaignId/participation/:appliedParticipationId/approved", validateToken, campaignController.approveParticipant )
+router.get("/campaign/participation/history", validateToken, campaignController.participationHistory)
 
 // VIDEO ROUTES
 router.get("/video/:id", videoController.show);

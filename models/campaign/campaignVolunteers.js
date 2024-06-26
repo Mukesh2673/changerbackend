@@ -7,6 +7,7 @@
       user: { type: Schema.Types.ObjectId, ref: "User" },
       campaign: { type: mongoose.Schema.Types.ObjectId, ref: "campaign" },
       participation: { type: mongoose.Schema.Types.ObjectId, ref: "campaignParticipant" },
+      approved: {type: Boolean, default: false}
     },
     {
       timestamps: true,

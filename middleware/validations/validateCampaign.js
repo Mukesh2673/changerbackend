@@ -42,8 +42,8 @@ const validateDonationAction = (action) => {
     if (!action.description || typeof action.description !== "string") {
       throw new Error("Donation description must be a string");
     }
-    if (!action.karmaUnit || typeof action.karmaUnit !== "string") {
-      throw new Error("karmaUnit must be a required string");
+    if (!action.karmaUnit || typeof action.karmaUnit !== "number") {
+      throw new Error("karmaUnit must be a non-negative number");
     }
     if (
       !action.karmaPoint ||

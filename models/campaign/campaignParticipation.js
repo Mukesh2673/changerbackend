@@ -16,7 +16,7 @@ const campaignParticipationSchema = new Schema(
     startDate: { type: String, default: ""},
     numberOfDays: { type: Number, default: 0},
     responsibilities: { type: Array, default: []},
-    skills:  [ { type: mongoose.Schema.Types.ObjectId, ref: "usersSkills", required: false }],
+    skills:  [ { type: mongoose.Schema.Types.ObjectId, ref: "skills", required: false }],
     requirements: { type: Array, default: []},
     provides: { type: Array, default: []},
     karmaPoint: { type: Number, default: 0},

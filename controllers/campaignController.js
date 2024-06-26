@@ -16,7 +16,6 @@ const {
   Notification,
   Report
 } = require("../models");
-
 const mongoose = require("mongoose");
 const { generateTags } = require("../controllers/hashtagController");
 const { upload, uploadVideoThumbnail } = require("../libs/fileUpload");
@@ -83,7 +82,6 @@ exports.showCampaigns = async (req, res, next) => {
 exports.showCampaign = async (req, res, next) => {
   try {
     const { id } = req.params;
-
     const campaign = await Campaign.aggregate([
       { $match: { _id: mongoose.Types.ObjectId(id) } },
       {
@@ -92,6 +90,11 @@ exports.showCampaign = async (req, res, next) => {
           localField: "user",
           foreignField: "_id",
           as: "user",
+          pipeline:[
+            {
+              $project: { _id: 1 , first_name:1, last_name:1, username:1 } 
+            }  
+          ]
         },
       },
       { $unwind: "$user" },
@@ -105,10 +108,154 @@ exports.showCampaign = async (req, res, next) => {
       },
       {
         $lookup: {
-          from: "phases",
+          from: "campaignPhase",
           localField: "phases",
           foreignField: "_id",
           as: "phases",
+          pipeline:[
+            {
+              $lookup: {
+                from: "campaignParticipation",
+                localField: "_id",
+                foreignField: "phaseId",
+                as: "campaignVolunteering",
+                pipeline:[
+                    {
+                      $lookup: {
+                        from: "skills",
+                        localField: "skills",
+                        foreignField: "_id",
+                        as: "skills",
+                        pipeline:[
+                          {
+                            $project: { _id: 1 , name: 1 } 
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      $project: { requirements: 0 , provides: 0,karmaPoint: 0, phaseId: 0, responsibilities: 0 } 
+   
+                    }
+                  ]
+              },
+            },
+            { 
+              $lookup: {
+                from: "campaignVolunteers",
+                localField: "participation",
+                foreignField: "participation",
+                as: "volunteers",
+                pipeline:[
+                  {
+                    $match: {
+                      approved: true
+                    }
+                  },
+                  {
+                    $lookup: {
+                      from: "users",
+                      localField: "user",
+                      foreignField: "_id",
+                      as: "user",
+                      pipeline:[
+                        {
+                          $project: { _id: 1 , first_name:1, last_name:1, username:1 } 
+                        }
+                      ]
+                    },
+
+                  },
+                  { $project: { _id: 1 , user:1 } }
+                  ]
+              },
+            },
+            {
+              $lookup: {
+                from: "campaignSignedPetition",
+                localField: "petition",
+                foreignField: "petition",
+                as: "signendPetitions",
+                pipeline:[
+                  {
+                    $lookup: {
+                      from: "users",
+                      localField: "user",
+                      foreignField: "_id",
+                      as: "user",
+                      pipeline:[
+                        {
+                          $project: { _id: 1 , first_name:1, last_name:1, username:1 } 
+                        }
+                      ]
+                    },
+
+                  },
+                  { $project: { _id: 1 , user:1 } }
+                  ]
+              }
+            },
+            {
+              $lookup: {
+                from: "campaignDonation",
+                localField: "_id",
+                foreignField: "phaseId",
+                as: "donation",
+                pipeline:[
+                  {
+                    $project: { karmaPoint: 0 , phaseId:0, updatedAt:0, __v:0 } 
+                  }
+                ]
+              }
+            },
+            {
+              $lookup: {
+                from: "campaignPetition",
+                localField: "_id",
+                foreignField: "phaseId",
+                as: "petition",
+                pipeline:[
+                  {
+                    $project: { karmaPoint: 0 , phaseId:0, updatedAt:0, __v:0 } 
+                  }
+                ]
+              },
+            },
+            {
+              $lookup: {
+                from: "campaignDonated",
+                localField: "campaignDonationId",
+                foreignField: "donation",
+                as: "donated",
+                pipeline:[
+                  {
+                    $lookup: {
+                      from: "users",
+                      localField: "user",
+                      foreignField: "_id",
+                      as: "donatedBy",
+                      pipeline:[
+                        {
+                          $project: { _id: 1 , first_name:1, last_name:1, username:1,profileImage:1 } 
+                        }  
+                      ]
+                    },    
+                 
+                  },
+                    {$project: { amount: 1 , donatedBy:1 }}
+                ]
+              },
+            },
+            {
+              $addFields: {
+                totalDonatedAmount: { $sum: "$donated.amount" }
+              }
+            },
+            {
+              $project: { _id: 1 , title: 1, donation: 1, createdAt: 1, volunteers: 1, signendPetitions: 1, campaignVolunteering:1, donated: 1, totalDonatedAmount:1,petition:1 }
+            }
+          ]
+
         },
       },
       {
@@ -117,6 +264,11 @@ exports.showCampaign = async (req, res, next) => {
           localField: "video",
           foreignField: "_id",
           as: "video",
+          pipeline:[
+            {
+              $project: { _id: 1 , video_url: 1, thumbnail_url: 1, title: 1,likes: 1, comments: 1  } 
+            }
+          ]
         },
       },
       { $unwind: { path: "$video", preserveNullAndEmptyArrays: true } }, // Video may be null, so preserve nulls
@@ -136,6 +288,9 @@ exports.showCampaign = async (req, res, next) => {
           as: "updates",
         },
       },
+      {
+        $project: { hashtags: 0 , algolia: 0, updatedAt: 0, _v: 0 } 
+      }
     ]);
 
     if (campaign.length > 0) {
@@ -187,6 +342,8 @@ exports.create = async (req, res, next) => {
       title: data.title,
       story: data.story,
       image: data.image,
+      location: data.location,
+      address: data.address
     });
     const campaigns = await campaign.save();
     
@@ -336,10 +493,19 @@ exports.donate = async (req, res) => {
   try {
     const userId = req.user; // Assuming req.user contains the authenticated user object
     const donationId = req.params.id;
+    let karmaPoint
     // Find the donation action added within campaign phase
     const campaignDonation = await donation.findById(donationId);
     if (!campaignDonation) {
       return res.status(404).json({ message: "Campaign donation not found" });
+    }
+    if(campaignDonation.karmaPoint)
+    {
+       karmaUnit=parseInt(campaignDonation.karmaPoint)
+       karmaPoint=parseInt(req.body.amount)/karmaUnit 
+    }
+    else{
+      karmaPoint=parseInt(req.body.amount)/10
     }
     // check is  donation  exist in campaign phase
     const campaignPhase = await campaignPhases.findOne({
@@ -368,29 +534,41 @@ exports.donate = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    // Create Stripe charge for donation
+
     const stripeToken = req.body.source;
     const charge = await stripe.charges.create({
       amount: parseInt(req.body.amount * 100), // Amount in cents
       currency: "usd",
-      card: stripeToken,
+      card:stripeToken,
       description: req.body.description,
     });
+
 
     // Handle the charge response
     if (charge.status === "succeeded") {
       let campaignDonation = new Donated({
+        user: userId,
         amount: req.body.amount,
         chargeId: charge.id,
-        donation: donationId,
+        campaignDonationId: donationId,
+        currency: charge.currency,
+        created: new Date(charge.created * 1000), 
+        paymentMethod: {
+          brand: charge.payment_method_details.card.brand,
+          expMonth: charge.payment_method_details.card.exp_month,
+          expYear: charge.payment_method_details.card.exp_year,
+          last4: charge.payment_method_details.card.last4
+        },
+        receiptUrl: charge.receipt_url,
+        customerId: charge.customer,
+        balanceTransactionId: charge.balance_transaction
       });
       await campaignDonation.save();
-      const karmaPoints = Math.round(req.body.amount * 10);
-      user.karmaPoint += karmaPoints;
+      user.karmaPoint += karmaPoint;
       await user.save();
 
       // Add notification to user who made doanation about karma points
-      const karmaMessage = `You received +50 karma points for participating in the campaign ${campaign.title}`;
+      const karmaMessage = `You received +100 karma points for participating in the campaign ${campaign.title}`;
       const karmaNotification = new Notification({
         messages: karmaMessage,
         user: user._id,
@@ -419,7 +597,8 @@ exports.donate = async (req, res) => {
       await updateCampaignInAlgolia(campaign._id);
       return res.status(200).json({
         status: 200,
-        message: "campaign Donation Success Fully",
+        message: "campaign Donation SuccessFully",
+        receiptUrl:  charge.receipt_url,
         success: true,
       });
     } else {
@@ -477,10 +656,6 @@ exports.participateInCampaign = async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-    currentUser.karmaPoint += 50;
-    await currentUser.save();
-    updateUsersInAlgolia(user._id);
-   
     // Create a new participation record
     const newVolunteer = new Volunteers({
       user: user._id,
@@ -488,8 +663,11 @@ exports.participateInCampaign = async (req, res) => {
       participation: participationId,
     });
     const savedVolunteer = await newVolunteer.save();
-
-    // Add notification for karma points
+    //update user Karma Point
+    currentUser.karmaPoint += 50;
+    await currentUser.save();
+    updateUsersInAlgolia(user._id);
+    // message to the  current user about notification for karma points
     const karmaMessage = `You received +50 karma points for participating in the campaign ${campaign.title}`;
     const karmaNotification = new Notification({
       messages: karmaMessage,
@@ -501,7 +679,7 @@ exports.participateInCampaign = async (req, res) => {
     await karmaNotification.save();
     sendMessage("karmaPoint", karmaMessage, currentUser._id);
 
-    // Add notification for campaign participation
+    // Add notification to campaign Admin about campaign participation 
     const participationMessage = `${currentUser.first_name} ${currentUser.last_name} participated in the campaign ${campaign.title}`;
     const participationNotification = new Notification({
       messages: participationMessage,
@@ -511,7 +689,6 @@ exports.participateInCampaign = async (req, res) => {
       notificationType: "campaignParticipation",
     });
     await participationNotification.save();
-
     await Campaign.findByIdAndUpdate(
       campaign._id,
       {
@@ -544,42 +721,67 @@ exports.userVolunteersCompaign = async (req, res) => {
     const { page = 1, pageSize = 10 } = req.query;
     const skip = (parseInt(page, 10) - 1) * parseInt(pageSize, 10);
     // Aggregate to find participations of the user
-    const userParticipations = await Volunteers.aggregate([
+    const appliedVolunteers= await Volunteers.find({user:user}).select('campaign')
+    // get Volunter Id to find the campaign that user not volunteered yet
+    const volunteeredCampaignIds = appliedVolunteers.map(volunteer => volunteer.campaign.toString());
+   // get  petition to find the campaign that user Signed but not volunteered
+
+    const campaignPetitions= await SignedPetitions.aggregate([
       {
-        $match: { user: mongoose.Types.ObjectId(user._id) },
+        $match: {user: user}
       },
       {
         $lookup: {
-          from: "campaigns",
-          localField: "campaign",
+          from: "campaignPetition",
+          localField: "petition",
+          foreignField: "_id",
+          as: "campaignPetition",
+        },
+      },
+      {
+        $unwind: "$campaignPetition",
+      },
+      {
+        $lookup: {
+          from: "campaignPhase",
+          localField: "campaignPetition.phaseId",
           foreignField: "_id",
           as: "campaign",
-        },
-      },
-      {
-        $lookup: {
-          //participation form that have details about participation
-          from: "campaignParticipation",
-          localField: "participation",
-          foreignField: "_id",
-          as: "participationDetails",
-        },
-      },
-      {
-        $project: {
-          _id: "$_id",
-          campaign: "$campaign",
-          participation: "$participationDetails",
-        },
-      },
-      {
-        $skip: skip,
-      },
-      {
-        $limit: parseInt(pageSize, 10),
-      },
-    ]);
+          pipeline:[
+            {$project: {campaign:1 }}
+          ]
 
+        },
+      },
+      {$project: {campaign:'$campaign.campaign'}}
+    ])
+    // Flatten the nested campaign array and convert to strings
+    const signedPetitionsCampaignIds = campaignPetitions.map(petition => petition.campaign.toString());
+    // Filter the campaigns
+    const recommendedCampaign = signedPetitionsCampaignIds.filter(element => !volunteeredCampaignIds.includes(element));
+    const userParticipations = await Campaign.aggregate([
+      {
+        $match: { _id: { $nin: volunteeredCampaignIds.map(id => mongoose.Types.ObjectId(id)) } }
+      },
+      {
+        $addFields: {
+          sortIndex: {
+            $indexOfArray: [recommendedCampaign.map(id => mongoose.Types.ObjectId(id)), '$_id']
+          }
+        }
+      },
+      {
+        $sort: {
+          sortIndex: -1 
+        }
+      },
+       {
+         $skip: skip,
+       },
+       {
+         $limit: parseInt(pageSize, 10),
+       },
+    ]);
     return res.status(200).json(userParticipations);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -652,7 +854,7 @@ exports.getMessages = async (req, res) => {
 //add signPetitions
 exports.signPetitions = async (req, res) => {
   try {
-    const { petition, location } = req.body;
+    const { petition, location, address } = req.body;
 
     // Check if the petition exists
     const petitionExists = await petitions.findById(petition);
@@ -682,9 +884,9 @@ exports.signPetitions = async (req, res) => {
       user: req.user._id,
       petition,
       location,
+      address,
     });
     await newSign.save();
-
     // Return success response
     return res.status(200).json({
       status: 200,
@@ -793,7 +995,6 @@ exports.campaignImpactVideos = async (req, res) => {
 
 //get Volunters based on Location, cause and filter on map
 exports.volunteers = async (req, res) => {
-  
   try {
     let pipeline = [
       {
@@ -958,3 +1159,89 @@ exports.report = async (req, res) => {
     });
   }
 };
+
+//add feature to approve participation request by admin
+exports.approveParticipant= async (req, res)=>{
+ try{
+  const user=req.user
+  const {campaignId,appliedParticipationId}=req.params
+  const campaign = await Campaign.find({_id: campaignId,user: user});
+  //check is campainId Valid or Not
+  if (!campaign) {
+    return res.status(404).json({ message: "You are Not Authorize to this campaign" });
+    }
+  const volunteers=  await Volunteers.findByIdAndUpdate(
+      {_id: appliedParticipationId},
+      {
+        $set: {
+          approved: true,
+        },
+      },
+      { new: true }
+    )    
+    const approvedMessages = `You were approved for volunteering`;
+    sendMessage("approvedMessage", approvedMessages, volunteers.user);
+    if (!volunteers) {
+      return res.status(404).json({ message: "Invalid participation applied Id" });
+      }
+  }
+  catch(err)
+  {
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server Error",
+      error: err.message,
+      success: false,
+    });
+  }
+}
+
+//get participation history
+exports.participationHistory=async (req, res)=>{
+  try{
+    const user=req.user
+    const volunteer=await Volunteers.aggregate([
+      { $match: { user: mongoose.Types.ObjectId(user) } },
+      {
+        $lookup: {
+          from: "campaignParticipation",
+          localField: "participation",
+          foreignField: "_id",
+          as: "volunteering",
+          pipeline:[
+            {
+              $project: { _id: 1 , location: 1 ,roleTitle: 1, participant: 1, description: 1 } 
+            }  
+          ]
+        },
+      },
+      {
+        $project:{_id:1, approved:1, campaign: 1, volunteering:1, createdAt: 1}
+      }
+
+
+    ])
+    if(volunteer.length>0)
+    {
+      return res.json({
+        status: 200,
+        message: "Participation records retrieved successfully.",
+        success: true,
+        data: volunteer,
+      });  
+    }
+    else{
+      return res.json({
+        status: 400,
+        message: "Participation records Not found",
+        success: false,
+        data: volunteer,
+      });   
+    }
+  }
+  catch(err)
+  {
+    return res.json({ status: 500, message: err, success: false });
+
+  }
+}

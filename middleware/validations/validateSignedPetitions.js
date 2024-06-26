@@ -5,6 +5,11 @@ const validateSignedPetitions = [
     .withMessage(
       "petition is required"
     ),
+  body("address")
+    .notEmpty()
+    .withMessage(
+      "address is required"
+    ),  
   body("location")
     .notEmpty()
     .withMessage("Location is required")
