@@ -201,10 +201,10 @@ exports.getUser = async (req, res, next) => {
       },
       {
         $lookup: {
-          from: "campaignParticipation",
+          from: "campaignVolunteers",
           localField: "volunteering.participation",
           foreignField: "_id",
-          as: "campaignParticipation", //add join to the volunters that is relate to the participant
+          as: "campaignVolunteers", //add join to the volunters that is relate to the participant
           pipeline: [
             {
               $lookup: {
@@ -394,7 +394,7 @@ exports.getUser = async (req, res, next) => {
            supportedCampaigns: {
              $concatArrays: ["$userCampaings", "$volunteerCampaigns"],
            },
-          volunteeringExperience: "$campaignParticipation",
+          volunteeringExperience: "$campaignVolunteers",
            impacts: "$impacts",
            advocacy: "$advocacy",
            issues: "$issues",

@@ -59,7 +59,7 @@ const campaignRecords = async (id) => {
             },
             {
               $lookup: {
-                from: "campaignParticipation",
+                from: "campaignVolunteers",
                 localField: "participation",
                 foreignField: "_id",
                 as: "participation",
@@ -161,9 +161,9 @@ exports.updateCampaignInAlgolia = async (id) => {
                 null
               }))
             : [],
-        _geoloc: campaign._geoloc,
-        _id: campaign._id,
-        hashtags: campaign.hashtags,
+        _geoloc: campaign?._geoloc,
+        _id: campaign?._id,
+        hashtags: campaign?.hashtags,
         updates:
           campaign?.updates?.length > 0
             ? campaign.updates.map((update) => ({
@@ -190,27 +190,27 @@ exports.updateCampaignInAlgolia = async (id) => {
                 petition: phase.petition
                   ? {
                       _id: phase.petition._id,
-                      name: phase.petition.name,
+                      name: phase.petition?.name,
                       signature: phase.petition.signature,
                       description: phase.petition.description,
                       karmaPoint: phase.petition.karmaPoint,
                     }
                   : null,
                 participation: phase.participation.map((participant) => ({
-                  _id: participant._id,
-                  participant: participant.participant,
-                  location: participant.location,
-                  roleTitle: participant.roleTitle,
-                  description: participant.description,
-                  workplaceType: participant.workplaceType,
-                  startdate: participant.startdate,
-                  numberofDays: participant.numberofDays,
-                  time: participant.time,
-                  responsibilities: participant.responsibilities,
-                  skills: participant.skills,
-                  requirements: participant.requirements,
-                  provides: participant.provides,
-                  karmaPoint: participant.karmaPoint,
+                  _id: participant?._id,
+                  participant: participant?.participant,
+                  location: participant?.location,
+                  roleTitle: participant?.roleTitle,
+                  description: participant?.description,
+                  workplaceType: participant?.workplaceType,
+                  startdate: participant?.startdate,
+                  numberofDays: participant?.numberofDays,
+                  time: participant?.time,
+                  responsibilities: participant?.responsibilities,
+                  skills: participant?.skills,
+                  requirements: participant?.requirements,
+                  provides: participant?.provides,
+                  karmaPoint: participant?.karmaPoint,
                 })),
               }))
             : [],

@@ -62,19 +62,21 @@ router.get("/user/messages", validateToken, userController.messages)
 // CAMPAIGN ROUTES
 router.post("/campaigns",validateToken, ValidateCampaign, campaignController.create);
 router.get("/campaigns", campaignController.showCampaigns);
+router.get("/campaigns/trending", campaignController.trendingCampaigns )
+router.get("/campaigns/forUser", validateToken, campaignController.campaignForUser)
 router.get("/campaigns/:id", campaignController.showCampaign);
 router.post("/campaign/donation/:id/donate", validateToken, campaignController.donate);
 router.post("/campaign/report",validateToken, campaignController.report)
-//apply for particiapation to the campaign participate
-router.post("/campaign/:campaignId/participate/:participationId",validateToken, campaignController.participateInCampaign);
 router.post("/campaign/message", validateToken, campaignController.postMessages)
 router.get("/campaign/:id/message", validateToken,campaignController.getMessages)
 router.post("/campaign/:campaignId/impactVideo",  upload.single("video"), validateToken, validateCampaignImpact, campaignController.campaignImpactVideos)
+
+router.post("/campaign/:campaignId/volunteering/:volunteeringId",validateToken, campaignController.applyForVolunteers);
+router.post("/campaign/:campaignId/volunteers/:volunteerId/approve", validateToken, campaignController.approveVolunteers )
 router.get("/campaign/volunteers", campaignController.volunteers)//get Volunteers based Location
 router.get("/campaign/volunteers/forYou", validateToken, campaignController.userVolunteersCompaign); //get campaing that you have voluteer
 router.post("/campaign/signPetition", validateToken, validateSignPetitions, campaignController.signPetitions)
-router.post("/campaign/:campaignId/participation/:appliedParticipationId/approved", validateToken, campaignController.approveParticipant )
-router.get("/campaign/participation/history", validateToken, campaignController.participationHistory)
+router.get("/campaign/volunteering/participation/history", validateToken, campaignController.volunteerParticipationHistory)
 
 // VIDEO ROUTES
 router.get("/video/:id", videoController.show);

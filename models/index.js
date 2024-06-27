@@ -15,7 +15,7 @@ module.exports = {
   Impact: require("./impact/impact"),
   Campaign: require("./campaign/campaign"),
   Video: require("./video"),
-  CampaignParticipant: require("./campaign/campaignParticipation"),
+  CampaignVolunteering: require("./campaign/campaignVolunteering"),
   campaignPhases: require("./campaign/campaignPhase"),
   donation: require("./campaign/campaignDonation"),
   Donated: require("./campaign/campaignDonated"),

@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const campaignParticipationSchema = new Schema(
+const campaignVolunteeringSchema = new Schema(
   {
     participant: { type: String, default: "" },
     roleTitle: { type: String, default: ""},
@@ -26,5 +26,5 @@ const campaignParticipationSchema = new Schema(
     timestamps: true,
   }
 );
-campaignParticipationSchema.index({ location: "2dsphere" });
-module.exports = mongoose.model("participation", campaignParticipationSchema,'campaignParticipation');
+campaignVolunteeringSchema.index({ location: "2dsphere" });
+module.exports = mongoose.model("campaingVolunteering", campaignVolunteeringSchema,'campaingVolunteering');

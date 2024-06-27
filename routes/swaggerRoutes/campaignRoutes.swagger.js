@@ -7,30 +7,11 @@
  *       - Campaigns
  *     responses:
  *       200:
- *         description: Campaigns retrieved successfully
- *         schema:
- *           type: object
- *           properties:
- *             status:
- *               type: integer
- *             data:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Campaign'
- *             success:
- *               type: boolean
- *       400:
+ *         description: Campaigns records retrieved successfully
+ *       401:
+ *         description: Correct  Authorization Token Required!
+ *       404:
  *         description: Bad request
- *         schema:
- *           type: object
- *           properties:
- *             status:
- *               type: integer
- *             data:
- *               type: array
- *               items: {}
- *             success:
- *               type: boolean
  */
 
 /**
@@ -48,14 +29,71 @@
  *         type: string
  *     responses:
  *       200:
- *         description: Details of the campaign
+ *         description: Details of the campaign retrieved successfully
  *         schema:
  *           $ref: '#/components/schemas/Campaign'
+ *       404:
+ *         description: Campaign not found
+ *       401:
+ *         description: Correct  Authorization Token Required!
+ *       500:
+ *         description: Something went wrong
+ */
+
+/**
+ * @swagger
+ * /campaigns/trending:
+ *   get:
+ *     summary: Get details of a campaign by ID
+ *     tags:
+ *       - Campaigns
+ *     parameters:
+ *       - name: page
+ *         in: query
+ *         description: Add Number of Page.
+ *         required: false
+ *       - name: PageSize
+ *         in: query
+ *         description: Describe the number of records in Page.
+ *         required: false
+ *     responses:
+ *       200:
+ *         description:  Trending campaign  records retrieved successfully
  *       404:
  *         description: Campaign not found
  *       500:
  *         description: Something went wrong
  */
+
+/**
+ * @swagger
+ * /campaigns/forUser:
+ *   get:
+ *     summary: Get details of a campaign by ID
+ *     tags:
+ *       - Campaigns
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
+ *         required: true
+ *       - name: page
+ *         in: query
+ *         description: Add Number of Page.
+ *         required: false
+ *       - name: PageSize
+ *         in: query
+ *         description: Describe the number of records in Page.
+ *         required: false
+ *     responses:
+ *       200:
+ *         description:  Trending campaign  records retrieved successfully
+ *       404:
+ *         description: Campaign not found
+ *       500:
+ *         description: Something went wrong
+ */
+
 
 
 
@@ -98,9 +136,9 @@
 
 /**
  * @swagger
- * /campaign/{campaignId}/participate/{participationId}:
+ * /campaign/{campaignId}/volunteering/{volunteeringId}:
  *   post:
- *     summary: Participate in The Campaign for the Volunteers
+ *     summary: Apply To Volunteers in the Campaign
  *     tags:
  *       - Volunteering
  *     parameters:
@@ -109,28 +147,15 @@
  *         description: Authorization Token        
  *       - name: campaignId
  *         in: path
- *         description: Campaing Id you Want to participate
+ *         description: Campaign ID you want to volunteer for
  *         required: true
- *       - name: participationId
+ *       - name: volunteeringId
  *         in: path
- *         description: Campaing Participation Id from campaign Phase
+ *         description: Campaign volunteering Id from campaign Phase
  *         required: true 
- *         schema:
- *           type: object
- *           required:
- *             - reportSubject
- *             - details
- *             - campaign 
- *           properties:
- *             reportSubject:
- *               type: string
- *             details:
- *               type: string
- *             campaign:
- *               type: string   
  *     responses:
  *       200:
- *         description: You successfully participated in the campaign.
+ *         description: Successfully participated  to volunteers in the campaign.
  *       500:
  *         description: Internal server error
  *       401:
@@ -139,6 +164,38 @@
  *         description: campaign does not correspond to the participation
  */
 
+/**
+ * @swagger
+ * /campaign/{campaignId}/volunteers/{volunteerId}/approve:
+ *   post:
+ *     summary: Approve participant to Volunteer the campaign
+ *     tags:
+ *       - Volunteering
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - name: campaignId
+ *         in: path
+ *         description: Add the campaign Id
+ *         required: true 
+ *       - name: volunteerId
+ *         in: path
+ *         description: Add the volunteer participation  id to Approve
+ *         required: true 
+ *     responses:
+ *       200:
+ *         description: Volunteer approved successfully.
+ *       403:
+ *         description: Correct Authorization Token Required!
+ *       500:
+ *         description: Internal server error
+ *       400: 
+ *         description: Invalid Campaign You are not Admin to this campaign 
+ */
 
 /**
  * @swagger
@@ -534,38 +591,6 @@
  */
 
 
-/**
- * @swagger
- * /campaign/{campaignId}/participation/{appliedParticipationId}/approved:
- *   post:
- *     summary: Approve participant to Volunteer the campaign
- *     tags:
- *       - Volunteering
- *     parameters:
- *       - name: Authorization
- *         in: header
- *         description: Authorization Token
- *         required: true
- *         schema:
- *           type: string
- *       - name: campaignId
- *         in: path
- *         description: Add the campaign Id
- *         required: true 
- *       - name: appliedParticipationId
- *         in: path
- *         description: Add the applied participation  id to Approve
- *         required: true 
- *     responses:
- *       200:
- *         description: Participaitn approved.
- *       403:
- *         description: Correct Authorization Token Required!
- *       500:
- *         description: Internal server error
- *       400: 
- *         description: Invalid Campaign You are not Admin to this campaign 
- */
 
 /**
  * @swagger
@@ -614,7 +639,7 @@
 
 /**
  * @swagger
- * /campaign/participation/history:
+ * /campaign/volunteering/participation/history:
  *   get:
  *     summary: Get the participation history of User
  *     tags:

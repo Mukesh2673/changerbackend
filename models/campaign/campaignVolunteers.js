@@ -6,7 +6,7 @@
     {
       user: { type: Schema.Types.ObjectId, ref: "User" },
       campaign: { type: mongoose.Schema.Types.ObjectId, ref: "campaign" },
-      participation: { type: mongoose.Schema.Types.ObjectId, ref: "campaignParticipant" },
+      volunteering: { type: mongoose.Schema.Types.ObjectId, ref: "campaingVolunteering" },
       approved: {type: Boolean, default: false}
     },
     {
