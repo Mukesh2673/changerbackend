@@ -27,6 +27,181 @@
  *         description: User not found
  */
 
+/**
+ * @swagger
+ * /signup:
+ *   post:
+ *     summary: Sign up a new user
+ *     tags: 
+ *       - Users
+ *     parameters:
+ *       - name: body
+ *         in: body
+ *         description: Sign up a new user account with email and password
+ *         required: true
+ *         schema:
+ *           type: object
+ *           required:
+ *             - email
+ *             - password
+ *           properties:
+ *             email:
+ *               type: string
+ *             password:
+ *               type: string
+ *     responses:
+ *       200:
+ *         description: Signup successful. Confirmation code sent to the provided email.
+ *         schema:
+ *           type: object
+ *           properties:
+ *             success:
+ *               type: boolean
+ *               example: true
+ *             message:
+ *               type: string
+ *               example: Confirmation Code has been sent to user@example.com
+ *             user:
+ *               type: object
+ *               description: Cognito user information
+ *       400:
+ *         description: Signup failed due to an error.
+ *         schema:
+ *           type: object
+ *           properties:
+ *             success:
+ *               type: boolean
+ *               example: false
+ *             message:
+ *               type: string
+ *               example: Error message
+ *             error:
+ *               type: object
+ *               description: Detailed error information
+ */
+
+/**
+ * @swagger
+ * /signupConfirm:
+ *   post:
+ *     summary: Confirm user signup
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - name: body
+ *         in: body
+ *         description: Confirm user signup with email and confirmation code
+ *         required: true
+ *         schema:
+ *           type: object
+ *           required:
+ *             - email
+ *             - code
+ *           properties:
+ *             email:
+ *               type: string
+ *             code:
+ *               type: string
+ *     responses:
+ *       200:
+ *         description: User email confirmed successfully
+ *         schema:
+ *           type: object
+ *           properties:
+ *             success:
+ *               type: boolean
+ *               example: true
+ *             message:
+ *               type: string
+ *               example: User email confirmed successfully
+ *             user:
+ *               type: object
+ *               properties:
+ *                 user_confirmed:
+ *                   type: boolean
+ *                   example: true
+ *       400:
+ *         description: Confirmation failed due to an error.
+ *         schema:
+ *           type: object
+ *           properties:
+ *             success:
+ *               type: boolean
+ *               example: false
+ *             message:
+ *               type: string
+ *               example: Error message
+ *             error:
+ *               type: object
+ *               description: Detailed error information
+ */
+
+/**
+ * @swagger
+ * /user/notification/{id}:
+ *   get:
+ *     summary: Get notifications for a user
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: ID of the user to get notifications for
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved notifications
+ *         schema:
+ *           type: object
+ *           properties:
+ *             status:
+ *               type: integer
+ *               example: 200
+ *             data:
+ *               type: object
+ *               properties:
+ *                 Today:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 Yesterday:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 ThisWeek:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 Older:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *             success:
+ *               type: boolean
+ *               example: true
+ *             message:
+ *               type: string
+ *               example: Notifications
+ *       400:
+ *         description: Failed to retrieve notifications
+ *         schema:
+ *           type: object
+ *           properties:
+ *             status:
+ *               type: integer
+ *               example: 400
+ *             data:
+ *               type: array
+ *               items:
+ *                 type: object
+ *             success:
+ *               type: boolean
+ *               example: false
+ *             message:
+ *               type: string
+ *               example: Error message
+ */
 
 /**
  * @swagger
@@ -534,7 +709,7 @@
  * @swagger
  * /user/message:
   *   post:
- *     summary: Submit a report
+ *     summary: Send a message
  *     tags:
  *       - Users
  *     parameters:
@@ -609,5 +784,84 @@
  *         description: Internal server error
  */
 
+/**
+ * @swagger
+ * /user/messages:
+ *   get:
+ *     summary: Get user messages
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Bearer token for authorization
+ *         required: true
+ *         type: string
+ *       - name: userId
+ *         in: query
+ *         description: ID of the user to get messages for
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved messages
+ *         schema:
+ *           type: object
+ *           properties:
+ *             status:
+ *               type: integer
+ *               example: 200
+ *             message:
+ *               type: string
+ *               example: Message records
+ *             success:
+ *               type: boolean
+ *               example: true
+ *             data:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   _id:
+ *                     type: string
+ *                   sender:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                   profile:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                   campaign:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *       500:
+ *         description: An error occurred
+ *         schema:
+ *           type: object
+ *           properties:
+ *             status:
+ *               type: integer
+ *               example: 500
+ *             message:
+ *               type: string
+ *               example: An error occurred
+ *             success:
+ *               type: boolean
+ *               example: false
+ *             error:
+ *               type: string
+ *               example: Error message
+ */
 
 module.exports = {}; 

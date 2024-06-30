@@ -44,7 +44,7 @@
  * @swagger
  * /skill/{id}:
  *   delete:
- *     summary: Get  Skill
+ *     summary: Delete a  Skill
  *     tags:
  *       - Skills
  *     parameters:

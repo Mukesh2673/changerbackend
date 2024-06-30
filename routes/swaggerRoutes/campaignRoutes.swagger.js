@@ -44,7 +44,7 @@
  * @swagger
  * /campaigns/trending:
  *   get:
- *     summary: Get details of a campaign by ID
+ *     summary: Get trending campaigns
  *     tags:
  *       - Campaigns
  *     parameters:
@@ -69,7 +69,7 @@
  * @swagger
  * /campaigns/forUser:
  *   get:
- *     summary: Get details of a campaign by ID
+ *     summary: Recommended campaigns for user
  *     tags:
  *       - Campaigns
  *     parameters:

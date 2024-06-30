@@ -114,7 +114,8 @@ router.post("/issue/deleteOld", issueController.deleteOldIssues)
 
 //search
 router.get("/search", searchController.search)
-//hasTags
+
+//hashtags
 router.post("/hashtags", hashtagsController.add)
 router.get("/content/hashtags/:tag", hashtagsController.getContent)
 
