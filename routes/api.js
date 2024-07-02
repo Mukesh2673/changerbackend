@@ -74,7 +74,7 @@ router.post("/campaign/:campaignId/impactVideo",  upload.single("video"), valida
 router.post("/campaign/:campaignId/volunteering/:volunteeringId",validateToken, campaignController.applyForVolunteers);
 router.post("/campaign/:campaignId/volunteers/:volunteerId/approve", validateToken, campaignController.approveVolunteers )
 router.get("/campaign/volunteers", campaignController.volunteers)//get Volunteers based Location
-router.get("/campaign/volunteers/forYou", validateToken, campaignController.userVolunteersCompaign); //get campaing that you have voluteer
+router.get("/campaign/volunteering/forUser", validateToken, campaignController.volunteeringForUser); //get campaing that you have voluteer
 router.post("/campaign/signPetition", validateToken, validateSignPetitions, campaignController.signPetitions)
 router.get("/campaign/volunteering/participation/history", validateToken, campaignController.volunteerParticipationHistory)
 
@@ -87,11 +87,12 @@ router.post("/thumbnail", upload.single("video"), videoController.thumbnail);
 router.post("/upload", upload.single("video"), videoController.upload);
 router.get("/videos/likes/:vid/:uid", videoController.getVideoLikes);
 router.post("/videos", videoController.store);
-router.post("/video/:id/like",validateToken, videoController.likeVideo);
-router.post("/video/:id/comment", validateToken, videoController.commentVideo);
+router.post("/video/:vid/comment",validateToken, videoController.commentVideo);
+router.post("/video/:vid/like",validateToken, videoController.likeVideo);
 router.post("/video/:vid/comment/:cid/like", validateToken, videoController.commentLikes);
 router.post("/video/:vid/comment/:cid/reply", validateToken, videoController.replyCommentVideo);
 router.post("/video/:vid/comment/reply/:repliesCommentId/like", validateToken, videoController.replyCommentLikes);
+router.get("/friends/impact", validateToken, videoController.friendsImpact);
 
 
 //issue Routes
@@ -100,7 +101,7 @@ router.get("/issue", issueController.index);
 router.post("/issue/location", issueController.location);
 router.post("/issue/generate", issueController.generate);
 router.post("/issue/upvotes", validateToken, issueController.upvotes)
-router.get("/issue/user", validateToken, issueController.userIssues);
+router.get("/issue/forUser", validateToken, issueController.issueForUser);
 router.post("/issue/join", validateToken, issueController.joinIssue)
 router.post("/issue/leave", validateToken, issueController.leaveIssue)
 router.get("/issue/:id", issueController.issueDetails)

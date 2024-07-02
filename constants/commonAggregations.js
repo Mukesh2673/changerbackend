@@ -204,8 +204,196 @@ const campaigncommonPipeline=[
         },
       },    
 ]
+const campignIdDonationPipeline=[
+  {
+    $lookup: {
+      from: "campaignDonation",
+      localField: "campaignDonationId",
+      foreignField: "_id",
+      as: "campaignDonation",
+    },
+  },
+  {
+    $unwind: "$campaignDonation",
+  },
+  {
+    $lookup: {
+      from: "campaignPhase",
+      localField: "campaignDonation.phaseId",
+      foreignField: "_id",
+      as: "campaignPhase",
+      pipeline:[
+        {$project: {campaign:1,_id:0 }}
+      ]
+    },
+  },
+  {
+    $unwind: "$campaignPhase",
+  },
+  {$project: {campaign:"$campaignPhase.campaign"}}
+]
+
+const campignIdPetitionPipeline=[
+  {
+    $lookup: {
+      from: "campaignPetition",
+      localField: "petition",
+      foreignField: "_id",
+      as: "campaignPetition",
+    },
+  },
+  {
+    $unwind: "$campaignPetition",
+  },
+  {
+    $lookup: {
+      from: "campaignPhase",
+      localField: "campaignPetition.phaseId",
+      foreignField: "_id",
+      as: "campaignPhase",
+      pipeline:[
+        {$project: {campaign:1,_id:0 }}
+      ]
+    },
+  },
+  {
+    $unwind: "$campaignPhase",
+  },
+  {$project: {campaign:"$campaignPhase.campaign"}}
+
+]
+
+const videoCommonPipeline=[
+  {
+    $lookup: {
+      from: 'users',
+      localField: 'user',
+      foreignField: '_id',
+      as: 'user',
+      pipeline:[
+        {
+          $project: { _id: 1 , username: 1 ,first_name: 1, last_name: 1, profileImage: 1 } 
+        }  
+      ]
+    }
+  },     
+{$unwind: '$user'},
+  {
+  $lookup: {
+    from: 'campaigns',
+    localField: 'campaign',
+    foreignField: '_id',
+    as: 'campaign',
+    pipeline:[
+      {
+        $project: { _id: 1 , title: 1 ,story: 1, cause: 1} 
+      }  
+    ]
+  }
+ },
+{
+  $lookup: {
+    from: 'issues',
+    localField: 'issue',
+    foreignField: '_id',
+    as: 'issue',
+    pipeline:[
+      {
+        $project: { _id: 1 , title: 1 ,description: 1, cause: 1} 
+      }  
+    ]
+  }
+},
+{
+  $lookup: {
+    from: 'comments',
+    localField: 'comments',
+    foreignField: '_id',
+    as: 'comments',
+    pipeline: [
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'sender',
+          foreignField: '_id',
+          as: 'sender',
+          pipeline:[
+            {
+              $project: { _id: 1 , username: 1 ,first_name: 1, last_name: 1, profileImage: 1 } 
+            }  
+          ]
+        }
+      },
+      {
+        $unwind: '$sender'
+      },
+      {
+        $lookup: {
+          from: 'commentsLikes',
+          localField: 'likes',
+          foreignField: '_id',
+          as: 'likes',
+          pipeline:[
+            {
+              $project: { _id: 1 , user: 1} 
+            }  
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'repliesComments',
+          localField: 'replies',
+          foreignField: '_id',
+          as: 'replies',
+          pipeline: [
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'sender',
+                foreignField: '_id',
+                as: 'sender',
+                pipeline:[
+                  {
+                    $project: { _id: 1 , username: 1 ,first_name: 1, last_name: 1, profileImage: 1 } 
+                  }  
+                ]
+              }
+            },
+            {
+              $unwind: '$sender'
+            },
+            {
+              $lookup: {
+                from: 'commentsLikes',
+                localField: 'likes',
+                foreignField: '_id',
+                as: 'likes'
+              }
+            },
+            {
+              $project:{
+                updatedAt:0, __v:0, comment:0 
+              }
+            }
+
+          ]
+        }
+      },
+      {
+        $project:{ updatedAt:0, __v:0}
+      }
+    ]
+  },
+
+}
+]
+
 module.exports = {
   campaigncommonPipeline,
+  campignIdDonationPipeline,
+  campignIdPetitionPipeline,
+  videoCommonPipeline
   // Add other pipelines as needed
 };
 

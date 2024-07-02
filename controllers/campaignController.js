@@ -25,7 +25,7 @@ const { addVideoInAlgolia } = require("../algolia/videoAlgolia");
 const { updateUsersInAlgolia } = require("../algolia/userAlgolia");
 const { updateIssueInAlgolia } = require("../algolia/issueAlgolia");
 const { addCampaignInAlgolia, updateCampaignInAlgolia} = require("../algolia/campaignAlgolia");
-const {campaigncommonPipeline} =require("../constants/commonAggregations")
+const {campaigncommonPipeline, campignIdDonationPipeline, campignIdPetitionPipeline} =require("../constants/commonAggregations")
 
 //get all Campaign
 exports.showCampaigns = async (req, res) => {
@@ -122,6 +122,16 @@ exports.campaignForUser = async (req, res) => {
     }
     //merge the cause from user profile and issue that he joined
     const commonCause=[...new Set([...cause])]
+    //collect the campign Id that user  participated
+    campignIdDonationPipeline.unshift({$match:{user: userId}})
+    campignIdPetitionPipeline.unshift({$match:{user: userId}})
+    const signedPetitions=await SignedPetitions.aggregate(campignIdPetitionPipeline)
+    const appliedVolunteers= await Volunteers.find({user: userId, approved: true}).select('campaign')
+    const donatedCampaign=await Donated.aggregate(campignIdDonationPipeline)
+    const volunteersCampaignIDs=appliedVolunteers.map(volunteer => volunteer.campaign.toString());
+    const signedPetitionsCampaignIds = signedPetitions.map(petition => petition.campaign.toString());
+    const donationCampaignId=donatedCampaign.map(donation => donation.campaign.toString());
+    const campaignParticipationId=[...new Set([...volunteersCampaignIDs,...signedPetitionsCampaignIds,...donationCampaignId])] 
     let pipeLine=campaigncommonPipeline
     if(cause.length>0)
     {
@@ -137,19 +147,41 @@ exports.campaignForUser = async (req, res) => {
           $sort: { sortKey: -1 }
         },
       ]
-    } 
+    }
+    //extract the campaign that user already participated
+    pipeLine.unshift( {
+      $match: { _id: { $nin: campaignParticipationId.map(id=> mongoose.Types.ObjectId(id))} }
+    },)
     pipeLine.push({
     $project: { hashtags: 0 , algolia: 0, updatedAt: 0, _v: 0, sortKey:0} 
   },
   { $skip: (parseInt(page) - 1) * parseInt(pageSize) },
   { $limit: parseInt(pageSize) }
   )
-    const campaign = await Campaign.aggregate(pipeLine);
-    if (campaign.length > 0) {
-      const totalRecords = await Campaign.countDocuments();
-      return res.json({ message: "Campaign  records retrieved successfully.",data: campaign,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
-    } else {
-      return res.status(404).json({ message: "Campaign not found.",status:200 });
+  //create pipe line seperatly using $facet  
+  const campaign = await Campaign.aggregate([
+      {
+        $facet: {
+          paginatedResults: pipeLine,
+          totalCount: [
+            {
+              $match: { _id: { $nin: campaignParticipationId.map(id => mongoose.Types.ObjectId(id)) } }
+            },
+            { $count: "count" }
+          ]
+        }
+      }
+    ]);
+    const totalRecords=campaign[0].totalCount[0].count
+    const campignRecords=campaign[0].paginatedResults
+    if(campignRecords.length>0)
+    {
+      return res.json({ message: "Campaign  records retrieved successfully.",data: campignRecords,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
+
+    }
+    else{
+      return res.json({ message: "Campaign  Not Found",data: campignRecords,  totalPage: Math.ceil(totalRecords / pageSize), status: 400});
+
     }
   } catch (error) {
     console.error("Error in showCampaign:", error);
@@ -229,7 +261,6 @@ exports.create = async (req, res) => {
     } else {
       tagsArray = tags;
     }
-
     //save campaign video to video collection
     const campaignsId = campaigns._id;
     const videos = new Video({
@@ -241,6 +272,7 @@ exports.create = async (req, res) => {
       type: req.body.video.type,
       thumbnail_url: req.body.video.thumbnailUrl,
       hashtags: tagsArray,
+      location: req.body.location,
     });
     const savedVideo = await videos.save();
     const videoId = savedVideo._id;
@@ -317,12 +349,12 @@ exports.create = async (req, res) => {
       updateCampaignInAlgolia(campaignsId);
     }
 
-    let records = await this.campaignRecords({ _id: campaignsId });
-    const message = `You received +100 karma Point for good intention of creating Campaign ${records[0].title}`;
+    let records = await Campaign.findById(campaignsId);
+    const message = `You received +100 karma Point for good intention of creating Campaign ${data.title}`;
     const notification = new Notification({
       messages: message,
       user: auth._id,
-      activity: records[0].user,
+      campaign: campaignsId,
       notificationType: "karmaPoint",
     });
     sendMessage("karmaPoint", message, auth._id);
@@ -445,7 +477,7 @@ exports.donate = async (req, res) => {
       await updateCampaignInAlgolia(campaign._id);
       return res.status(200).json({
         status: 200,
-        message: "campaign Donation SuccessFully",
+        message: "Amount Donated to campaign SuccessFully",
         receiptUrl:  charge.receipt_url,
         success: true,
       });
@@ -461,74 +493,68 @@ exports.donate = async (req, res) => {
 };
 
 //get the campaign that you are volunteer
-exports.userVolunteersCompaign = async (req, res) => {
+exports.volunteeringForUser = async (req, res) => {
   try {
     const { user } = req;
     const { page = 1, pageSize = 10 } = req.query;
-    const skip = (parseInt(page, 10) - 1) * parseInt(pageSize, 10);
     // Aggregate to find participations of the user
     const appliedVolunteers= await Volunteers.find({user: user, approved: true}).select('campaign')
     // get Volunter Id to find the campaign that user not volunteered yet
     const volunteeredCampaignIds = appliedVolunteers.map(volunteer => volunteer.campaign.toString());
-   // get  petition to find the campaign that user Signed but not volunteered
-
-    const campaignPetitions= await SignedPetitions.aggregate([
+    //collect the campign Id that user  participated
+    campignIdPetitionPipeline.unshift({$match:{user: user}})
+    campignIdDonationPipeline.unshift({$match:{user: user}})
+    const signedPetitions= await SignedPetitions.aggregate(campignIdPetitionPipeline)
+    const donatedCampaign=await Donated.aggregate(campignIdDonationPipeline)
+    const signedPetitionsCampaignIds = signedPetitions.map(petition => petition.campaign.toString());
+    const donationCampaignId=donatedCampaign.map(donation => donation.campaign.toString());
+    const particiapationCampaignId=[...new Set([...signedPetitionsCampaignIds,...donationCampaignId])] 
+    // Filter the campaigns by extract the volunteers ID from participation Id
+    const recommendedCampaign = particiapationCampaignId.filter(element => !volunteeredCampaignIds.includes(element));
+    const pipeLine=campaigncommonPipeline
+    pipeLine.unshift({
+      $match: { _id: { $nin: volunteeredCampaignIds.map(id => mongoose.Types.ObjectId(id)) } }
+    },
+    {
+      $addFields: {
+        sortIndex: {
+          $indexOfArray: [recommendedCampaign.map(id => mongoose.Types.ObjectId(id)), '$_id']
+        }
+      }
+    },
+    {
+      $sort: {
+        sortIndex: -1 
+      }
+    })
+    pipeLine.push({
+      $project: { hashtags: 0 , algolia: 0, updatedAt: 0, _v: 0, sortKey:0} 
+    },
+    { $skip: (parseInt(page) - 1) * parseInt(pageSize) },
+    { $limit: parseInt(pageSize) })
+    //const userParticipations = await Campaign.aggregate(pipeLine);
+    const volunteeringRecords = await Campaign.aggregate([
       {
-        $match: {user: user}
-      },
-      {
-        $lookup: {
-          from: "campaignPetition",
-          localField: "petition",
-          foreignField: "_id",
-          as: "campaignPetition",
-        },
-      },
-      {
-        $unwind: "$campaignPetition",
-      },
-      {
-        $lookup: {
-          from: "campaignPhase",
-          localField: "campaignPetition.phaseId",
-          foreignField: "_id",
-          as: "campaign",
-          pipeline:[
-            {$project: {campaign:1 }}
+        $facet: {
+          paginatedResults: pipeLine,
+          totalCount: [
+            {
+              $match: { _id: { $nin: volunteeredCampaignIds.map(id => mongoose.Types.ObjectId(id)) } }
+            },
+            { $count: "count" }
           ]
-
-        },
-      },
-      {$project: {campaign:'$campaign.campaign'}}
-    ])
-    // Flatten the nested campaign array and convert to strings
-    const signedPetitionsCampaignIds = campaignPetitions.map(petition => petition.campaign.toString());
-    // Filter the campaigns
-    const recommendedCampaign = signedPetitionsCampaignIds.filter(element => !volunteeredCampaignIds.includes(element));
-    const userParticipations = await Campaign.aggregate([
-      {
-        $match: { _id: { $nin: volunteeredCampaignIds.map(id => mongoose.Types.ObjectId(id)) } }
-      },
-      {
-        $addFields: {
-          sortIndex: {
-            $indexOfArray: [recommendedCampaign.map(id => mongoose.Types.ObjectId(id)), '$_id']
-          }
         }
-      },
-      {
-        $sort: {
-          sortIndex: -1 
-        }
-      },
-       {
-         $skip: skip,
-       },
-       {
-         $limit: parseInt(pageSize, 10),
-       },
+      }
     ]);
-    return res.status(200).json(userParticipations);
+    const totalRecords=volunteeringRecords[0].totalCount[0].count
+    const records=volunteeringRecords[0].paginatedResults
+    if(records.length>0)
+    {
+      return res.json({ message: "Campaign  records retrieved successfully.",data: records,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
+    }
+    else{
+      return res.json({ message: "Campaign  Not Found",data: records,  totalPage: Math.ceil(totalRecords / pageSize), status: 400});
+    }
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

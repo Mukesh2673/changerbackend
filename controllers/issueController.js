@@ -8,6 +8,7 @@ const { sendMessage } = require("../libs/webSocket");
 const {updateIssueInAlgolia, deleteIssueInAlgolia, addIssueInAlgolia}=require('../algolia/issueAlgolia')
 const { updateUsersInAlgolia } = require("../algolia/userAlgolia")
 const {addVideoInAlgolia } = require("../algolia/videoAlgolia")
+
 exports.issueRecords = async (query) => {
   let records = await Issue.find(query).populate([
     {
@@ -206,7 +207,7 @@ exports.create = async (req, res, next) => {
     await notification.save();
     return res.json({
       status: 200,
-      message: "issue added successfully",
+      message: "Issue added successfully",
       success: true,
     });
   } catch (err) {
@@ -411,29 +412,62 @@ exports.upvotes = async (req, res, next) => {
   }
 };
 
-exports.userIssues = async (req, res) => {
+exports.issueForUser = async (req, res) => {
   try {
     const uid=req.user
-    let records = await Issue.find({ user: uid }).populate([
+    const { page = 1, pageSize = 10 } = req.query;
+    const pipeLine=[
       {
-        path: "video",
-        populate: { path: "videos", model: Video },
+        $match: {//get the records that user not involved
+          $and: [
+            { user: { $ne: uid } }, 
+            { joined: { $ne: uid } }
+          ]
+        }
       },
       {
-        path: "user",
-        populate: { path: "User", model: User },
+        $lookup: {
+          from: 'videos',
+          localField: 'video',
+          foreignField: '_id',
+          as: 'video',
+          pipeline:[
+            {
+              $project: { _id: 1 , video_url:1, thumbnail_url:1 } 
+            }  
+          ]
+        }
       },
+      { $skip: (parseInt(page) - 1) * parseInt(pageSize) },
+      { $limit: parseInt(pageSize) }
+    ]
+    const issueRecords = await Issue.aggregate([
       {
-        path: "joined",
-        populate: { path: "User", model: User },
-      },
+        $facet: {
+          paginatedResults: pipeLine,
+          totalCount: [
+            {
+              $match: {//get the records that user not involved
+                $and: [
+                  { user: { $ne: uid } }, 
+                  { joined: { $ne: uid } }
+                ]
+              }
+            },
+            { $count: "count" }
+          ]
+        }
+      }
     ]);
-    return res.json({
-      status: 200,
-      message: "Issue records retrieved successfully.",
-      success: true,
-      data: records,
-    });
+    const totalRecords=issueRecords[0]?.totalCount[0]?.count||0
+    const records=issueRecords[0].paginatedResults
+    if(records.length>0)
+    {
+      return res.json({ message: "Issue  records retrieved successfully.",data: records,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
+    }
+    else{
+      return res.json({ message: "Issue  Not Found",data: records,  totalPage: Math.ceil(totalRecords / pageSize), status: 400});
+    }
   } catch (err) {
     console.log("errr is", err);
     return res.json({ status: 500, message: err, success: false });
@@ -470,7 +504,7 @@ exports.joinIssue = async (req, res) => {
       }
     }
     const karmaPoint = auth.karmaPoint + 50;
-    const user = await User.findByIdAndUpdate(
+    await User.findByIdAndUpdate(
       { _id: auth._id },
       {
         $set: {
@@ -506,7 +540,6 @@ exports.joinIssue = async (req, res) => {
     });
     await karmaPointnotification.save();
     sendMessage("karmaPoint", message, auth._id);
-    let filterData = { search: result._id, type: "issues" };
      return res.json({
       status: 200,
       message: "Issue joined successfully",

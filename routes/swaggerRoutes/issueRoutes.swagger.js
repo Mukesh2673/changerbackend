@@ -109,7 +109,7 @@
  *             address:
  *               type: string
  *               example: West Bridge London, United Kingdom
- *             story:
+ *             desc:
  *               type: string
  *               example: Join us for a day of mental health awareness and advocacy! Our
  *             image:
@@ -123,7 +123,7 @@
  *                   example: 1717285907501.m3u8
  *                 type:
  *                   type: string
- *                   example: actionVideo
+ *                   example: impactVideo
  *                 thumbnailUrl:
  *                   type: string
  *                   example: thumbnail/1717285896269.png
@@ -132,7 +132,7 @@
  *              example: Join me in tackling the plastic waste problem at Central London Park. Together, we can restore the beauty of our beloved park and create a healthier environment for all. #CleanUpCentralPark #PlasticFreeParks
  *     responses:
  *       200:
- *         description: Prompt generated successfully
+ *         description: Issue added successfully
  *       500: 
  *             description: Internal server error 
 */
@@ -169,15 +169,23 @@
 
 /**
  * @swagger
- * /issue/user:
+ * /issue/forUser:
  *   get:
- *     summary: Get Users Issue
+ *     summary: Get Issue for User
  *     tags:
  *       - Issues
  *     parameters:
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
+ *       - name: page
+ *         in: query
+ *         description: Add Number of Page.
+ *         required: false
+ *       - name: pageSize
+ *         in: query
+ *         description: Describe the number of records in Page.
+ *         required: false
  *     responses:
  *       200:
  *         description: Issue records retrieved successfully.

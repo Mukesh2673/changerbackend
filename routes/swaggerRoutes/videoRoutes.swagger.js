@@ -148,7 +148,7 @@
  *         type: string
  *     responses:
  *       200:
- *         description: Liked Comment/unLiked Comment
+ *         description: Comment liked successfully
  *       404:
  *         description: Video not found
  *       500:
@@ -224,13 +224,40 @@
  *               example: nice Videos
  *     responses:
  *       200:
- *         description: video
- *         schema:
- *          type: array
- *          items:
- *           $ref: '#/components/schemas/Video'  
+ *         description: Comment reply successfully
  *       400:
  *         description: Invalid Comment Id
  *       500:
  *         description: Something went wrong
+ */
+
+
+/**
+ * @swagger
+ * /friends/impact:
+ *   get:
+ *     summary: Get friends Impacts
+ *     tags:
+ *       - Videos
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token  
+ *       - name: page
+ *         in: query
+ *         description: Add Number of Page.
+ *         required: false
+ *       - name: pageSize
+ *         in: query
+ *         description: Describe the number of records in Page.
+ *         required: false  
+ *     responses:
+ *       200:
+ *         description: Friends' impact videos retrieved successfully
+ *       401:
+ *         description: Correct  Authorization Token Required!
+ *       404:
+ *         description: Bad request
+ *       400:
+ *         description: No Records Found
  */

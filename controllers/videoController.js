@@ -2,7 +2,6 @@ const { ObjectId } = require("mongodb");
 const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
 const ffmpeg = require("fluent-ffmpeg");
 ffmpeg.setFfmpegPath(ffmpegPath);
-const { VideoType } = require("../constants");
 const Buffer = require("buffer/").Buffer;
 const fs = require("fs");
 const {
@@ -24,7 +23,7 @@ const {
 } = require("../libs/fileUpload");
 const {addVideoInAlgolia, updateVideosInAlgolia, deleteVideosInAlgolia } = require("../algolia/videoAlgolia")
 const { sendMessage } = require("../libs/webSocket");
-
+const { videoCommonPipeline } = require('../constants/commonAggregations')
 // get Impact videos
 exports.getVideos = async (req, res, next) => {
   try {
@@ -33,105 +32,7 @@ exports.getVideos = async (req, res, next) => {
     let  campaigns = []
     let issues = []
     let query = [] 
-    let pipLine=[
-      {
-        $lookup: {
-          from: 'comments',
-          localField: 'comments',
-          foreignField: '_id',
-          as: 'comments',
-          pipeline: [
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'sender',
-                foreignField: '_id',
-                as: 'sender'
-              }
-            },
-            {
-              $unwind: '$sender'
-            },
-            {
-              $lookup: {
-                from: 'commentsLikes',
-                localField: 'likes',
-                foreignField: '_id',
-                as: 'likes'
-              }
-            },
-            {
-              $lookup: {
-                from: 'repliesComments',
-                localField: 'replies',
-                foreignField: '_id',
-                as: 'replies',
-                pipeline: [
-                  {
-                    $lookup: {
-                      from: 'users',
-                      localField: 'sender',
-                      foreignField: '_id',
-                      as: 'sender'
-                    }
-                  },
-                  {
-                    $unwind: '$sender'
-                  },
-                  {
-                    $lookup: {
-                      from: 'commentsLikes',
-                      localField: 'likes',
-                      foreignField: '_id',
-                      as: 'likes'
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      },
-      {
-        $lookup: {
-          from: 'issues',
-          localField: 'issue',
-          foreignField: '_id',
-          as: 'issue'
-        }
-      },
-      {
-        $unwind: {
-          path: '$issue',
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'issue.user',
-          foreignField: '_id',
-          as: 'issue.user'
-        }
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'issue.joined',
-          foreignField: '_id',
-          as: 'issue.joined'
-        }
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'issue.votes',
-          foreignField: '_id',
-          as: 'issue.votes'
-        }
-      },
-     
-    ]
+    let pipeLine=videoCommonPipeline
     if(location)
     {
       const location = JSON.parse(decodeURIComponent(req.query.location));
@@ -140,7 +41,7 @@ exports.getVideos = async (req, res, next) => {
       const coordinates = [longitude, latitude];
       const distance = 1; 
       const unitValue = 1000;
-      pipLine.unshift({
+      pipeLine.unshift({
         $geoNear: {
           near: {
             type: "Point",
@@ -182,7 +83,7 @@ exports.getVideos = async (req, res, next) => {
         query.push({issue: { $in: issues } });
         }
       
-        pipLine=[...pipLine,{ $match: { $or: query } }]
+        pipeLine=[...pipeLine,{ $match: { $or: query } }]
         }
       else{
         return res.status(400).json({ message: "Invalid User Id"});
@@ -192,7 +93,7 @@ exports.getVideos = async (req, res, next) => {
     {
       return res.status(400).json({ message: "User Id required For Supporting Tab"});
     }
-    pipLine=[...pipLine,{ $skip: (page - 1) * pageSize },{ $limit: pageSize }]
+    pipeLine=[...pipeLine,{ $skip: (page - 1) * pageSize },{ $limit: pageSize }]
     const result = await Video.aggregate(pipLine)
     return res.json(result);
   } catch (error) {
@@ -300,8 +201,6 @@ exports.likeVideo = async (req, res) => {
     const uid = req.user
     const video = await Video.findById({ _id: vid });
     let hasLiked = false;
-    const sender = await User.findById({ _id: uid });
-
     if (video.likes.includes(uid)) {
       // remove like
       await Video.updateOne({ _id: vid }, { $pull: { likes: uid } });
@@ -309,7 +208,7 @@ exports.likeVideo = async (req, res) => {
       hasLiked = false;
       const updatedVideo = await Video.findById({ _id: vid });
       const likes = updatedVideo.likes.length;
-      return res.status(200).json({ likedVideo: hasLiked, likes });
+      return res.status(200).json({ likedVideo: hasLiked, NumberofLikes: likes ,message: "The video has been unLiked successfully."});
     } else {
       let data = await Video.findByIdAndUpdate(
         { _id: vid },
@@ -344,6 +243,7 @@ exports.likeVideo = async (req, res) => {
       return res.status(200).json({ success: hasLiked, NumberofLikes: likes, message: "The video has been liked successfully." });
     }
   } catch (e) {
+    console.log("error is",e)
     return res.status(404).json({ error: e.message });
   }
 };
@@ -446,8 +346,9 @@ exports.uploadProfile = async (req, res) => {
 exports.commentVideo = async (req, res) => {
   try {
     let records = req.body;
+    const { vid } = req.params;
     records.sender=req.user
-    records.video=req.params.id
+    records.video=vid
     const message = new Comment(records);
     const savedMessage = await message.save();
     let messageId = savedMessage._id;
@@ -542,7 +443,7 @@ exports.replyCommentVideo = async (req, res) => {
     sendMessage("repliesComment", notificationMessage, uid);
     return res.json({
       status: 200,
-      message: "Reply successful!",
+      message: "Comment reply successfully",
       success: false,
       data: newRecords,
     });
@@ -589,7 +490,7 @@ exports.commentLikes = async (req, res) => {
       );
       //delete like
       await CommentsLikes.deleteOne({ _id: isLiked[0]._id });
-      responseMessage = "unLikedComment";
+      responseMessage = "Comment unliked Successfully";
     } else {
       const likes = new CommentsLikes(records);
       const savedLike = await likes.save();
@@ -602,7 +503,7 @@ exports.commentLikes = async (req, res) => {
         },
         { new: true }
       );
-      responseMessage = "Liked Comment";
+      responseMessage = "Comment liked successfully";
       const sender = await User.findById({ _id: records.user });
       const likeMessage = `${sender.first_name} ${sender.last_name} likes  your comments`;
       const notification = new Notification({
@@ -707,6 +608,73 @@ exports.replyCommentLikes = async (req, res) => {
       status: 500,
       message: "Something went wrong",
       success: false,
+    });
+  }
+};
+
+
+exports.friendsImpact = async (req, res) => {
+  try {
+    const { page = 1, pageSize = 10 } = req.query; 
+    const userId = req.user; 
+    const pipeline=[...videoCommonPipeline, 
+      { $skip: (parseInt(page) - 1) * parseInt(pageSize) },
+      { $limit: parseInt(pageSize) },
+      {
+        $project: { user: 1 , campaign: 1, issue: 1, video_url: 1, thumbnail_url: 1 } 
+      }
+    ]
+    // Fetch the authenticated user's document
+    const auth = await User.findById(userId);
+    // Gather IDs of friends (following and followers)
+    const friends = [...auth.following, ...auth.followers];
+    // Query videos where the user ID matches any user in the friends list
+    pipeline.unshift({
+      $match: { user: { $in: friends } }
+    })
+
+    const result = await Video.aggregate([
+      {
+        $facet: {
+          paginatedResults: pipeline,
+          totalCount: [
+            {
+              $match: { user: { $in: friends } }
+            },
+            { $count: "count" }
+          ]
+        }
+      }
+    ]);
+    const totalRecords=result[0].totalCount[0].count
+    const videoRecords=result[0].paginatedResults
+    if(videoRecords.length>0)
+    {
+      return res.status(200).json({
+        status: 200,
+        message: "Friends' impact videos retrieved successfully",
+        success: true,
+        data: videoRecords,
+        totalPage: Math.ceil(totalRecords / pageSize)
+      });
+    }
+    else{
+      return res.status(400).json({
+        status: 400,
+        message: "Records not found",
+        success: false,
+        data: videoRecords,
+        data: videoRecords,
+        totalPage: Math.ceil(totalRecords / pageSize)
+      });
+    }
+  } catch (err) {
+    console.error("Error:", err);
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      success: false,
+      error: err.message
     });
   }
 };

@@ -52,7 +52,7 @@
  *         in: query
  *         description: Add Number of Page.
  *         required: false
- *       - name: PageSize
+ *       - name: pageSize
  *         in: query
  *         description: Describe the number of records in Page.
  *         required: false
@@ -81,7 +81,7 @@
  *         in: query
  *         description: Add Number of Page.
  *         required: false
- *       - name: PageSize
+ *       - name: pageSize
  *         in: query
  *         description: Describe the number of records in Page.
  *         required: false
@@ -310,7 +310,7 @@
  *                   example: 1717285907501.m3u8
  *                 type:
  *                   type: string
- *                   example: actionVideo
+ *                   example: impactVideo
  *                 thumbnailUrl:
  *                   type: string
  *                   example: thumbnail/1717285896269.png
@@ -478,7 +478,7 @@
 
 /**
  * @swagger
- * /campaign/volunteers/forYou:
+ * /campaign/volunteering/forUser:
  *   get:
  *     summary: Retrieve the list of all campaign that user voluntered.
  *     tags:
@@ -491,7 +491,7 @@
  *         in: query
  *         description: Add Number of Page.
  *         required: false
- *       - name: PageSize
+ *       - name: pageSize
  *         in: query
  *         description: Describe the number of records in Page.
  *         required: false
@@ -596,7 +596,7 @@
  * @swagger
  * /campaign/donation/{donationId}/donate:
  *   post:
- *     summary: Approve participant to Volunteer the campaign
+ *     summary:  Donate Amount to the campaign
  *     tags:
  *       - Donation
  *     parameters:
@@ -628,13 +628,13 @@
  *               example: tok_1PVYTbIdZnRVQ8NumHEEXYEA
  *     responses:
  *       200:
- *         description: Participation approved.
+ *         description: Amount Donated to campaign successfully
  *       403:
  *         description: Correct Authorization Token Required!
  *       500:
  *         description: Internal server error
  *       400: 
- *         description: Invalid Campaign You are not Admin to this campaign 
+ *         description: Invalid donation id 
  */
 
 /**
