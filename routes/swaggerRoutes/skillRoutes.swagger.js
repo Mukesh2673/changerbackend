@@ -82,24 +82,43 @@
  *         required: true
  *         schema:
  *           type: string
- *       - name: body
- *         in: body
- *         description: Add Skill publish  
- *         required: true
- *         schema :
- *          type: object
- *          required: 
- *              -skill
- *          properties:
- *           name:
- *              type: string
- *              example: 'full Stack'
- 
+ *       - name: id
+ *         in: query
+ *         description: Add  either id or skill Name. 
+ *         required: false
+ *       - name: skill
+ *         in: query
+ *         description: Add either id or skill Name. 
+ *         required: false
  *     responses:
  *       200:
- *         description: Skill  published successfully.
+ *         description: Skill added Successfully.
  *       403:
  *         description: Correct Authorization Token Required!
  *       500:
  *         description: Internal server error
+ */
+
+
+/**
+ * @swagger
+ * /skill/{id}/verify:
+ *   patch:
+ *     summary: verify the  Skill
+ *     tags:
+ *       - Skills
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
+ *       - name: id
+ *         in: path
+ *         description: ID of the  skill
+ *         required: true
+ *         type: string         
+ *     responses:
+ *       200:
+ *         description: Skill Verified Successfully
+ *       404:
+ *         description: Skill not found
  */

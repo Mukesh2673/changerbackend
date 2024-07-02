@@ -4,7 +4,7 @@
  *   post:
  *     summary: Sign in to the user Account
  *     tags:
- *       - Users
+ *       - Cognito
  *     parameters:
  *       - name: body
  *         in: body
@@ -33,7 +33,7 @@
  *   post:
  *     summary: Sign up a new user
  *     tags: 
- *       - Users
+ *       - Cognito
  *     parameters:
  *       - name: body
  *         in: body
@@ -86,7 +86,7 @@
  *   post:
  *     summary: Confirm user signup
  *     tags:
- *       - Users
+ *       - Cognito
  *     parameters:
  *       - name: body
  *         in: body
@@ -294,23 +294,42 @@
 
 /**
  * @swagger
- * /users:
+ * /user/onboarding:
  *   post:
- *     summary: Create a new user
+ *     summary: Register User Details
  *     tags:
  *       - Users
  *     parameters:
- *       - name: user
+ *       - name: body
  *         in: body
- *         description: User object
+ *         description: Save User details  Records
  *         required: true
  *         schema:
- *           $ref: '#/components/schemas/User'
+ *           type: object
+ *           required:
+ *              - cognitoUsername
+ *              - dob
+ *              - first_name
+ *              - last_name
+ *           properties:
+ *              cognitoUsername:
+ *                  type: string
+ *                  example: 31ebd500-40b1-708b-62e9-047779e666b7
+ *              dob:
+ *                  type: string
+ *                  example: 07/04/2023
+ *              first_name:
+ *                  type: string
+ *                  example: changer   
+ *              last_name:
+ *                  type: string
+ *                  example: application 
+ *              
  *     responses:
  *       200:
- *         description: User created successfully
- *       400:
- *         description: Bad request
+ *         description: User records details saved successfully
+ *       500:
+ *         description: Internal Server Error
  */
 
 /**
@@ -465,20 +484,25 @@
 
 /**
  * @swagger
- * /users/{uid}:
+ * /user/{cid}:
  *   delete:
- *     summary: Delete a user by UID
+ *     summary: Delete a user Account
  *     tags:
- *       - Users
+ *       - Settings
  *     parameters:
- *       - name: uid
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token     
+ *       - name: cid
  *         in: path
- *         description: UID of the user to delete
+ *         description: Add cognito Id to delete the User Account
  *         required: true
  *         type: string
  *     responses:
  *       200:
- *         description: User Deleted
+ *         description: User Account Deleted Successfully.
+ *       400:
+ *         description: Invalid Congnito Id.
  *       500:
  *         description: Internal server error
  */
@@ -486,63 +510,51 @@
 /**
  * @swagger
  * /user/privacy:
- *   post:
+ *   patch:
  *     summary: Update user privacy settings
  *     tags:
- *       - Users
+ *       - Settings
  *     parameters:
- *       - name: body
- *         in: body
- *         description: User ID and new privacy settings
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token        
+ *       - name: status
+ *         in: query
+ *         type: boolean
+ *         description: Add privacy status in the Boolean formate
  *         required: true
- *         schema:
- *           type: object
- *           required:
- *             - id
- *             - privacy
- *           properties:
- *             id:
- *               type: string
- *             privacy:
- *               type: string
  *     responses:
  *       200:
- *         description: Updated user privacy settings
- *         schema:
- *           $ref: '#/components/schemas/User'
- *       404:
- *         description: User not found
+ *         description: Privacy updated to the profile successfully.
+ *       403:
+ *         description: Correct Authorization Token Required!
+ *       500:
+ *         description: Internal server error
  */
 
 /**
  * @swagger
  * /user/language:
- *   post:
+ *   patch:
  *     summary: Update user language settings
  *     tags:
- *       - Users
+ *       - Settings
  *     parameters:
- *       - name: body
- *         in: body
- *         description: User ID and new language settings
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token 
+ *       - name: language
+ *         in: query
+ *         type: string
+ *         description: Add Language Name to update in Profile
  *         required: true
- *         schema:
- *           type: object
- *           required:
- *             - id
- *             - language
- *           properties:
- *             id:
- *               type: string
- *             language:
- *               type: string
  *     responses:
  *       200:
- *         description: Updated user language settings
- *         schema:
- *           $ref: '#/components/schemas/User'
- *       404:
- *         description: User not found
+ *         description: Language updated to the profile successfully.
+ *       403:
+ *         description: Correct Authorization Token Required!
+ *       500:
+ *         description: Internal server error
  */
 
 /**

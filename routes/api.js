@@ -26,33 +26,38 @@ const bookMarkController = require("../controllers/bookMarksController")
 const skillController = require("../controllers/skillController") 
 cron.schedule('0 0 * * *',  issueController.deleteOldIssues);
 
+//cognito Routes
+router.post("/signin", validateSigninRequest, authController.signin)
+router.post("/signup", validateSignupRequest, authController.signup)
+router.post("/signupConfirm", validateSignupConfirmRequest, authController.signupConfirm)
+
 // USER ROUTES
+router.post("/user/onboarding", userController.saveUserRecords);
 router.get("/users", userController.users)
 router.get("/users/:id", userController.getUser);
 router.get("/users/uid/:uid", userController.getUserByUID);
 router.get("/users/following/:cuid/:fuid", userController.getFollowingVideos);
-router.post("/users",validateToken, userController.createUser);
 router.post("/users/follow/:cuid/:fuid", userController.followUser);
 router.post("/users/unfollow/:cuid/:fuid", userController.unFollowUser);
 router.post("/users/update/:id", userController.editProfile);
 router.patch("/user/cause", userController.cause)
 router.get("/users/cognito/:cuid", userController.getUserByCognito)
-router.delete("/users/:uid", userController.delete)
-router.post("/user/privacy", userController.privacy)
-router.post("/user/language", userController.language)
 router.post("/user/report", userController.report)
 router.post("/user/profile/remove/:id", userController.removeProfileImage)
-router.post("/signin", validateSigninRequest, authController.signin)
-router.post("/signup", validateSignupRequest, authController.signup)
-router.post("/signupConfirm", validateSignupConfirmRequest, authController.signupConfirm)
 router.get("/user/notification/:id", userController.notification)
 router.post("/upload/profile", upload.single("Image"), videoController.uploadProfile);
 
+//Settins Routes
+router.patch("/user/privacy", validateToken, userController.privacy)
+router.patch("/user/language", validateToken, userController.language)
+router.delete("/user/:cid", validateToken, userController.delete)
+
+
 //Skills Routes
 router.get("/skills",skillController.skills)
-router.post("/skill/:id", validateToken, skillController.addUserSkill)
 router.delete("/skill/:id", validateToken, skillController.removeUserSkill)
 router.post("/skills/add", validateToken, skillController.add)
+router.patch("/skill/:id/verify", validateToken, skillController.verifySkill)
 
 // Messages
 router.post("/user/message", userController.message)
@@ -70,7 +75,6 @@ router.post("/campaign/report",validateToken, campaignController.report)
 router.post("/campaign/message", validateToken, campaignController.postMessages)
 router.get("/campaign/:id/message", validateToken,campaignController.getMessages)
 router.post("/campaign/:campaignId/impactVideo",  upload.single("video"), validateToken, validateCampaignImpact, campaignController.campaignImpactVideos)
-
 router.post("/campaign/:campaignId/volunteering/:volunteeringId",validateToken, campaignController.applyForVolunteers);
 router.post("/campaign/:campaignId/volunteers/:volunteerId/approve", validateToken, campaignController.approveVolunteers )
 router.get("/campaign/volunteers", campaignController.volunteers)//get Volunteers based Location
@@ -93,7 +97,6 @@ router.post("/video/:vid/comment/:cid/like", validateToken, videoController.comm
 router.post("/video/:vid/comment/:cid/reply", validateToken, videoController.replyCommentVideo);
 router.post("/video/:vid/comment/reply/:repliesCommentId/like", validateToken, videoController.replyCommentLikes);
 router.get("/friends/impact", validateToken, videoController.friendsImpact);
-
 
 //issue Routes
 router.post("/issue", validateToken, issueController.create);

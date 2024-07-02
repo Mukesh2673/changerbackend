@@ -1,7 +1,7 @@
 const { User, Report, Message, Notification, Issue } = require("../models");
 const { sendMessage } = require("../libs/webSocket");
 const moment = require("moment");
-const { addUserInAlgolia, updateUserInAlgolia } = require("./userController");
+const { addUserInAlgolia, updateUsersInAlgolia } = require("../algolia/userAlgolia");
 const mongoose = require("mongoose");
 const { ObjectId } = require("mongodb");
 
@@ -445,29 +445,53 @@ exports.getUserByUID = async (req, res, next) => {
   }
 };
 
-exports.createUser = async (req, res, next) => {
-  const user = new User({
-    username: req.body.first_name + req.body.last_name,
-    first_name: req.body.first_name,
-    last_name: req.body.last_name,
-    dob: req.body.dob,
-    uid: req.body.uid,
-    email: req.body.email,
-    cognitoUsername: req.body.cognitoUsername,
-    followers: [],
-    follower: [],
-    bio: req.body.bio ? req.body.bio : "",
-  });
-  try {
-    const savedUser = await user.save();
-    const userId = savedUser._id;
-    await addUserInAlgolia(userId);
-    return res.status(200).json(savedUser);
-  } catch (error) {
-    console.log(error);
-    return res.status(400).json({ message: error.message });
+exports.saveUserRecords = async (req, res, next) => {
+  try{
+    const userDetails=await User.find({cognitoUsername: req.body.cognitoUsername});
+    if(userDetails.length>0)
+    {
+     let userId=userDetails[0]._id
+     let records={
+      first_name: req.body.first_name,
+      last_name: req.body.last_name,
+      dob: req.body.dob,
+      username: req.body.first_name + req.body.last_name,
+     }
+     let userRecords=await User.findOneAndUpdate({ _id: userId }, {records}, { new: true });
+     updateUsersInAlgolia(userId) 
+     return res.json({
+        status: 200,
+        message: "User records details saved successfully",
+        data: userRecords,
+        success: false,
+      });
+    }
+    else{
+      const user = new User({
+        username: req.body.first_name + req.body.last_name,
+        first_name: req.body.first_name,
+        last_name: req.body.last_name,
+        dob: req.body.dob,
+        cognitoUsername: req.body.cognitoUsername
+      });
+      const savedUser = await user.save();
+      const userId = savedUser._id;
+      await addUserInAlgolia(userId);
+      return res.json({
+        status: 200,
+        message: "User records details saved successfully",
+        data: savedUser,
+        success: false,
+      });
+  
+    }
   }
-};
+  catch(err)
+  {
+   return res.json({ status: 500, message: "Internal Server Error", success: false });
+  }
+
+}
 
 exports.cause = async (req, res, next) => {
   const { cause, uid } = req.body;
@@ -475,7 +499,7 @@ exports.cause = async (req, res, next) => {
     const existingUser = await User.findById(uid);
     if (existingUser) {
       await User.updateOne({ _id: uid }, { cause: cause });
-      updateUserInAlgolia(uid);
+      updateUsersInAlgolia(uid);
       return res.status(200).json({ message: "cause added" });
     } else {
       return res.status(403).json({ message: "username not exists" });
@@ -488,10 +512,20 @@ exports.cause = async (req, res, next) => {
 
 exports.delete = async (req, res) => {
   try {
-    let cognitoId = req.params.uid;
-    const user = await User.deleteOne({ cognitoUsername: cognitoId });
-    await deleteAlgolia(user._id);
-    return res.json({ success: "User Deleted" });
+    const user = req.user
+    const cognitoId = req.params.cid;
+    const auth=await User.findById(user)
+    if(cognitoId !== auth.cognitoUsername)
+    {
+      return res.json({
+        status: 400,
+        message: "Invalid Congnito Id",
+        success: false,
+      });
+    }
+    await User.deleteOne({ cognitoUsername: cognitoId });
+    await deleteAlgolia(user);
+    return res.json({ status: 200, message: "User Account Deleted Successfully.", success: true});
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -540,8 +574,8 @@ exports.followUser = async (req, res) => {
       { _id: cuid },
       { $push: { following: fuid } }
     );
-    await updateUserInAlgolia(fuid);
-    await updateUserInAlgolia(cuid);
+    await updateUsersInAlgolia(fuid);
+    await updateUsersInAlgolia(cuid);
 
     // Get followers
     const followers = await User.find({ _id: fuid }).populate([
@@ -622,8 +656,8 @@ exports.unFollowUser = async (req, res) => {
       { $pull: { following: fuid } },
       { new: true }
     );
-    await updateUserInAlgolia(fuid);
-    await updateUserInAlgolia(cuid);
+    await updateUsersInAlgolia(fuid);
+    await updateUsersInAlgolia(cuid);
     // Get followers
     const followers = await User.find({ _id: fuid }).populate([
       {
@@ -660,7 +694,7 @@ exports.editProfile = async (req, res) => {
   try {
     const id = req.params.id;
     const updateUser = await User.findOneAndUpdate({ _id: id }, req.body);
-    await updateUserInAlgolia(_id);
+    await updateUsersInAlgolia(_id);
     if (!updateUser) {
       return res.json({ status: 404, message: "Invalid User", success: false });
     }
@@ -679,7 +713,7 @@ exports.removeProfileImage = async (req, res) => {
       { $unset: { profileImage: "" } },
       { new: true } // to return the updated document
     );
-    await updateUserInAlgolia(_id);
+    await updateUsersInAlgolia(_id);
     if (!updateUser) {
       return res.json({ status: 404, message: "Invalid User", success: false });
     }
@@ -716,31 +750,51 @@ exports.getFollowingVideos = async (req, res) => {
 
 exports.privacy = async (req, res) => {
   try {
-    const { id, privacy } = req.body;
+    const user=req.user;
+    const {status}=req.query
     const updateUser = await User.findOneAndUpdate(
-      { _id: id },
-      { privacy: privacy }
+      { _id: user },
+      { privacy: status }
     );
-    const user = await User.findById({ _id: id });
-    await updateUserInAlgolia(_id);
-    return res.status(200).json(user);
-  } catch (e) {
-    return res.status(404).json({ error: e.message });
+    await updateUsersInAlgolia(user);
+    return res.json({
+      status: 200,
+      message: "Privacy updated to the profile successfully.",
+      user: updateUser,
+      success: true,
+    });
+  } catch (err) {
+    console.log('err',err)
+    return res.json({
+      status: 500,
+      message: "Something Went wrong",
+      success: false,
+    });
   }
 };
 
 exports.language = async (req, res) => {
   try {
-    const { id, language } = req.body;
+    const user=req.user;
+    const {language}=req.query
     const updateUser = await User.findOneAndUpdate(
-      { _id: id },
-      { language: language }
+      { _id: user },
+      { language: language}
     );
-    const user = await User.findById({ _id: id });
-    updateUserInAlgolia(_id);
-    return res.status(200).json(user);
-  } catch (e) {
-    return res.status(404).json({ error: e.message });
+    await updateUsersInAlgolia(user);
+    return res.json({
+      status: 200,
+      message: "Language updated to the profile successfully.",
+      user: updateUser,
+      success: true,
+    });
+  }catch (error){
+    console.log('err', error)
+    return res.json({
+      status: 500,
+      message: "Something Went wrong",
+      success: false,
+    });
   }
 };
 
@@ -775,7 +829,7 @@ exports.message = async (req, res) => {
       { $push: { messages: messageId } },
       { new: true }
     );
-    await updateUserInAlgolia(_id);
+    await updateUsersInAlgolia(_id);
     sendMessage("message", message, records.profile);
     return res.json({
       status: 200,
