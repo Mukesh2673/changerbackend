@@ -139,6 +139,110 @@
 
 /**
  * @swagger
+ * /issue/location:
+ *   post:
+ *     summary: Get issues based on location
+ *     tags:
+ *       - Issues
+ *     parameters:
+ *       - name: body
+ *         in: body
+ *         description: Location data and optional cause filter
+ *         required: true
+ *         schema:
+ *           type: object
+ *           required:
+ *             - lng
+ *             - lat
+ *           properties:
+ *             lng:
+ *               type: number
+ *               description: Longitude
+ *             lat:
+ *               type: number
+ *               description: Latitude
+ *             cause:
+ *               type: array
+ *               items:
+ *                 type: string
+ *               description: Array of causes to filter issues
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved issues based on location
+ *         schema:
+ *           type: object
+ *           properties:
+ *             status:
+ *               type: integer
+ *               example: 200
+ *             success:
+ *               type: boolean
+ *               example: true
+ *             data:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   _id:
+ *                     type: string
+ *                   video:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                   joined:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                   location:
+ *                     type: object
+ *                   hashtags:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                   title:
+ *                     type: string
+ *                   cause:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                   address:
+ *                     type: string
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *                   updatedAt:
+ *                     type: string
+ *                     format: date-time
+ *                   videos:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                   user:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                   votes:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *       500:
+ *         description: An error occurred
+ *         schema:
+ *           type: object
+ *           properties:
+ *             status:
+ *               type: integer
+ *               example: 500
+ *             message:
+ *               type: string
+ *               example: An error occurred
+ *             success:
+ *               type: boolean
+ *               example: false
+ */
+
+/**
+ * @swagger
  * /issue/upvotes:
  *   post:
  *     summary: Upvotes the issue
