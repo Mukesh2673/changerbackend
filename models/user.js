@@ -10,6 +10,7 @@ const userSchema = new Schema(
     email: { type: String, required: false },
     username: { type: String, required: true },
     uid: { type: String, required: false },
+    role: { type: String, required: false },
     dob: { type: Date, required: true },
     profile_url: { type: String, required: false },
     premium: { type: Boolean, required: false },

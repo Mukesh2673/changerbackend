@@ -121,4 +121,6 @@
  *         description: Skill Verified Successfully
  *       404:
  *         description: Skill not found
+ *       401:
+ *         description: You do not have the required admin privileges to perform this action
  */

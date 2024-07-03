@@ -798,6 +798,31 @@
 
 /**
  * @swagger
+ * /user/admin:
+ *   get:
+ *     summary: Create Admin User
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Bearer token for authorization
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Your profile role has been successfully changed to admin.
+ *       500:
+ *         description: Internal server error
+ */
+
+
+
+
+
+
+/**
+ * @swagger
  * /user/messages:
  *   get:
  *     summary: Get user messages

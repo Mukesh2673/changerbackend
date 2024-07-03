@@ -40,6 +40,7 @@ router.get("/users/following/:cuid/:fuid", userController.getFollowingVideos);
 router.post("/users/follow/:cuid/:fuid", userController.followUser);
 router.post("/users/unfollow/:cuid/:fuid", userController.unFollowUser);
 router.post("/users/update/:id", userController.editProfile);
+router.get("/user/admin", validateToken, userController.createAdmin )
 router.patch("/user/cause", userController.cause)
 router.get("/users/cognito/:cuid", userController.getUserByCognito)
 router.post("/user/report", userController.report)

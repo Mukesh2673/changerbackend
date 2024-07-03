@@ -153,6 +153,16 @@ exports.add = async (req, res) => {
 };
 
 exports.verifySkill= async (req, res)=>{
+  const user = req.user
+  const userRecords = await User.findById(user);
+  if(userRecords?.role != 'admin')
+  {
+    return res.json({
+      status: 401,
+      message: "You do not have the required admin privileges to perform this action",
+      success: false,
+    }) 
+  }
   const skillId = req.params.id;
   const checkSkill=await Skills.findById(skillId);
   if(!checkSkill)

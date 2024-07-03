@@ -952,3 +952,24 @@ exports.messages = async (req, res) => {
     });
   }
 };
+
+//create Admin
+exports.createAdmin = async (req, res) => {
+  try {
+    const user = req.user
+    await User.findOneAndUpdate({ _id: user }, {role:'admin'}, { new: true });
+    updateUsersInAlgolia(user) 
+    return res.json({
+      status: 200,
+      message: "Your profile role has been successfully changed to admin.",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: "An error occurred",
+      success: false,
+      error: error.message,
+    });
+  }
+};
