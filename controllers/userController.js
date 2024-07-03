@@ -493,21 +493,21 @@ exports.saveUserRecords = async (req, res, next) => {
 
 }
 
-exports.cause = async (req, res, next) => {
-  const { cause, uid } = req.body;
+exports.cause = async (req, res) => {
+  const { cause } = req.body;
+  const user =req.user
   try {
-    const existingUser = await User.findById(uid);
+    const existingUser = await User.findById(user);
     if (existingUser) {
       await User.updateOne({ _id: uid }, { cause: cause });
       updateUsersInAlgolia(uid);
-      return res.status(200).json({ message: "cause added" });
+      return res.status(200).json({ message: "cause added to profile Successfully." });
     } else {
       return res.status(403).json({ message: "username not exists" });
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
-  // const cause=req.body.cause
 };
 
 exports.delete = async (req, res) => {

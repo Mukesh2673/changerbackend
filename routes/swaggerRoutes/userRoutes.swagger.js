@@ -298,7 +298,7 @@
  *   post:
  *     summary: Register User Details
  *     tags:
- *       - Users
+ *       - Onboarding
  *     parameters:
  *       - name: body
  *         in: body
@@ -426,32 +426,33 @@
  *   patch:
  *     summary: Add cause to user profile
  *     tags:
- *       - Users
+ *       - Onboarding
  *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token   
  *       - name: body
  *         in: body
- *         description: Cause and UID of the user
+ *         description: Cause for the user
  *         required: true
  *         schema:
  *           type: object
  *           required:
  *             - cause
- *             - uid
  *           properties:
  *             cause:
  *               type: array
  *               items:
  *                 type: string
- *             uid:
- *               type: string
+ *                 example: environment
  *     responses:
  *       200:
- *         description: Cause added
- *       403:
- *         description: Mistake occured!
+ *         description: cause added to profile Successfully.
  *       500:
  *         description: Internal server error
- */
+ *       403:
+ *         description: No Authorization Token! 
+*/
 
 /**
  * @swagger

@@ -32,7 +32,6 @@ router.post("/signup", validateSignupRequest, authController.signup)
 router.post("/signupConfirm", validateSignupConfirmRequest, authController.signupConfirm)
 
 // USER ROUTES
-router.post("/user/onboarding", userController.saveUserRecords);
 router.get("/users", userController.users)
 router.get("/users/:id", userController.getUser);
 router.get("/users/uid/:uid", userController.getUserByUID);
@@ -41,12 +40,17 @@ router.post("/users/follow/:cuid/:fuid", userController.followUser);
 router.post("/users/unfollow/:cuid/:fuid", userController.unFollowUser);
 router.post("/users/update/:id", userController.editProfile);
 router.get("/user/admin", validateToken, userController.createAdmin )
-router.patch("/user/cause", userController.cause)
 router.get("/users/cognito/:cuid", userController.getUserByCognito)
 router.post("/user/report", userController.report)
 router.post("/user/profile/remove/:id", userController.removeProfileImage)
 router.get("/user/notification/:id", userController.notification)
-router.post("/upload/profile", upload.single("Image"), videoController.uploadProfile);
+
+router.post("/upload/profile",validateToken, upload.single("Image"), videoController.uploadProfile);
+
+//onboarding route
+router.post("/user/onboarding", userController.saveUserRecords);
+router.patch("/user/cause",validateToken, userController.cause)
+
 
 //Settins Routes
 router.patch("/user/privacy", validateToken, userController.privacy)
