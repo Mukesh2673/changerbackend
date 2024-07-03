@@ -317,7 +317,7 @@ exports.upload = async (req, res, next) => {
     const thumbnail = await uploadVideoThumbnail(req.file);
     const uploadStatus = await upload(req.file);
     uploadStatus.thumbnailKey = thumbnail.key;
-    return res.status(200).json(uploadStatus);
+    return res.status(200).json({ message: "Video uploaded Sucessfully", data: uploadStatus, status: 200 });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }

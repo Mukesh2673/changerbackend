@@ -9,14 +9,21 @@ exports.skills = async (req, res) => {
     const searchQuery = search
       ? { name: { $regex: search, $options: "i" } }
       : {};
-      searchQuery.verified=true  
-    const records = await Skills.find(searchQuery).select('_id name').skip(skip).limit(pageSize);
+    if(req.query.verified == 'false'){
+      searchQuery.verified=false
+    }
+    else{
+      searchQuery.verified=true
+
+    }  
+    const records = await Skills.find(searchQuery).select('_id name verified').skip(skip).limit(pageSize);
     const totalRecords = await Skills.countDocuments(searchQuery);
     return res.json({
       status: 200,
       skills: records,
       totalPage: Math.ceil(totalRecords / pageSize),
       success: true,
+      message: 'Skill records retrieve successfully'
     });
   } catch (err) {
     console.log("err", err);

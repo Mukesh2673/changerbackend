@@ -27,14 +27,14 @@
  *         schema:
  *           type: string
  *           example: IT Support 
-
+ *       - name: verified
+ *         in: query
+ *         type: boolean
+ *         description: Add skill verify status
+ *         required: true
  *     responses:
  *       200:
- *         description: List of skills
- *         schema:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/Skill'
+ *         description: Skill records retrieve successfully
  *       404:
  *         description: Skills not found
  */

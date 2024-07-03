@@ -55,7 +55,7 @@ router.delete("/user/:cid", validateToken, userController.delete)
 
 
 //Skills Routes
-router.get("/skills",skillController.skills)
+router.get("/skills", skillController.skills)
 router.delete("/skill/:id", validateToken, skillController.removeUserSkill)
 router.post("/skills/add", validateToken, skillController.add)
 router.patch("/skill/:id/verify", validateToken, skillController.verifySkill)
@@ -89,7 +89,7 @@ router.post("/uploadImage", upload.single("Image"), videoController.uploadImages
 router.delete("/video/:id", videoController.delete);
 router.get("/videos", videoController.getVideos);
 router.post("/thumbnail", upload.single("video"), videoController.thumbnail);
-router.post("/upload", upload.single("video"), videoController.upload);
+router.post("/video/upload",validateToken, upload.single("video"), videoController.upload);
 router.get("/videos/likes/:vid/:uid", videoController.getVideoLikes);
 router.post("/videos", videoController.store);
 router.post("/video/:vid/comment",validateToken, videoController.commentVideo);

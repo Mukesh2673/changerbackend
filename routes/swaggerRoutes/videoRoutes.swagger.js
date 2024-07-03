@@ -261,3 +261,32 @@
  *       400:
  *         description: No Records Found
  */
+
+
+
+/**
+ * @swagger
+ * /video/upload:
+ *   post:
+ *     summary:  Get encoded video and thumbnail url 
+ *     tags:
+ *       - Videos
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
+ *       - name: video
+ *         in: formData
+ *         type: file
+ *         description: Embed a  video to upload
+ *         required: true   
+ *     responses:
+ *       200:
+ *         description: Video uploaded Sucessfully
+ *       401:
+ *         description: Correct  Authorization Token Required!
+ *       404:
+ *         description: Bad request
+ *       400:
+ *         description: Internal server error
+ */
