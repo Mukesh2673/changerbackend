@@ -357,3 +357,21 @@ exports.uploadImage = async (file,bucket) => {
     }
   });
 };
+
+//remove media from s3
+exports.removeImage = async (bucket, key)=>{
+  AWS.config.update(options);
+  const s3 = new AWS.S3({
+    s3ForcePathStyle: true,
+  });
+  const params = {
+    Bucket: bucket,
+    Key: key
+};
+  s3.deleteObject(params, (error, data) => {
+    if (error) {
+      res.status(500).send(error);
+    }
+    return true
+  });
+}

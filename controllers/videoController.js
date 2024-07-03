@@ -24,6 +24,7 @@ const {
 const {addVideoInAlgolia, updateVideosInAlgolia, deleteVideosInAlgolia } = require("../algolia/videoAlgolia")
 const { sendMessage } = require("../libs/webSocket");
 const { videoCommonPipeline } = require('../constants/commonAggregations')
+
 // get Impact videos
 exports.getVideos = async (req, res, next) => {
   try {
@@ -94,7 +95,7 @@ exports.getVideos = async (req, res, next) => {
       return res.status(400).json({ message: "User Id required For Supporting Tab"});
     }
     pipeLine=[...pipeLine,{ $skip: (page - 1) * pageSize },{ $limit: pageSize }]
-    const result = await Video.aggregate(pipLine)
+    const result = await Video.aggregate(pipeLine)
     return res.json(result);
   } catch (error) {
     console.log("err is", error);
@@ -335,6 +336,8 @@ exports.uploadImages = async (req, res) => {
 
 exports.uploadProfile = async (req, res) => {
   try {
+    const user=req.user
+    console.log('user records')
     const thumbnail = await uploadImage(req.file, "profile");
     let data = `${thumbnail.Bucket}/${thumbnail.key}`;
     return res.status(200).json({ message: "Profile image uploaded successfully", image: data });
@@ -612,7 +615,7 @@ exports.replyCommentLikes = async (req, res) => {
   }
 };
 
-
+//get friends impact 
 exports.friendsImpact = async (req, res) => {
   try {
     const { page = 1, pageSize = 10 } = req.query; 
@@ -678,3 +681,23 @@ exports.friendsImpact = async (req, res) => {
     });
   }
 };
+
+//add watch count in videos
+exports.addViews = async (req, res)=>{
+  try{
+    const {vid}=req.params    
+    const video= await Video.findById(vid)
+    if(!video)
+    {
+      return res.status(400).json({message: "Invalid video Id.", status: 400, success: false})
+    }
+    let count =++video.views;
+    const update=await Video.updateOne({ _id: vid }, { views: count });
+    await updateVideosInAlgolia(vid)
+    return res.status(200).json({ success: true,  message: "Video watch count has been updated.", data: update});
+  }
+  catch(err)
+  {
+    return res.status(500).json({ success: false,  message: err.message});
+  }
+}

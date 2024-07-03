@@ -392,23 +392,35 @@
 
 /**
  * @swagger
- * /users/update/{id}:
+ * /users/update:
  *   post:
  *     summary: Update user profile
  *     tags:
- *       - Users
+ *       - Profile
  *     parameters:
- *       - name: id
- *         in: path
- *         description: ID of the user to update
- *         required: true
- *         type: string
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token   
  *       - name: body
  *         in: body
  *         description: Fields to update
  *         required: true
  *         schema:
- *           $ref: '#/components/schemas/User'
+ *           type: object
+ *           required:
+ *             - first_name
+ *             - last_name
+ *             - username
+ *           properties:
+ *              first_name: 
+ *                type: string
+ *                example: changer
+ *              last_name: 
+ *                type: string
+ *                example: app
+ *              username: 
+ *                type: string
+ *                example: changerapp
  *     responses:
  *       200:
  *         description: User profile updated successfully
@@ -416,6 +428,8 @@
  *           $ref: '#/components/schemas/User'
  *       404:
  *         description: Invalid User
+ *       403:
+ *         description: No Authorization Token! 
  *       500:
  *         description: Internal server error
  */
@@ -601,17 +615,15 @@
 
 /**
  * @swagger
- * /user/profile/remove/{id}:
+ * /user/profile/remove:
  *   post:
  *     summary: Remove user profile image
  *     tags:
- *       - Users
+ *       - Profile
  *     parameters:
- *       - name: id
- *         in: path
- *         description: User ID whose profile image to remove
- *         required: true
- *         type: string
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
  *     responses:
  *       200:
  *         description: Profile image removed successfully
@@ -622,6 +634,7 @@
  *               type: integer
  *             message:
  *               type: string
+ *               example: Profile image removed successfully     
  *             user:
  *               $ref: '#/components/schemas/User'
  *             success:
@@ -687,33 +700,27 @@
 
 /**
  * @swagger
- * /upload/profile:
+ * /user/profile/upload:
  *   post:
  *     summary: Upload user profile image
  *     tags:
- *       - Users
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               Image:
- *                 type: string
- *                 format: binary
+ *       - Profile
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
+ *       - name: Image
+ *         in: formData
+ *         type: file
+ *         description: Add images to upload
+ *         required: true   
  *     responses:
  *       200:
  *         description: Profile image uploaded successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                 image:
- *                   type: string
+ *       401:
+ *         description: Correct  Authorization Token Required!
+ *       404:
+ *         description: Bad request 
  *       500:
  *         description: Internal server error
  */
@@ -833,11 +840,6 @@
  *       - name: Authorization
  *         in: header
  *         description: Bearer token for authorization
- *         required: true
- *         type: string
- *       - name: userId
- *         in: query
- *         description: ID of the user to get messages for
  *         required: true
  *         type: string
  *     responses:

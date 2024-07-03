@@ -4,6 +4,7 @@ const moment = require("moment");
 const { addUserInAlgolia, updateUsersInAlgolia } = require("../algolia/userAlgolia");
 const mongoose = require("mongoose");
 const { ObjectId } = require("mongodb");
+const {uploadImage, removeImage}=require("../libs/fileUpload")
 
 exports.notification = async (req, res) => {
   try {
@@ -690,32 +691,39 @@ exports.unFollowUser = async (req, res) => {
 };
 
 exports.editProfile = async (req, res) => {
-  const { id: _id } = req.params;
   try {
-    const id = req.params.id;
-    const updateUser = await User.findOneAndUpdate({ _id: id }, req.body);
-    await updateUsersInAlgolia(_id);
+    const id = req.user
+    const user = await User.findById({ _id: id });
+    const updateUser = await User.findOneAndUpdate({ _id: id }, req.body,{new:true});
+    await updateUsersInAlgolia(id);
     if (!updateUser) {
       return res.json({ status: 404, message: "Invalid User", success: false });
     }
-    const user = await User.findById({ _id: id });
-    return res.status(200).json(user);
+
+    return res.status(200).json({status : 200, message:'User profile updated successfully.', data: updateUser});
   } catch (e) {
-    return res.status(404).json({ error: e.message });
+    return res.status(404).json({status : 404, message: e.message });
   }
 };
 
 exports.removeProfileImage = async (req, res) => {
   try {
-    const id = req.params.id;
+    const id = req.user
+    const user=await User.findById(id);
     const updateUser = await User.findOneAndUpdate(
       { _id: id },
       { $unset: { profileImage: "" } },
       { new: true } // to return the updated document
     );
-    await updateUsersInAlgolia(_id);
+    await updateUsersInAlgolia(id);
     if (!updateUser) {
       return res.json({ status: 404, message: "Invalid User", success: false });
+    }
+    if(user.profileImage)
+    {
+      let imagekey=user.profileImage.split('/')[1];
+      //remove file from bucket
+      await removeImage('profile', imagekey)
     }
     return res.json({
       status: 200,
@@ -880,7 +888,7 @@ exports.getMessages = async (req, res) => {
 //get all Messages
 exports.messages = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user;
     let records = await Message.aggregate([
       {
         $match: {
@@ -971,5 +979,26 @@ exports.createAdmin = async (req, res) => {
       success: false,
       error: error.message,
     });
+  }
+};
+
+//upload profile
+exports.uploadProfile = async (req, res) => {
+  try {
+    const user=req.user
+    const activeUser = await User.findById(user);
+    if(activeUser.profileImage)
+    {
+      let imagekey=activeUser.profileImage.split('/')[1];
+      //remove file from bucket
+      await removeImage('profile', imagekey)
+    }
+    const thumbnail = await uploadImage(req.file, "profile");
+    let data = `${thumbnail.Bucket}/${thumbnail.key}`;
+    let updateRecord=await User.findByIdAndUpdate(user, { profileImage: data }, { new: true });
+    return res.status(200).json({ message: "Profile image uploaded successfully", image: data,user:updateRecord });
+  } catch (error) {
+    console.log('err',error)
+    return res.status(500).json({ message: error.message, status: 500 });
   }
 };

@@ -19,6 +19,7 @@ const videoSchema = new Schema(
     hashtags:{ type: Array, default: []},
     algolia: {type: String, default: ""},
     address: { type: String, required: false },
+    views: {type: Number, default: 0}
   },
   {
     timestamps: true,

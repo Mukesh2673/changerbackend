@@ -2,8 +2,7 @@ var express = require("express");
 var router = express.Router();
 const cron = require('node-cron');
 const upload = require('../libs/multerConfig')
-const auth = require("../middleware/firebaseAuth").authCheck;
-const { validateToken } = require("../middleware/auth");
+const { validateToken} = require("../middleware/auth");
 const {
   validateSigninRequest,
   validateAdvocate,
@@ -38,21 +37,20 @@ router.get("/users/uid/:uid", userController.getUserByUID);
 router.get("/users/following/:cuid/:fuid", userController.getFollowingVideos);
 router.post("/users/follow/:cuid/:fuid", userController.followUser);
 router.post("/users/unfollow/:cuid/:fuid", userController.unFollowUser);
-router.post("/users/update/:id", userController.editProfile);
+router.post("/users/update",validateToken,  userController.editProfile);
 router.get("/user/admin", validateToken, userController.createAdmin )
 router.get("/users/cognito/:cuid", userController.getUserByCognito)
 router.post("/user/report", userController.report)
-router.post("/user/profile/remove/:id", userController.removeProfileImage)
+router.post("/user/profile/remove", validateToken, userController.removeProfileImage)
 router.get("/user/notification/:id", userController.notification)
-
-router.post("/upload/profile",validateToken, upload.single("Image"), videoController.uploadProfile);
+router.post("/user/profile/upload",validateToken, upload.single("Image"), userController.uploadProfile);
 
 //onboarding route
 router.post("/user/onboarding", userController.saveUserRecords);
 router.patch("/user/cause",validateToken, userController.cause)
 
 
-//Settins Routes
+//Settings Routes
 router.patch("/user/privacy", validateToken, userController.privacy)
 router.patch("/user/language", validateToken, userController.language)
 router.delete("/user/:cid", validateToken, userController.delete)
@@ -101,6 +99,7 @@ router.post("/video/:vid/like",validateToken, videoController.likeVideo);
 router.post("/video/:vid/comment/:cid/like", validateToken, videoController.commentLikes);
 router.post("/video/:vid/comment/:cid/reply", validateToken, videoController.replyCommentVideo);
 router.post("/video/:vid/comment/reply/:repliesCommentId/like", validateToken, videoController.replyCommentLikes);
+router.patch("/video/:vid/watch", videoController.addViews)
 router.get("/friends/impact", validateToken, videoController.friendsImpact);
 
 //issue Routes

@@ -25,9 +25,6 @@
  *         description: ID of the video to fetch
  *         required: true
  *         type: string
- *       - name: body
- *         in: body
- *         description: Add comments to the Videos
  *     responses:
  *       200:
  *         description: Video records retrieved successfully.
@@ -283,6 +280,30 @@
  *     responses:
  *       200:
  *         description: Video uploaded Sucessfully
+ *       401:
+ *         description: Correct  Authorization Token Required!
+ *       404:
+ *         description: Bad request
+ *       400:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /video/{id}/watch:
+ *   patch:
+ *     summary: Add views Count in video
+ *     tags:
+ *       - Videos
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: ID of the video to watch 
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Video watch count has been updated.
  *       401:
  *         description: Correct  Authorization Token Required!
  *       404:
