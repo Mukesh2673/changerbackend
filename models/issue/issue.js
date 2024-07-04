@@ -25,5 +25,6 @@ const issueSchema = new Schema(
     timestamps: true,
   }
 );
+
 issueSchema.index({ location: "2dsphere" });
 module.exports = mongoose.model("issue", issueSchema);

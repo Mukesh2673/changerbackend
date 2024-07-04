@@ -5,6 +5,27 @@
  *     summary: Get all issue
  *     tags:
  *       - Issues
+ *     parameters:
+ *       - name: page
+ *         in: query
+ *         description: Add Number of Page.
+ *       - name: pageSize
+ *         in: query
+ *         description: Describe the number of records in Page.
+ *         required: false
+ *       - name: cause   
+ *         in: query
+ *         type: array
+ *         description: Add Cause Array   
+ *       - name: lng   
+ *         in: query
+ *         type: number
+ *         description: Add longitude
+ *       - name: lat   
+ *         in: query
+ *         type: number
+ *         description: Add  latitude
+ * 
  *     responses:
  *       200:
  *         description: Issue retrieved successfully
@@ -158,13 +179,16 @@
  *             lng:
  *               type: number
  *               description: Longitude
+ *               example: 20.59   
  *             lat:
  *               type: number
  *               description: Latitude
+ *               example: 78.96
  *             cause:
  *               type: array
  *               items:
  *                 type: string
+ *                 example: environment
  *               description: Array of causes to filter issues
  *     responses:
  *       200:

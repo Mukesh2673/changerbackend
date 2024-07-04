@@ -138,17 +138,17 @@
 
 /**
  * @swagger
- * /user/notification/{id}:
+ * /user/notification:
  *   get:
- *     summary: Get notifications for a user
+ *     summary: Get User Notification
  *     tags:
  *       - Users
  *     parameters:
- *       - name: id
- *         in: path
- *         description: ID of the user to get notifications for
- *         required: true
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
  *         type: string
+ *         required: true        
  *     responses:
  *       200:
  *         description: Successfully retrieved notifications

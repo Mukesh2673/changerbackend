@@ -43,7 +43,7 @@ router.get("/user/admin", validateToken, userController.createAdmin )
 router.get("/users/cognito/:cuid", userController.getUserByCognito)
 router.post("/user/report", validateToken, userController.report)
 router.post("/user/profile/remove", validateToken, userController.removeProfileImage)
-router.get("/user/notification/:id", userController.notification)
+router.get("/user/notification",validateToken,  userController.notification)
 router.post("/user/profile/upload",validateToken, upload.single("Image"), userController.uploadProfile);
 
 //onboarding route

@@ -8,17 +8,21 @@ const {uploadImage, removeImage}=require("../libs/fileUpload")
 
 exports.notification = async (req, res) => {
   try {
-    const notificationId = req.params.id;
-    const notification = await Notification.find({ user: notificationId })
+    const user=req.user
+    const notification = await Notification.find({ user: user })
       .sort({ createdAt: -1 })
       .populate([
         {
           path: "user",
           model: User,
+          select: "_id profileImage first_name last_name username", // Specify the fields you want to select
+
         },
         {
           path: "activity",
           model: User,
+          select: "_id profileImage first_name last_name username", // Specify the fields you want to select
+
         },
         {
           path: "joinedIssue",

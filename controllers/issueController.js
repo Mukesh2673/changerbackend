@@ -26,6 +26,7 @@ exports.issueRecords = async (query) => {
 exports.index = async (req, res, next) => {
   try {
     const query = [];
+    const {cause ,lat,lng}=req.query
     // Handle pagination
     if (req.query.page && req.query.pageSize) {
       const page = parseInt(req.query.page, 10);
@@ -34,11 +35,8 @@ exports.index = async (req, res, next) => {
       query.push({ $skip: skip });
       query.push({ $limit: pageSize });
     }
-    if(req.query.location) {
-      const location = JSON.parse(decodeURIComponent(req.query.location));
-      const longitude = location[0];
-      const latitude = location[1];
-      const coordinates = [parseFloat(longitude), parseFloat(latitude)];
+    if(lat && lng) {
+      const coordinates = [parseFloat(lng), parseFloat(lng)];
       const distance = 1;
       const unitValue = 10000000;
       query.push({
@@ -55,9 +53,9 @@ exports.index = async (req, res, next) => {
         },
       });
     }
-    if (req?.query?.cause?.length > 0) {
-      const cause = JSON.parse(decodeURIComponent(req.query.cause));
-      query.push({ $match: { cause: { $in: cause } } });
+    if(cause){
+      let causeFilter=cause.split(',')
+      query.push({ $match: { cause: { $in: causeFilter } } });
     }
     query.push({
       $lookup: {
@@ -98,7 +96,6 @@ exports.index = async (req, res, next) => {
         ],
       },
     });
-
     query.push({
       $lookup: {
         from: "users", // The name of the collection to join with
