@@ -243,54 +243,7 @@
  *         description: Internal server error
  */
 
-/**
- * @swagger
- * /users/uid/{uid}:
- *   get:
- *     summary: Retrieve a user by UID
- *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: uid
- *         description: UID of the user to retrieve
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: A user object
- *         schema:
- *           $ref: '#/components/schemas/User'
- *       500:
- *         description: Internal server error
- */
 
-/**
- * @swagger
- * /users/following/{cuid}/{fuid}:
- *   get:
- *     summary: Check if a user is following another user
- *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: cuid
- *         description: ID of the user for who we are checking
- *         required: true
- *         schema:
- *           type: string
- *       - in: path
- *         name: fuid
- *         description: ID of the user for who we wanna see if following
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         schema:
- *           type: boolean
- *       404:
- *         description: User not found
- */
 
 /**
  * @swagger
@@ -334,27 +287,27 @@
 
 /**
  * @swagger
- * /users/follow/{cuid}/{fuid}:
+ * /users/{id}/follow:
  *   post:
  *     summary: Follow a user
  *     tags:
  *       - Users
  *     parameters:
- *       - name: cuid
- *         in: path
- *         description: ID of the current user
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token 
  *         required: true
- *         type: string
- *       - name: fuid
+ *         type: string   
+ *       - name: id
  *         in: path
- *         description: ID of the user to follow
+ *         description: ID of the follow user
  *         required: true
  *         type: string
  *     responses:
  *       200:
  *         description: User followed successfully
- *       401:
- *         description: Invalid login user or following user
+*       401:
+ *         description: Correct  Authorization Token Required!
  *       400:
  *         description: User already followed
  *       500:
@@ -363,20 +316,20 @@
 
 /**
  * @swagger
- * /users/unfollow/{cuid}/{fuid}:
+ * /users/{id}/unfollow:
  *   post:
  *     summary: Unfollow a user
  *     tags:
  *       - Users
  *     parameters:
- *       - name: cuid
- *         in: path
- *         description: ID of the current user
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token 
  *         required: true
- *         type: string
- *       - name: fuid
+ *         type: string   
+ *       - name: id
  *         in: path
- *         description: ID of the user to unfollow
+ *         description: ID of the  unfollow user
  *         required: true
  *         type: string
  *     responses:
@@ -557,7 +510,8 @@
  *     parameters:
  *       - name: Authorization
  *         in: header
- *         description: Authorization Token 
+ *         description: Authorization Token
+ *         required: true  
  *       - name: language
  *         in: query
  *         type: string
@@ -580,12 +534,30 @@
  *     tags:
  *       - Users
  *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
+ *         required: true  
  *       - name: body
  *         in: body
  *         description: Report details
  *         required: true
  *         schema:
- *           $ref: '#/components/schemas/Report'
+ *           type: object
+ *           required:
+ *              - reportSubject
+ *              - details
+ *              - profile
+ *           properties:
+ *            reportSubject:
+ *             type: string
+ *             example: Non-existent profile
+ *            details:
+ *             type: string
+ *             example: I contact the profile but not get any response
+ *            profile:
+ *             type: string
+ *             example: 6479d85db73d8802b387381f
  *     responses:
  *       200:
  *         description: Report added successfully
@@ -728,17 +700,30 @@
 /**
  * @swagger
  * /user/message:
-  *   post:
+ *   post:
  *     summary: Send a message
  *     tags:
  *       - Users
  *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
  *       - name: body
  *         in: body
  *         description: Message details
  *         required: true
- *         schema:
- *           $ref: '#/components/schemas/Message'
+  *         schema:
+ *           type: object
+ *           required:
+ *              - profile
+ *              - message
+ *           properties:
+ *            profile:
+ *             type: string
+ *             example: 65deef3bc50f2a0bf4580fa1
+ *            message:
+ *             type: string
+ *             example: Hello
  *     responses:
  *       200:
  *         description: Message sent successfully!
@@ -768,20 +753,18 @@
 
 /**
  * @swagger
- * /user/message/{pid}/{uid}:
+ * /user/{id}/message:
  *   get:
- *     summary: Get messages between two users
+ *     summary: Get users messages with current user
  *     tags:
  *       - Users
  *     parameters:
- *       - name: pid
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
+ *       - name: id
  *         in: path
  *         description: ID of the first user
- *         required: true
- *         type: string
- *       - name: uid
- *         in: path
- *         description: ID of the second user
  *         required: true
  *         type: string
  *     responses:
@@ -825,15 +808,11 @@
  */
 
 
-
-
-
-
 /**
  * @swagger
  * /user/messages:
  *   get:
- *     summary: Get user messages
+ *     summary: Get current user messages
  *     tags:
  *       - Users
  *     parameters:
@@ -903,5 +882,44 @@
  *               type: string
  *               example: Error message
  */
+
+/**
+ * @swagger
+ * /accessToken:
+ *   get:
+ *     summary: Get Access token from refresh token
+ *     tags:
+ *       - Cognito
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Add refresh token to access token
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Access token has been retrieved successfully.
+ *         schema:
+ *           type: object
+ *           properties:
+ *             accessToken:
+ *               type: string
+ *             idToken:
+ *               type: string
+ *             refreshToken:
+ *               type: string 
+ *             success:
+ *               type: boolean 
+ *       500:
+ *         description: Internal server error
+ */
+
+
+
+
+
+
+
+
 
 module.exports = {}; 

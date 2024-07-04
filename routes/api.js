@@ -2,7 +2,7 @@ var express = require("express");
 var router = express.Router();
 const cron = require('node-cron');
 const upload = require('../libs/multerConfig')
-const { validateToken} = require("../middleware/auth");
+const { validateToken, accessToken} = require("../middleware/auth");
 const {
   validateSigninRequest,
   validateAdvocate,
@@ -29,18 +29,19 @@ cron.schedule('0 0 * * *',  issueController.deleteOldIssues);
 router.post("/signin", validateSigninRequest, authController.signin)
 router.post("/signup", validateSignupRequest, authController.signup)
 router.post("/signupConfirm", validateSignupConfirmRequest, authController.signupConfirm)
+router.get("/accessToken" ,accessToken)
 
 // USER ROUTES
 router.get("/users", userController.users)
 router.get("/users/:id", userController.getUser);
-router.get("/users/uid/:uid", userController.getUserByUID);
-router.get("/users/following/:cuid/:fuid", userController.getFollowingVideos);
-router.post("/users/follow/:cuid/:fuid", userController.followUser);
-router.post("/users/unfollow/:cuid/:fuid", userController.unFollowUser);
+// router.get("/users/uid/:uid", userController.getUserByUID);
+// router.get("/users/following/:cuid/:fuid", userController.getFollowingUser);
+router.post("/users/:id/follow", validateToken, userController.followUser);
+router.post("/users/:id/unfollow", validateToken, userController.unFollowUser);
 router.post("/users/update",validateToken,  userController.editProfile);
 router.get("/user/admin", validateToken, userController.createAdmin )
 router.get("/users/cognito/:cuid", userController.getUserByCognito)
-router.post("/user/report", userController.report)
+router.post("/user/report", validateToken, userController.report)
 router.post("/user/profile/remove", validateToken, userController.removeProfileImage)
 router.get("/user/notification/:id", userController.notification)
 router.post("/user/profile/upload",validateToken, upload.single("Image"), userController.uploadProfile);
@@ -63,8 +64,8 @@ router.post("/skills/add", validateToken, skillController.add)
 router.patch("/skill/:id/verify", validateToken, skillController.verifySkill)
 
 // Messages
-router.post("/user/message", userController.message)
-router.get("/user/message/:pid/:uid",userController.getMessages)
+router.post("/user/message", validateToken, userController.message)
+router.get("/user/:id/message", validateToken,  userController.getMessages)
 router.get("/user/messages", validateToken, userController.messages)
 
 // CAMPAIGN ROUTES
@@ -106,7 +107,7 @@ router.get("/friends/impact", validateToken, videoController.friendsImpact);
 router.post("/issue", validateToken, issueController.create);
 router.get("/issue", issueController.index);
 router.post("/issue/location", issueController.location);
-router.post("/issue/generate", issueController.generate);
+router.post("/issue/generate",  issueController.generate);
 router.post("/issue/upvotes", validateToken, issueController.upvotes)
 router.get("/issue/forUser", validateToken, issueController.issueForUser);
 router.post("/issue/join", validateToken, issueController.joinIssue)

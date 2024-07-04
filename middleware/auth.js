@@ -1,6 +1,11 @@
-//https://gist.github.com/fourgates/92dc769468497863168417c3524e24dd
 const AWS = require('aws-sdk');
-AWS.config.update({ region: 'us-east-2' });
+AWS.config.update({
+  region:  process.env["AWS_REGION"], // e.g., 'us-west-2'
+  secretAccessKey: process.env["AWS_SECRET_KEY"],
+  accessKeyId: process.env["AWS_ACCESS_KEY"],
+});
+
+const cognitoISP = new AWS.CognitoIdentityServiceProvider();
 const cognitoIssuer = `https://cognito-idp.us-east-2.amazonaws.com/us-east-2_ZgoWAopWn`;
 const {validateCognitoToken}=require("./cognitoAuth")
 const { User} = require("../models");
@@ -28,7 +33,6 @@ const   validateToken = async (req, res, next) => {
       let respData = {
         success: false,
         message: "Invalid Access Token",
-        error: error.name,
         status: 401
       };
       return res.status(401).json(respData);
@@ -47,4 +51,32 @@ const   validateToken = async (req, res, next) => {
   }
 };
 
-module.exports = { validateToken };
+const accessToken = async (req, res, next) => {
+  try {
+    const refreshToken = req.headers.authorization.replace("Bearer ", "");
+    const params = {
+      AuthFlow: 'REFRESH_TOKEN_AUTH',
+      ClientId: process.env.AWS_COGNITO_CLIENT_ID, // Your Cognito App Client ID
+      AuthParameters: {
+        'REFRESH_TOKEN': refreshToken, // The refresh token value
+      },
+    };
+    const response = await cognitoISP.initiateAuth(params).promise();
+    if (response && response.AuthenticationResult) {
+      res.status(200).json({
+        message:'Access token has been retrieved successfully',
+        accessToken: response.AuthenticationResult.AccessToken,
+        idToken: response.AuthenticationResult.IdToken,
+        refreshToken: response.AuthenticationResult.RefreshToken || refreshToken, // Use the old refresh token if a new one isn't provided
+        sucess:true
+      });
+      } else {
+      res.status(400).json({ error: 'Invalid token response', success: false });
+    }
+  } catch (error) {
+    console.error('Error refreshing tokens:', error);
+    res.status(500).json({ error: 'Error refreshing tokens' });
+  }
+};
+
+module.exports = { validateToken, accessToken };
