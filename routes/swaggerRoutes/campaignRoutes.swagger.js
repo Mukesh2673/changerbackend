@@ -662,4 +662,31 @@
  *         description: Participation records Not found
  */
 
+
+
+/**
+ * @swagger
+ * /campaign/{campaignId}/share:
+ *   post:
+ *     summary: share the Campaign
+ *     tags:
+ *       - Campaigns
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
+ *       - name: campaignId     
+ *         in: path
+ *         description: Add campaign Id to share campaign
+ *         required: true  
+ *     responses:
+ *       200:
+ *         description: Campaign shared successfully
+ *       403:
+ *         description: Correct  Authorization Token Required!
+ *       500:
+ *         description: Internal server error
+ */
+
+
 module.exports = {}; 

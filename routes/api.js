@@ -85,7 +85,7 @@ router.get("/campaign/volunteers", campaignController.volunteers)//get Volunteer
 router.get("/campaign/volunteering/forUser", validateToken, campaignController.volunteeringForUser); //get campaing that you have voluteer
 router.post("/campaign/signPetition", validateToken, validateSignPetitions, campaignController.signPetitions)
 router.get("/campaign/volunteering/participation/history", validateToken, campaignController.volunteerParticipationHistory)
-
+router.post("/campaign/:campaignId/share", validateToken, campaignController.shareCampaign)
 // VIDEO ROUTES
 router.get("/video/:id", videoController.show);
 router.post("/uploadImage", upload.single("Image"), videoController.uploadImages);

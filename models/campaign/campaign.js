@@ -15,6 +15,7 @@
       address: { type: String, required: false },
       hashtags: { type: Array, default: [] },
       updates: [{ type: mongoose.Schema.Types.ObjectId, ref: "notification" }],
+      shared: [{ type: Schema.Types.ObjectId, ref: "User", required: false }],
       algolia: {type: String, default: ""},
     },
     {

@@ -112,6 +112,7 @@ exports.generateTags = async (text) => {
   }
   return hashtags;
 };
+
 exports.getContent = async (req, res) => {
   try {
     const hashtagToFind = `#${req.params.tag}`;

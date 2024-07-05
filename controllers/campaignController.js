@@ -1138,3 +1138,53 @@ exports.volunteerParticipationHistory=async (req, res)=>{
 
   }
 }
+
+//share the campaign
+exports.shareCampaign = async(req, res)=>{
+  try {
+    const uid =req.user
+    const campaignId=req.params.campaignId
+    if (!mongoose.Types.ObjectId.isValid(campaignId)) {
+      return res.status(400).json({ status: 400, error: "Invalid campaign id format", success: false,
+     })}
+    const isExist= await Campaign.find({_id: campaignId })  
+    if (isExist) {
+      const shared = isExist[0].shared;
+      let exist = shared.includes(uid);
+      if (exist) {
+        return res.json({
+          status: 200,
+          message: "Campaign shared successfully.",
+          success: true,
+        });
+      } else {
+        const campaign = await Campaign.findByIdAndUpdate(
+          { _id: campaignId },
+          { $push: { shared: uid } },
+
+          { new: true }
+        );
+        await updateCampaignInAlgolia(campaignId)     
+        return res.json({
+          status: 200,
+          message: "Campaign shared successfully.",
+          success: true,
+          data: campaign,
+        });
+      }
+    } else {
+      return res.json({
+        status: 500,
+        message: "invalid issue",
+        success: false,
+      });
+    }
+  } catch (err) {
+    console.log('uerrror',err)
+    return res.json({
+      status: 500,
+      message: "some thing went wrong",
+      success: false,
+    });
+  }
+} 

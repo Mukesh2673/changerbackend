@@ -1,5 +1,4 @@
 const { Issue} = require("../models");
-
 const {
   searchAlgolia,
   updateAlgolia,

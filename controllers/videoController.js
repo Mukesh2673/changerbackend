@@ -26,7 +26,7 @@ const { sendMessage } = require("../libs/webSocket");
 const { videoCommonPipeline } = require('../constants/commonAggregations')
 
 // get Impact videos
-exports.getVideos = async (req, res, next) => {
+exports.getVideos = async (req, res) => {
   try {
     const { page = 1, userId, tab, pageSize = 10, location} = req.query;
     let users = []
@@ -155,7 +155,7 @@ exports.videosData = async (id) => {
     ]);
 };
 
-exports.show = async (req, res, next) => {
+exports.show = async (req, res) => {
   try {
     const video = await Video.findById(req.params.id);
 
@@ -169,7 +169,7 @@ exports.show = async (req, res, next) => {
   }
 };
 
-exports.store = async (req, res, next) => {
+exports.store = async (req, res) => {
   const user = req.user;
   const video = new Video({
     user: user?._id,
@@ -272,7 +272,7 @@ exports.getVideoLikes = async (req, res) => {
 };
 
 
-exports.delete = async (req, res, next) => {
+exports.delete = async (req, res) => {
   try {
     await Video.deleteOne({ _id: req.params.id });
     await deleteVideosInAlgolia(req.params.id)
@@ -282,7 +282,7 @@ exports.delete = async (req, res, next) => {
   }
 };
 
-exports.thumbnail = async (req, res, next) => {
+exports.thumbnail = async (req, res) => {
   try {
     const source = `uploads/${req.file.filename}`;
     //await upload(req.file);
@@ -313,7 +313,7 @@ exports.thumbnail = async (req, res, next) => {
   }
 };
 
-exports.upload = async (req, res, next) => {
+exports.upload = async (req, res) => {
   try {
     const thumbnail = await uploadVideoThumbnail(req.file);
     const uploadStatus = await upload(req.file);

@@ -88,7 +88,7 @@ exports.notification = async (req, res) => {
   }
 };
 
-exports.getUser = async (req, res, next) => {
+exports.getUser = async (req, res) => {
   try {
     let userId = req.params.id;
     if (!ObjectId.isValid(userId)) {
@@ -414,7 +414,7 @@ exports.getUser = async (req, res, next) => {
   }
 };
 
-exports.users = async (req, res, next) => {
+exports.users = async (req, res) => {
   try {
     const user = await User.find({});
     return res.json(user);
@@ -423,7 +423,7 @@ exports.users = async (req, res, next) => {
   }
 };
 
-exports.getUserByCognito = async (req, res, next) => {
+exports.getUserByCognito = async (req, res) => {
   try {
     let userName = req.params.cuid;
     const existingUser = await User.findOne({ cognitoUsername: userName });
@@ -442,7 +442,7 @@ exports.getUserByCognito = async (req, res, next) => {
 };
 
 
-exports.saveUserRecords = async (req, res, next) => {
+exports.saveUserRecords = async (req, res) => {
   try{
     const userDetails=await User.find({cognitoUsername: req.body.cognitoUsername});
     if(userDetails.length>0)
@@ -887,7 +887,7 @@ exports.getMessages = async (req, res) => {
   }
 };
 
-//get all Messages
+//get last  Messages from profile or campaign
 exports.messages = async (req, res) => {
   try {
     const userId = req.user;
@@ -898,53 +898,74 @@ exports.messages = async (req, res) => {
         },
       },
       {
+        $lookup:{
+          from: "users",
+          localField: "sender",
+          foreignField: "_id",
+          as: "sender",
+          pipeline:[
+            {$project:{_id:1,username:1,first_name:1,last_name:1,profileImage:1}} 
+          ]
+        }
+      },
+      {
+        $lookup:{
+          from: "users",
+          localField: "profile",
+          foreignField: "_id",
+          as: "profile",
+          pipeline:[
+            {$project:{_id:1,username:1,first_name:1,last_name:1,profileImage:1}} 
+          ]
+        }
+      },
+      {
+        $lookup:{
+          from: "campaigns",
+          localField: "campaign",
+          foreignField: "_id",
+          as: "campaign",
+          pipeline:[
+            {$project:{title:1,cause:1}} 
+          ]
+        }
+      },
+      {
         $sort: { createdAt: -1 }, // Sort by created date in descending order
       },
       {
         $group: {
           _id: {
-            sender: "$sender",
-            profile: "$profile",
+            participants: {
+              $cond: {
+                if: { $gt: ["$sender", "$profile"] },
+                then: ["$sender", "$profile"],
+                else: ["$profile", "$sender"]
+              }
+            }
           },
           latestMessage: { $first: "$$ROOT" }, // Take the first document in each group (latest due to sort)
         },
       },
+
       {
         $replaceRoot: { newRoot: "$latestMessage" }, // Replace root with the latest message
       },
+
       {
-        $lookup: {
-          from: "users",
-          localField: "sender",
-          foreignField: "_id",
-          as: "sender",
+        $sort: { createdAt: -1 }, // Sort the final results to get the latest one
+      },
+      {
+        $project: {
+          _id: "$_id",
+           profile: "$profile",
+           sender: "$sender",
+           campaign: "$campaign",
+           createdAt: "$createdAt"
         },
       },
-      {
-        $unwind: "$sender",
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "profile",
-          foreignField: "_id",
-          as: "profile",
-        },
-      },
-      {
-        $unwind: "$profile",
-      },
-      {
-        $lookup: {
-          from: "campaigns",
-          localField: "campaign",
-          foreignField: "_id",
-          as: "campaign",
-        },
-      },
-      {
-        $unwind: { path: "$campaign", preserveNullAndEmptyArrays: true }, // Campaign may be null, preserve it
-      },
+      
+
     ]);
 
     return res.json({

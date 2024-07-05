@@ -31,8 +31,6 @@ exports.skills = async (req, res) => {
   }
 };
 
-
-
 exports.removeUserSkill = async (req, res) => {
   try {
     const userId = req.user._id;
