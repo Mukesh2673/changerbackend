@@ -29,10 +29,7 @@
  *         type: file
  *         description: Embed a motivating video to enhance the impact of your message
  *         required: true 
- *       - name: location
- *         in: formData
- *         description: Add Location
- *         required: true 
+
  * 
  *     responses:
  *       200:

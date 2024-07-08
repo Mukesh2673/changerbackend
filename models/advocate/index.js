@@ -9,8 +9,6 @@ const advocateSchema = new Schema(
     title: { type: String, default: "" },
     description: { type: String, default: "" },
     advocateUser: { type: Schema.Types.ObjectId, ref: "User" },
-    location: { type: { type: String, default: "Point", enum: "Point"}, coordinates: { type: [Number], default: [0, 0]}},
-  
   },
   {
     timestamps: true,

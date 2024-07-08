@@ -16,14 +16,14 @@ exports.skills = async (req, res) => {
       searchQuery.verified=true
 
     }  
-    const records = await Skills.find(searchQuery).select('_id name verified').skip(skip).limit(pageSize);
+    const records = await Skills.find(searchQuery).select('_id name verified appearances').skip(skip).limit(pageSize);
     const totalRecords = await Skills.countDocuments(searchQuery);
     return res.json({
-      status: 200,
+      status: records.length>0? 200: 400,
       skills: records,
       totalPage: Math.ceil(totalRecords / pageSize),
       success: true,
-      message: 'Skill records retrieve successfully'
+      message: records.length>0?'Skill records retrieve successfully':'Skill records not Found'
     });
   } catch (err) {
     console.log("err", err);

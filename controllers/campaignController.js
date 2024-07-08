@@ -302,7 +302,7 @@ exports.create = async (req, res) => {
         (item) => item?.name == "participation"
       );
       
-      const participantionsId = [];
+      const volunteeringIds = [];
       const location = [];
       for (let j = 0; j < participation.length; j++) {
         participation[j].phaseId = savePhaseId[i];
@@ -314,7 +314,7 @@ exports.create = async (req, res) => {
           lng: parseFloat(savedParticipant.location.coordinates[1]),
         };
         location.push(geoLocation);
-        participantionsId.push(id);
+        volunteeringIds.push(id);
       }
       const donations = new donation(donationCount[0]);
       const savedDonation = await donations.save();
@@ -329,7 +329,7 @@ exports.create = async (req, res) => {
           $set: {
             donation: DonationId,
             petition: petitionId,
-            participation: participantionsId,
+            volunteering: volunteeringIds,
           },
         },
         { new: true }

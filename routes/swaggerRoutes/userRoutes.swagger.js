@@ -236,7 +236,7 @@
  *         type: string
  *     responses:
  *       200:
- *         description: A user object
+ *         description: User  records retrieved successfully.
  *         schema:
  *           $ref: '#/components/schemas/User'
  *       500:

@@ -123,16 +123,16 @@ exports.getUser = async (req, res) => {
                 pipeline: [{ $project: { _id: 1 } }],
               },
             },
-
             {
               $project: {
                 _id: 1,
                 username: 1,
                 profileImage: 1,
-                followers: 1,
+                followers: { $size: "$followers" },
+                profileImage: 1,
                 first_name: 1,
                 last_name: 1,
-                impacts: 1,
+                impacts: { $size: "$impacts" },
               },
             },
           ],
@@ -165,36 +165,73 @@ exports.getUser = async (req, res) => {
                 pipeline: [{ $project: { _id: 1 } }],
               },
             },
-
+  
             {
               $project: {
                 _id: 1,
                 username: 1,
                 profileImage: 1,
-                followers: 1,
+                followers: { $size: "$followers" },
                 first_name: 1,
                 last_name: 1,
-                impacts: 1,
+                impacts: { $size: "$impacts" },
               },
             },
           ],
         },
       },
-      {
-        $lookup: {
-          from: "users",
-          localField: "following",
-          foreignField: "_id",
-          as: "following",
-        },
-      },
+      //get campaign from volunteering
       {
         $lookup: {
           from: "campaignVolunteers",
           localField: "_id",
           foreignField: "user",
           as: "volunteering",
-        },
+          pipeline:[
+          {
+            $lookup: {
+              from: "campaigns",
+              localField: "campaign",
+              foreignField: "_id",
+              as: "campaign",
+              pipeline: [{ $project: { cause: 1, title:1, _id:0 } }],
+            },
+          },
+          {
+            $lookup: {
+              from: "campaingVolunteering",
+              localField: "volunteering",
+              foreignField: "_id",
+              as: "volunteering",
+              pipeline: [ 
+                {
+                  $lookup: {
+                       from: "campaignVolunteers",
+                        localField: "_id",
+                        foreignField: "volunteering",
+                        as: "users",
+                        pipeline:[
+                                  {
+                                    $lookup: {
+                                    from: "users",
+                                    localField: "user",
+                                    foreignField: "_id",
+                                    as: "endorsedUser",
+                                    pipeline: [{ $project: { username: 1, first_name:1, last_name:1 } }], 
+                                  }
+                                },
+                                {
+                                  $project: { endorsedUser: 1,_id:0} 
+                                }
+                              ]
+                        },
+                     }, 
+                       { $project: { roleTitle: 1, _id:1, createdAt:1,users:1} }
+              ],
+            },
+          },
+        ] 
+       },
       },
       {
         $lookup: {
@@ -202,53 +239,91 @@ exports.getUser = async (req, res) => {
           localField: "volunteering.campaign",
           foreignField: "_id",
           as: "volunteerCampaigns",
-        },
-      },
-      {
-        $lookup: {
-          from: "campaignVolunteers",
-          localField: "volunteering.participation",
-          foreignField: "_id",
-          as: "campaignVolunteers", //add join to the volunters that is relate to the participant
-          pipeline: [
-            {
-              $lookup: {
-                from: "campaignVolunteers",//display how many voluteers apply this participation
-                localField: "_id",
-                foreignField: "participation",
-                as: "endorsed",
-                pipeline:[
-                  {
+          pipeline:[           
+           {
+            $lookup:  {
+              from: "campaignPhase",
+              localField: "phases",
+              foreignField: "_id",
+              as: "phases",
+              pipeline:[
+                {
                     $lookup: {
-                      from: "users",
-                      localField: "user",
+                      from: "campaignDonation",
+                      localField: "donation",
                       foreignField: "_id",
-                      as: "user",
-                      pipeline: [{ $project: { username: 1, first_name:1, last_name:1 } }],
-
+                      as: "campaignDonation",
+                      pipeline:[{
+                        $project:{
+                          description:1,
+                          amount: 1,
+                          _id: 0
+                        }
+                      }]
                     },
+                },
+                {
+                  $lookup: {
+                    from: "campaingVolunteering",
+                    localField: "volunteering",
+                    foreignField: "_id",
+                    as: "volunteering",
+                    pipeline:[{$project:{participant: 1,roleTitle:1, _id:0}}]
                   },
-                  {
-                    $project: { user: 1 }
+                },
+                {
+                  $project:{
+                    "donation": "$campaignDonation",
+                    "volunteering":"$volunteering",
                   }
-                ]  
-              },
-            },
-            {
-              $lookup: {
-                from: "campaigns",
-                localField: "phaseId",
-                foreignField: "phases",
-                as: "campaign",
-                pipeline: [{ $project: { cause: 1, title:1} }],
-              },
-            },
-            {
-              $unwind: "$campaign",
-            },
-            { $project: { roleTitle: 1, createdAt: 1, endorsed: 1, campaign: 1} },
+                }
 
-          ],
+              ]
+            },
+           },
+           {
+            $lookup: {
+              from: "advocates",
+              localField: "advocate",
+              foreignField: "_id",
+              as: "advocate",
+              pipeline:[
+                {
+                  $lookup: {
+                    from: "users",
+                    localField: "user",
+                    foreignField: "_id",
+                    as: "user",
+                    pipeline: [
+                      {
+                        $project: {
+                          profileImage: 1,
+                          _id :0
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  $project: {
+                    user: 1,
+                    _id: 0
+                  },
+                }
+              ]
+            }
+           },
+          {
+            $project:{
+              title: 1,
+              phases: 1,
+              cause: 1,
+              image: 1,
+              advocate: 1,
+              createdAt: 1
+            }
+          }
+          ]
         },
       },
       {
@@ -257,8 +332,88 @@ exports.getUser = async (req, res) => {
           localField: "_id",
           foreignField: "user",
           as: "userCampaings",
+          pipeline:[           
+            {
+             $lookup:  {
+               from: "campaignPhase",
+               localField: "phases",
+               foreignField: "_id",
+               as: "phases",
+               pipeline:[
+                 {
+                     $lookup: {
+                       from: "campaignDonation",
+                       localField: "donation",
+                       foreignField: "_id",
+                       as: "campaignDonation",
+                       pipeline:[{
+                         $project:{
+                           description:1,
+                           amount: 1,
+                           _id: 0
+                         }
+                       }]
+                     },
+                 },
+                 {
+                   $lookup: {
+                     from: "campaingVolunteering",
+                     localField: "volunteering",
+                     foreignField: "_id",
+                     as: "volunteering",
+                     pipeline:[{$project:{participant: 1,roleTitle:1, _id:0}}]
+                   },
+                 },
+                 {
+                   $project:{
+                     "donation": "$campaignDonation",
+                     "volunteering":"$volunteering",
+                   }
+                 }
+ 
+               ]
+             },
+           },
+           {
+            $lookup: {
+              from: "advocates",
+              localField: "advocate",
+              foreignField: "_id",
+              as: "advocate",
+              pipeline:[
+                {
+                  $lookup: {
+                    from: "users",
+                    localField: "user",
+                    foreignField: "_id",
+                    as: "user",
+                    pipeline: [
+                      {
+                        $project: {
+                          profileImage: 1,
+                        },
+                      },
+                    ],
+                  },
+                }
+              ]
+            }
+           },
+           {
+             $project:{
+               title: 1,
+               phases: 1,
+               cause: 1,
+               image: 1,
+               advocate: 1,
+               createdAt: 1
+             }
+           }
+           ]
+          
         },
       },
+      //get impact video records with issue and campaign details
       {
         $lookup: {
           from: "videos",
@@ -279,7 +434,21 @@ exports.getUser = async (req, res) => {
                 from: "campaigns",
                 localField: "campaign",
                 foreignField: "_id",
-                as: "campaignDetails",
+                as: "campaign",
+                pipeline:[
+                  { $project: { _id: 0,title:1,cause:1 }
+                }]
+              },
+            },
+            {
+              $lookup: {
+                from: "issues",
+                localField: "issue",
+                foreignField: "_id",
+                as: "issue",
+                pipeline:[
+                  { $project: { _id: 0,title:1,cause:1 }
+                }]
               },
             },
             {
@@ -287,13 +456,22 @@ exports.getUser = async (req, res) => {
                 from: "users",
                 localField: "user",
                 foreignField: "_id",
-                as: "userDetails",
+                as: "user",
+                pipeline:[
+                  {
+                    $project: { _id: 1 , first_name:1, last_name:1, username:1 } 
+                  }  
+                ]
               },
             },
+            {
+              $project: { _id: 1 , user:1, views: 1, video_url: 1,campaign: 1, issue: 1, description: 1}   
+            }
           ],
           as: "impacts",
         },
       },
+      //advocay of users
       {
         $lookup: {
           from: "advocates",
@@ -320,6 +498,16 @@ exports.getUser = async (req, res) => {
                 ],
               },
             },
+            {        
+              $lookup: {
+              from: "campaigns",
+              localField: "campaign",
+              foreignField: "_id",
+              as: "campaign",
+              pipeline: [{ $project: { _id: 1, title: 1, cause: 1 } }],
+              }
+
+            },
             {
               $lookup: {
                 from: "videos",
@@ -327,7 +515,7 @@ exports.getUser = async (req, res) => {
                 foreignField: "_id",
                 as: "video",
                 pipeline: [
-                  { $project: { _id: 1, video_url: 1, thumbnail_url: 1 } },
+                  { $project: { _id: 1, video_url: 1, thumbnail_url: 1, views:1} },
                 ],
               },
             },
@@ -363,7 +551,10 @@ exports.getUser = async (req, res) => {
             },
             {
               $project: {
+                algolia: 0,
                 shared: 0,
+                campaign:0,
+                advocate:0,
                 views: 0,
                 notification: 0,
                 messages: 0,
@@ -377,11 +568,26 @@ exports.getUser = async (req, res) => {
       },
       {
         $lookup: {
-          from: "usersSkills",
+          from: "skills",
           localField: "skills",
           foreignField: "_id",
           as: "skills",
-          pipeline: [{ $project: { name: 1 } }]         
+          pipeline: [
+            {
+              $lookup:{
+                from: "users",
+                localField: "users",
+                foreignField: "_id",
+                as: "endorseUser",
+                pipeline: [
+                  {
+                     $project: {first_name:1, last_name:1 }
+                  }
+                ]
+              }
+            },
+          { $project: { verified: 1, name:1, endorseUser: 1 }}
+          ]         
         },
       },
       {
@@ -399,7 +605,7 @@ exports.getUser = async (req, res) => {
            supportedCampaigns: {
              $concatArrays: ["$userCampaings", "$volunteerCampaigns"],
            },
-          volunteeringExperience: "$campaignVolunteers",
+          volunteeringExperience: "$volunteering",
            impacts: "$impacts",
            advocacy: "$advocacy",
            issues: "$issues",
@@ -408,7 +614,7 @@ exports.getUser = async (req, res) => {
       },
     ];
     const user = await User.aggregate(pipeLine);
-    return res.json(user);
+    return res.json({message : "User  records retrieved successfully.", data: user, status: 200});
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -731,26 +937,6 @@ exports.removeProfileImage = async (req, res) => {
     return res.status(404).json({ error: e.message });
   }
 };
-
-// exports.getFollowingUser = async (req, res) => {
-//   const { cuid, fuid } = req.params;
-//   try {
-//     const user = await User.findById({ _id: cuid });
-//     let hasfollowed = false;
-//     //  const followers = user.followers.length;
-//     if (user.followers.includes(fuid)) {
-//       hasfollowed = true;
-
-//       return res.status(200).json({ followedUser: hasfollowed });
-//     } else {
-//       hasfollowed = false;
-
-//       return res.status(200).json({ followedUser: hasfollowed });
-//     }
-//   } catch (e) {
-//     return res.status(404).json({ error: e.message });
-//   }
-// };
 
 exports.privacy = async (req, res) => {
   try {

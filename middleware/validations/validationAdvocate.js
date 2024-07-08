@@ -27,38 +27,38 @@ const validateAdvocate = [
     ],
     "At least one of issue, campaign, or user must be provided"
   ),
-  body("location")
-    .notEmpty()
-    .withMessage("Location is required")
-    .trim() // Trim whitespace characters
-    .custom((location) => {
-      try {
-        const locationObj = JSON.parse(location);
-        if (
-          typeof locationObj !== "object" ||
-          !locationObj.hasOwnProperty("type") ||
-          !locationObj.hasOwnProperty("coordinates")
-        ) {
-          throw new Error("Invalid location format");
-        }
-        if (locationObj.type !== "Point") {
-          throw new Error("Invalid location type");
-        }
-        if (
-          !Array.isArray(locationObj.coordinates) ||
-          locationObj.coordinates.length !== 2
-        ) {
-          throw new Error("Invalid coordinates format");
-        }
-        const [longitude, latitude] = locationObj.coordinates;
-        if (typeof longitude !== "number" || typeof latitude !== "number") {
-          throw new Error("Coordinates must be numbers");
-        }
-        return true;
-      } catch (error) {
-        throw new Error("Invalid location format");
-      }
-    }),
+  // body("location")
+  //   .notEmpty()
+  //   .withMessage("Location is required")
+  //   .trim() // Trim whitespace characters
+  //   .custom((location) => {
+  //     try {
+  //       const locationObj = JSON.parse(location);
+  //       if (
+  //         typeof locationObj !== "object" ||
+  //         !locationObj.hasOwnProperty("type") ||
+  //         !locationObj.hasOwnProperty("coordinates")
+  //       ) {
+  //         throw new Error("Invalid location format");
+  //       }
+  //       if (locationObj.type !== "Point") {
+  //         throw new Error("Invalid location type");
+  //       }
+  //       if (
+  //         !Array.isArray(locationObj.coordinates) ||
+  //         locationObj.coordinates.length !== 2
+  //       ) {
+  //         throw new Error("Invalid coordinates format");
+  //       }
+  //       const [longitude, latitude] = locationObj.coordinates;
+  //       if (typeof longitude !== "number" || typeof latitude !== "number") {
+  //         throw new Error("Coordinates must be numbers");
+  //       }
+  //       return true;
+  //     } catch (error) {
+  //       throw new Error("Invalid location format");
+  //     }
+  //   }),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
