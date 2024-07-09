@@ -123,6 +123,8 @@ router.post("/issue/deleteOld", issueController.deleteOldIssues)
 
 //search
 router.get("/search", searchController.search)
+router.get("/searchkeywords/trending", searchController.searchKeyword)
+
 
 //hashtags
 router.post("/hashtags", hashtagsController.add)

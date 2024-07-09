@@ -78,6 +78,7 @@ exports.searchAlgolia = async (query) => {
         delete queries[i].query;
       }
     }
+    // console.log('querieesis', queries);
     const { results } = await client.multipleQueries(queries);
     return results
     .filter(result => result.hits.length > 0)

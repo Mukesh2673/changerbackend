@@ -188,6 +188,9 @@ exports.getUser = async (req, res) => {
           foreignField: "user",
           as: "volunteering",
           pipeline:[
+            {
+              $match: { approved: true }
+            },
           {
             $lookup: {
               from: "campaigns",
@@ -702,8 +705,8 @@ exports.cause = async (req, res) => {
   try {
     const existingUser = await User.findById(user);
     if (existingUser) {
-      await User.updateOne({ _id: uid }, { cause: cause });
-      updateUsersInAlgolia(uid);
+      await User.updateOne({ _id: user }, { cause: cause });
+      updateUsersInAlgolia(user);
       return res.status(200).json({ message: "cause added to profile Successfully." });
     } else {
       return res.status(403).json({ message: "username not exists" });

@@ -19,7 +19,31 @@ const campaigncommonPipeline=[
           localField: "advocate",
           foreignField: "_id",
           as: "advocate",
-        },
+          pipeline:[
+            {
+              $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user",
+                pipeline: [
+                  {
+                    $project: {
+                      profileImage: 1,
+                      _id :0
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                user: 1,
+                _id: 0
+              },
+            }
+          ]
+        }
       },
       {
         $lookup: {
@@ -204,6 +228,221 @@ const campaigncommonPipeline=[
         },
       },    
 ]
+// pipeline for card list campaign
+const campaignListingPipeline=[
+  {
+      $lookup: {
+        from: "users",
+        localField: "user",
+        foreignField: "_id",
+        as: "user",
+        pipeline:[
+          {
+            $project: { _id: 1 , first_name:1, last_name:1, username:1 } 
+          }  
+        ]
+      },
+    },
+    { $unwind: "$user" },
+    {
+      $lookup: {
+        from: "advocates",
+        localField: "advocate",
+        foreignField: "_id",
+        as: "advocate",
+        pipeline:[
+          {
+            $lookup: {
+              from: "users",
+              localField: "user",
+              foreignField: "_id",
+              as: "user",
+              pipeline: [
+                {
+                  $project: {
+                    profileImage: 1,
+                    _id :0
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $project: {
+              user: 1,
+              _id: 0
+            },
+          }
+        ]
+      }
+    },
+    {
+      $lookup: {
+        from: "campaignPhase",
+        localField: "phases",
+        foreignField: "_id",
+        as: "phases",
+        pipeline:[
+          {
+            $lookup: {
+              from: "campaingVolunteering",
+              localField: "_id",
+              foreignField: "phaseId",
+              as: "campaignVolunteering",
+              pipeline:[
+                  {
+                    $project: { participant: 1 , roleTitle: 1, _id:0 } 
+ 
+                  }
+                ]
+            },
+          },
+          {
+            $lookup: {
+              from: "campaignDonation",
+              localField: "_id",
+              foreignField: "phaseId",
+              as: "donation",
+              pipeline:[
+                {
+                  $project: { amount: 1 , description: 1, _id: 0} 
+                }
+              ]
+            }
+          },
+   
+   
+          {
+            $project: { campaignVolunteering: 1 , title: 1, donation: 1 }
+          }
+        ]
+
+      },
+    },
+    {
+      $project:{
+        advocate: 1,
+        phases: 1,
+        image: 1,
+        cause: 1,
+        title: 1,
+        createdAt: 1
+      }
+    }
+  
+]
+
+//pipeline for card listing Issue
+const issueListingPipeLine=[  
+        {
+        $lookup: {
+          from: "users",
+          localField: "joined",
+          foreignField: "_id", 
+          as: "joined",
+          pipeline:[
+            {
+              $project:{
+                first_name:1,
+                last_name:1,
+                profileImage:1
+              }
+            }
+          ]
+        }
+      },
+      { $project: { _id: 0,title:1,cause:1, location:1,address:1,joined:1, issueState:1 }}
+]
+
+//pipeline for card impact listing
+const impactListingPipeLine=[
+{
+  $lookup:{
+    from: "users",
+    localField: "user",
+    foreignField: "_id",
+    as: "user",
+    pipeline:[
+      {$project: {first_name:1,last_name:1,profileImage:1, _id:0 }}
+
+    ] 
+  }
+  },
+  {
+    $lookup: {
+      from: "campaigns",
+      localField: "campaign",
+      foreignField: "_id",
+      as: "campaign",
+      pipeline:[
+        { $project: { _id: 0,title:1,cause:1 }
+      }]
+    },
+  },
+  {
+    $lookup: {
+      from: "issues",
+      localField: "issue",
+      foreignField: "_id",
+      as: "issue",
+      pipeline:[
+        { $project: { _id: 0,title:1,cause:1 }
+      }]
+    },
+  },
+  {
+  $project:{
+    user: 1,
+    campaign: 1,
+    issue: 1,
+    title: 1,
+    video_url: 1,
+    thumbnail_url: 1,
+    createdAt: 1
+  }
+  }
+]
+
+//pipeline for user Listing
+const userListingPipeLine=[
+  {
+    $lookup:{
+      from: "videos",
+      localField: "_id",
+      foreignField: "user",
+      as:"impacts"
+    }
+  },
+  {
+    $lookup:{
+      from: "users",
+      localField: "followers",
+      foreignField: "_id",
+      as:"followers",
+      pipeline:[
+        {
+          $project:{
+            _id:1
+          }
+        }
+      ]
+    }  
+  },
+  {
+    $project: {
+      _id: 1,
+      username: 1,
+      profileImage: 1,
+      followers: 1,
+      profileImage: 1,
+      first_name: 1,
+      last_name: 1,
+      impacts: { $size: "$impacts" },
+      cause:1
+    },
+  },
+]
+
 const campignIdDonationPipeline=[
   {
     $lookup: {
@@ -390,6 +629,10 @@ const videoCommonPipeline=[
 ]
 
 module.exports = {
+  campaignListingPipeline,
+  issueListingPipeLine,
+  impactListingPipeLine,
+  userListingPipeLine,
   campaigncommonPipeline,
   campignIdDonationPipeline,
   campignIdPetitionPipeline,
