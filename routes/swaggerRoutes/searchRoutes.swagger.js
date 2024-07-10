@@ -29,8 +29,10 @@
  *          example: animal
  *       - name: hashtags
  *         in: query
- *         description: Add hashtags to search records
+ *         description: Add hashtags to search records by hastags
  *         required: false
+ *         type: string 
+ *         example: environment 
  *       - name: recordType
  *         in: query
  *         enum: [ "Campaigns", "Users","Impact", "Issues", "Hashtags"]

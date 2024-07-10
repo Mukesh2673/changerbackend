@@ -65,22 +65,31 @@ exports.searchAlgolia = async (query) => {
         queries[i].aroundRadius = searchRadius;
       }
     }
-    if (query.cause) {
-      const causeFilter = `cause:${query.cause}`;
-      for (let i = 0; i < queries.length; i++) {
-        queries[i].facetFilters = [`${causeFilter}`];
-      }
-    }
-    if (query.hashtags) {
+
+    if (query.hashtags){
       const hashtags = `hashtags:${query.hashtags}`;
       for (let i = 0; i < queries.length; i++) {
         queries[i].facetFilters = [`${hashtags}`];
         delete queries[i].query;
       }
     }
-    // console.log('querieesis', queries);
+    if (query.cause) {
+      let cause=query.cause
+      let causeFilter=[]
+      if(Array.isArray(cause))
+      {
+         causeFilter = cause.map(data => `cause:${data}`);
+      }
+      else{
+         causeFilter = [`cause:${cause}`];
+
+      }
+      for (let i = 0; i < queries.length; i++) {
+        queries[i].facetFilters = [causeFilter];
+      }
+    }
     const { results } = await client.multipleQueries(queries);
-    return results
+    let records=results
     .filter(result => result.hits.length > 0)
     .map((result, index) => ({
       data: result.hits.map(hit => {
@@ -88,12 +97,12 @@ exports.searchAlgolia = async (query) => {
         return hit;
       }),
     }));
+    return records?.length>0 ?  records[0]?.data: records
   } catch (error) {
     console.log("err is", error);
     return error;
   }
 };
-
 exports.updateAlgolia = async (objects, index) => {
   try {
     const algoliaIndex = client.initIndex(index);
@@ -118,7 +127,6 @@ exports.deleteAlgolia = async (index) => {
     console.log("err is", err);
   }
 };
-
 exports.findObjectById = async (objectId, indexName) => {
   try {
     const index = client.initIndex(indexName); // Initialize the index

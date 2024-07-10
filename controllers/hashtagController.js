@@ -122,7 +122,6 @@ exports.getContent = async (req, res) => {
       Issue.find({ hashtags: hashtagToFind }),
       Video.find({ hashtags: hashtagToFind })
     ]);
-  
     return res.status(200).json({
       data: {
         campaigns,
@@ -131,5 +130,6 @@ exports.getContent = async (req, res) => {
       }
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message, status: 500 });
+    return res.status(500).json({ message: error.message, status: 500 }); 
+  
   }}
