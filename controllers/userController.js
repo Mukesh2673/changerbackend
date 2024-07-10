@@ -705,11 +705,18 @@ exports.cause = async (req, res) => {
   try {
     const existingUser = await User.findById(user);
     if (existingUser) {
-      await User.updateOne({ _id: user }, { cause: cause });
-      updateUsersInAlgolia(user);
-      return res.status(200).json({ message: "cause added to profile Successfully." });
+      // Check if the cause already exists in the user's cause array
+      if (!existingUser.cause.includes(cause)) {
+        await User.updateOne({ _id: user }, {
+          $push: { cause: cause }
+        });
+        updateUsersInAlgolia(user);
+        return res.status(200).json({ message: "Cause added to profile successfully." });
+      } else {
+        return res.status(400).json({ message: "Cause already exists in the profile." });
+      }
     } else {
-      return res.status(403).json({ message: "username not exists" });
+      return res.status(403).json({ message: "Username does not exist." });
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });

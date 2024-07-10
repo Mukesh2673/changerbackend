@@ -129,9 +129,28 @@ exports.searchKeyword = async (req, res) => {
 exports.search = async (req, res)=>{
   let {searchKey, cause, hashtags, recordType, lat, lng} = req.query;
   recordType=recordType.toLowerCase();
-  // const lat= parseFloat(query.lat);
-  // const lng = parseFloat(query.lng);
-    const filter = {}
+  const filter = {}
+  let location={} 
+  if (lat && lng) {
+    const coordinates = [parseFloat(lng), parseFloat(lng)];
+    const distance = 1;
+    const unitValue = 1000000;
+    console.log('condfasfdasfd',coordinates)
+    location={
+      $geoNear: {
+        near: {
+          type: "Point",
+          coordinates: coordinates,
+        },
+
+        maxDistance: distance * unitValue,
+        distanceField: "distance",
+        distanceMultiplier: 1 / unitValue,
+        key: "location",
+        spherical: true,
+      },
+    }
+  }
     if(cause)
     {
       let causeArray=cause.split(',')
@@ -145,10 +164,7 @@ exports.search = async (req, res)=>{
         { cause: { $in: causeTags } }, // Match any cause in causeTags
         { cause: { $all: causeTags } } // Match all causes in causeTags
       ];
-      //filter.cause = { $elemMatch: { $in: causeTags } };
-
     }
-    
     if (searchKey){
       const searchKeyWordRecords=await SearchKeyWord.find({
         name: new RegExp(`^${searchKey}$`, "i"),
@@ -159,18 +175,6 @@ exports.search = async (req, res)=>{
       }
       const regex = new RegExp(".*" + searchKey + ".*", "i");
       filter.$or = [{ cause: regex }, { title: regex }, {first_name: regex}, {last_name: regex }];
-    }
-
-    if(lat && lng){
-      filter.location = {
-        $near: {
-          $geometry: {
-            type: "Point",
-            coordinates: [lng, lat]
-          },
-          $maxDistance: 10000 // Example: 10 km radius
-        }
-      }
     }
 
     if(!recordType){
@@ -194,6 +198,8 @@ exports.search = async (req, res)=>{
       switch (recordType) {
         case 'issues':
           const issuePipeLine=[...issueListingPipeLine,{$match:filter}]
+          if(lat && lng){ issuePipeLine.unshift(location)}; 
+          console.log('pisssadfasfd',issuePipeLine)
           const issues = await Issue.aggregate(issuePipeLine);
           return res.status(200).json({
             data: {
@@ -202,6 +208,7 @@ exports.search = async (req, res)=>{
           });
         case 'campaigns':
           const campaignPipeLine=[...campaignListingPipeline, {$match:filter}]
+          if(lat && lng){ campaignPipeLine.unshift(location)}; 
           const campaigns = await Campaign.aggregate(campaignPipeLine);
           return res.status(200).json({
             data: {
@@ -210,6 +217,7 @@ exports.search = async (req, res)=>{
           });
         case 'impact':
           const impactPipeLine=[...impactListingPipeLine,{$match:filter}]
+          if(lat && lng){ impactPipeLine.unshift(location)}; 
           const videos = await Video.aggregate(impactPipeLine);
           return res.status(200).json({
             data: {
@@ -218,8 +226,8 @@ exports.search = async (req, res)=>{
           });
         case 'users':
           const userPipeLine=[{$match:filter},...userListingPipeLine, ]
+          if(lat && lng){ userPipeLine.unshift(location)}; 
           const users = await User.aggregate(userPipeLine);
-          console.log('user pipelisis=>>>>',filter)
           return res.status(200).json({
             data: {
               users: users
@@ -266,20 +274,4 @@ exports.search = async (req, res)=>{
         }
     }
   }
-  //  if(type == 'tags')
-  //  {
-  //   const hashtagToFind = `#${query.tag}`;
-  //   const [campaigns, issues, videos] = await Promise.all([
-  //     Campaign.find({ hashtags: hashtagToFind}, 'hashtags'),
-  //     Issue.find({ hashtags: hashtagToFind }, 'hashtags'),
-  //     Video.find({ hashtags: hashtagToFind }, 'hashtags')
-  //   ]);
-  //   const allHashtags = campaigns.map(c => c.hashtags)
-  //   .concat(issues.map(i => i.hashtags))
-  //   .concat(videos.map(v => v.hashtags)).flat();
-  //    const uniqueHashtags = [...new Set(allHashtags)];
-  //     return res.status(200).json({
-  //     hashtags: uniqueHashtags
-  //   });
-  //  }
 

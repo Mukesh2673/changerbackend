@@ -4,7 +4,7 @@ const issueSchema = new Schema(
   {
     title: { type: String, required: false },
     cause: { type: String, required: false },
-    location: { type: { type: String, default: "Point", enum: "Point"}, coordinates: { type: [Number], default: [0, 0]}},
+    location: { type: { type: String, default: "Point", enum: "Point"}, coordinates: { type: [Number, Number], default: [0, 0]}},
     address: { type: String, required: false },
     description: { type: String, default: "" },
     shared: [{ type: Schema.Types.ObjectId, ref: "User", required: false }],
