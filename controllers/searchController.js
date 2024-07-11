@@ -8,16 +8,18 @@ exports.search = async (req, res) => {
     const {searchKey, cause, hashtags, recordType, lat, lng}=req.query
     const filter = {};
     const query = req.query;
-
+    //validate search variable
+    if(!(searchKey || hashtags))
+    {
+      return res
+      .status(400)
+      .json({ message: "Invalid search key are required", status: 400 });
+    }
     if (hashtags){
       filter.hashtags =`#${hashtags}`;
     }
     if(cause){
       let causeArray=cause.split(',')
-      let causeTags=[]
-      causeArray.forEach((data)=>{
-        causeTags=[...causeTags, data]
-      })
       causeTags = causeArray.map(data => data.trim());
       filter.cause = causeTags;
     }
@@ -32,15 +34,10 @@ exports.search = async (req, res) => {
          await new SearchKeyWord({name:searchKeyWord}).save();
       }
     }
-    if(Object.keys(query).length === 0){
-      return res
-        .status(500)
-        .json({ message: "invalid search key", status: 500 });
-    }
     if (lat && lng) {
       filter.location = [{ lat: lat, lng: lng }];
     }
-    const arr = [
+    const  documentCollection = [
       "campaigns",
       "users",
       "impacts",
@@ -50,7 +47,7 @@ exports.search = async (req, res) => {
     ];
     let documentType=recordType?.toLowerCase();
     //search from all collection when document type not define
-    if (arr.includes(documentType)) {
+    if (documentCollection.includes(documentType)) {
       filter.type = documentType;
     } else {
       const filters = [
