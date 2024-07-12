@@ -398,7 +398,7 @@ const impactListingPipeLine=[
     title: 1,
     video_url: 1,
     thumbnail_url: 1,
-    createdAt: 1
+    createdAt: 1,
   }
   }
 ]

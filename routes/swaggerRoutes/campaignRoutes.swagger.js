@@ -16,13 +16,13 @@
 
 /**
  * @swagger
- * /campaigns/{id}:
+ * /campaigns/{campaignId}:
  *   get:
  *     summary: Get details of a campaign by ID
  *     tags:
  *       - Campaigns
  *     parameters:
- *       - name: id
+ *       - name: campaignId
  *         in: path
  *         description: ID of the campaign to fetch
  *         required: true
@@ -160,7 +160,7 @@
  *         description: Internal server error
  *       401:
  *         description: Correct  Authorization Token Required!
- *       404:
+ *       400:
  *         description: campaign does not correspond to the participation
  */
 
@@ -327,7 +327,7 @@
 
 /**
  * @swagger
- * /campaign/message:
+ * /campaign/{campaignId}/message:
  *   post:
  *     summary: Post the messages for the campaign-related user within campaigns.
  *     tags:
@@ -335,7 +335,11 @@
  *     parameters:
  *       - name: Authorization
  *         in: header
- *         description: Authorization Token        
+ *         description: Authorization Token  
+ *       - name: campaignId
+ *         in: path
+ *         description: Add the campaign Id
+ *         required: true       
  *       - name: body
  *         in: body
  *         description: Message to a particular user who is a part of the campaign by user ID and campaign ID.
@@ -344,12 +348,9 @@
  *           type: object
  *           required:
  *             - profile
- *             - campaign
  *             - message 
  *           properties:
  *             profile:
- *               type: string
- *             campaign:
  *               type: string
  *             message:
  *               type: string   

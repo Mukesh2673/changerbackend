@@ -1,5 +1,10 @@
-const { body, validationResult } = require("express-validator");
+const { body, validationResult,param } = require("express-validator");
 const validateImpact = [
+  param('campaignId')
+    .notEmpty()
+    .withMessage('Campaign ID is required')
+    .isMongoId()
+    .withMessage('Campaign ID must be a valid MongoDB ID'),
   body("description").notEmpty().withMessage("Description is required"),
   body("video").custom((value, { req }) => {
     if (!req.file) {

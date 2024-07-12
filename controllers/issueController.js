@@ -329,7 +329,7 @@ exports.generate = async (req, res, next) => {
 
 exports.upvotes = async (req, res, next) => {
   try {
-    const issueId = req.body.issue;
+    const issueId = req.params.id;
     const uid= req.user
     const auth = await User.findById({ _id: uid });
     if (!auth) {
@@ -472,7 +472,7 @@ exports.issueForUser = async (req, res) => {
 };
 
 exports.joinIssue = async (req, res) => {
-  const issueId = req.body.issueId;
+  const issueId =  req.params.id;
   const userId = req.user;
   const result = await Issue.findById({ _id: issueId }).populate([
     {
@@ -552,7 +552,7 @@ exports.joinIssue = async (req, res) => {
 };
 
 exports.leaveIssue = async (req, res) => {
-  const issueId = req.body.issueId;
+  const issueId =  req.params.id;
   const userId = req.user;
   const result = await Issue.findById({ _id: issueId });
   if (result) {
@@ -762,7 +762,7 @@ exports.deleteIssue = async (req, res) => {
     } else {
       return res.json({
         status: 500,
-        message: "invalid issue",
+        message: "Invalid issue: you are not authorized to delete this issue",
         success: false,
       });
     }
@@ -820,7 +820,7 @@ exports.report = async (req, res) => {
     let records = req.body;
     const user=req.user;
     records.reportedBy=user
-    const issue=await Issue.findById( records.issues)
+    const issue=await Issue.findById( records.issue)
     if(!issue)
     {
       return res.json({
@@ -849,8 +849,7 @@ exports.report = async (req, res) => {
 exports.share = async (req, res) => {
   try {
     const uid =req.user
-    const id = req.body.issue;
-    const issueId = id;
+    const issueId = req.params.id;
     const isExist = await Issue.find({ _id: issueId ,user:uid });
     if (isExist) {
       const shared = isExist[0].shared;

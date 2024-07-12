@@ -59,7 +59,7 @@ exports.showCampaigns = async (req, res) => {
 //get Campaing by Id
 exports.showCampaign = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id= req.params.campaignId
     let pipeLine=campaigncommonPipeline
     pipeLine.unshift({ $match: { _id: mongoose.Types.ObjectId(id) }});
     pipeLine.push({$project: { hashtags: 0 , algolia: 0, updatedAt: 0, _v: 0 } });
@@ -74,7 +74,6 @@ exports.showCampaign = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
-
 
 //trendingCampaign
 exports.trendingCampaigns = async (req, res) => {
@@ -565,6 +564,8 @@ exports.postMessages = async (req, res) => {
   try {
     let records = req.body;
     const { user } = req;
+    const campaignId = req.params.campaignId;
+    records.campaign=campaignId;
     records.sender = user;
     const message = new Message(records);
     const savedMessage = await message.save();
@@ -956,7 +957,7 @@ exports.applyForVolunteers = async (req, res) => {
     const {phases}=campaign
     if(!phases.includes(phaseId))
     {
-      return res.status(404).json({ message: "Invalid campaign: campaign does not correspond to the participation" });
+      return res.status(404).json({ message: "Invalid campaign: campaign does not correspond to the participation",status:400,success:false });
 
     }
     // Check if the user is already volunteers

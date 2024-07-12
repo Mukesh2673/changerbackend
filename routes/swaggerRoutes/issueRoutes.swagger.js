@@ -130,9 +130,6 @@
  *             address:
  *               type: string
  *               example: West Bridge London, United Kingdom
- *             desc:
- *               type: string
- *               example: Join us for a day of mental health awareness and advocacy! Our
  *             image:
  *              type: string
  *              example: thumbnail/1717285896269.png
@@ -267,7 +264,7 @@
 
 /**
  * @swagger
- * /issue/upvotes:
+ * /issue/{id}/upvotes:
  *   post:
  *     summary: Upvotes the issue
  *     tags:
@@ -276,18 +273,10 @@
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
- *       - name: body
- *         in: body
+ *       - name: id
+ *         in: path
  *         description: Add Issue id 
  *         required: true
- *         schema:
- *           type: object
- *           required:
- *             - issue
- *           properties:
- *             issue:
- *               type: string
- *               example: 667912d875fcf3a374ab3bab
  *     responses:
  *       200:
  *         description: Issue voted successfully
@@ -324,7 +313,7 @@
 
 /**
  * @swagger
- * /issue/join:
+ * /issue/{id}/join:
  *   post:
  *     summary: Join Issue
  *     tags:
@@ -333,18 +322,10 @@
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
- *       - name: body
- *         in: body
+ *       - name: id
+ *         in: path
  *         description: Add Issue id 
  *         required: true
- *         schema:
- *           type: object
- *           required:
- *             - issue
- *           properties:
- *             issueId:
- *               type: string
- *               example: 667912d875fcf3a374ab3bab
  *     responses:
  *       200:
  *         description: Issue joined successfully.
@@ -356,7 +337,7 @@
 
 /**
  * @swagger
- * /issue/leave:
+ * /issue/{id}/leave:
  *   post:
  *     summary: Leave Issue
  *     tags:
@@ -365,18 +346,10 @@
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
- *       - name: body
- *         in: body
+ *       - name: id
+ *         in: path
  *         description: Add Issue id 
  *         required: true
- *         schema:
- *           type: object
- *           required:
- *             - issue
- *           properties:
- *             issueId:
- *               type: string
- *               example: 667912d875fcf3a374ab3bab
  *     responses:
  *       200:
  *         description: Issue Leave successfully.
@@ -529,7 +502,7 @@
  *             - reportSubject
  *             - details
  *           properties:
- *             issues:
+ *             issue:
  *               type: string
  *               example: 66792e4ab0123f7763ef28a3
  *             reportSubject:
@@ -549,7 +522,7 @@
 
 /**
  * @swagger
- * /issue/share:
+ * /issue/{id}/share:
  *   post:
  *     summary: Share the Issue
  *     tags:
@@ -558,18 +531,10 @@
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
- *       - name: body
- *         in: body
- *         description: share the  Issue 
+ *       - name: id
+ *         in: path
+ *         description: Add Issue id 
  *         required: true
- *         schema:
- *           type: object
- *           required:
- *             - id
- *           properties:
- *             issue:
- *               type: string
- *               example: 66792e4ab0123f7763ef28a3
  *     responses:
  *       200:
  *         description: Issue shared successfully.
