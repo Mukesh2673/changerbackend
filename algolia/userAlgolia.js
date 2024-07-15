@@ -1,5 +1,4 @@
 const { User } = require("../models");
-
 const {
   searchAlgolia,
   updateAlgolia,
@@ -7,10 +6,13 @@ const {
   deleteAlgolia,
   findObjectById,
 } = require("../libs/algolia");
-
+const {userListingPipeLine} =require("../constants/commonAggregations")
+const mongoose = require("mongoose");
 const userRecords = async (id) => {
   try {
-    return await User.find({ _id: id });
+    let pipeLine=userListingPipeLine
+    pipeLine.unshift({ $match: { _id: mongoose.Types.ObjectId(id)}});
+    return await User.aggregate(pipeLine);
     // Run the aggregation
   } catch (err) {
     console.log("value of err is", err);
@@ -35,20 +37,10 @@ exports.updateUsersInAlgolia = async (id) => {
         objectID: userAlgoId,
         first_name: users[0]?.first_name,
         last_name: users[0]?.last_name,
-        email: users[0]?.email,
         username: users[0]?.username,
-        uid: users[0]?.uid,
-        dob: users[0]?.dob,
         profileImage: users[0]?.profileImage,
-        karmaPoint: users[0]?.karmaPoint,
         _id: users[0]?._id,
-        uid: users[0]?.uid || users[0]?.cognitoUsername,
         followers: users[0]?.followers,
-        following: users[0]?.following,
-        updatedAt: users[0]?.updatedAt,
-        language: users[0]?.language,
-        privacy: users[0]?.privacy,
-        cause: users[0]?.cause,
       };
       await updateAlgolia(algoliaObject, "users");
       if (!algoliaObjectId) {
@@ -56,7 +48,7 @@ exports.updateUsersInAlgolia = async (id) => {
         }
       return true;
     } else {
-      const records = await User.find({ _id: id });
+      const records = await userRecords(id);
       let obj = await saveAlgolia(records, "users");
       let objectID = obj.objectIDs[0];
       await User.updateOne({ _id: id }, { algolia: objectID });
@@ -70,8 +62,9 @@ exports.updateUsersInAlgolia = async (id) => {
 exports.addUserInAlgolia = async (id) => {
   try {
     let records = await userRecords(id);
-    const user = records[0];
-    await saveAlgolia(user, "users");
+    let obj = await saveAlgolia(records, "users");
+    let objectID = obj.objectIDs[0];
+    await User.updateOne({ _id: id }, { algolia: objectID });
     return true;
   } catch (err) {
     return false;

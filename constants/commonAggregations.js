@@ -322,6 +322,8 @@ const campaignListingPipeline=[
     {
       $project:{
         advocate: 1,
+        location: 1,
+        hashtags: 1,
         phases: 1,
         image: 1,
         cause: 1,
@@ -332,7 +334,7 @@ const campaignListingPipeline=[
   
 ]
 
-//pipeline for card listing Issue
+//pipeline for card listing   e
 const issueListingPipeLine=[  
         {
         $lookup: {
@@ -351,7 +353,7 @@ const issueListingPipeLine=[
           ]
         }
       },
-      { $project: { _id: 0,title:1,cause:1, location:1,address:1,joined:1, issueState:1 }}
+      { $project: { _id: 0,title:1,cause:1, location:1,address:1,joined:1, issueState:1, hashtags: 1, votes:1 }}
 ]
 
 //pipeline for card impact listing
@@ -398,7 +400,10 @@ const impactListingPipeLine=[
     title: 1,
     video_url: 1,
     thumbnail_url: 1,
+    hashtags: 1,
     createdAt: 1,
+    algolia:1,
+    location:1
   }
   }
 ]
@@ -438,7 +443,10 @@ const userListingPipeLine=[
       first_name: 1,
       last_name: 1,
       impacts: { $size: "$impacts" },
-      cause:1
+      createdAt: 1,
+      cause:1,
+      hashtags:1,
+      location:1
     },
   },
 ]

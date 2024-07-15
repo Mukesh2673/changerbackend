@@ -221,7 +221,7 @@ exports.searchKeyword = async (req, res) => {
 //         case 'campaigns':
 //           const campaignPipeLine=[...campaignListingPipeline, {$match:filter}]
 //           if(lat && lng){ campaignPipeLine.unshift(location)}; 
-//           const campaigns = await Campaign.aggregate(campaignPipeLine);
+//           const campaigns = await Campaign.aggregate(campaignListingPipeline);
 //           return res.status(200).json({
 //             data: {
 //               campaigns: campaigns

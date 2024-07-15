@@ -216,7 +216,6 @@ exports.create = async (req, res) => {
       },
       { new: true }
     );
-    await updateUsersInAlgolia(auth._id);
     const campaign = new Campaign({
       user:  userId,
       cause: data.cause,
@@ -277,10 +276,7 @@ exports.create = async (req, res) => {
     const videoId = savedVideo._id;
     const savePhaseId = [];
     const phaseArr = data.phase;
-    //update Records in Algolia
-    await addVideoInAlgolia(savedVideo._id);
-    await addVideoInAlgolia(videoId);
-    await addCampaignInAlgolia(campaigns._id);
+
     //save phase data to campaign Phase Collection
     for (let i = 0; i < phaseArr.length; i++) {
       const phaseItem = new campaignPhases({
@@ -345,8 +341,13 @@ exports.create = async (req, res) => {
           },
         }
       );
-      updateCampaignInAlgolia(campaignsId);
     }
+    //add Records in Algolia
+    await Promise.all([
+      addCampaignInAlgolia(campaigns._id),
+      addVideoInAlgolia(videoId),
+      updateUsersInAlgolia(auth._id)
+    ]);
 
     let records = await Campaign.findById(campaignsId);
     const message = `You received +100 karma Point for good intention of creating Campaign ${data.title}`;

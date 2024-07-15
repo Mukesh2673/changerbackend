@@ -208,6 +208,7 @@
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
+ *         required: true 
  *       - name: body
  *         in: body
  *         description: Add campaign

@@ -16,7 +16,6 @@ function sendMessage(type, data, id){
     if (typeof uid === 'object') {
         uid=id.toString();
     }  
-    console.log("message is",uid)
     const ws= clients.get(uid);
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(message);

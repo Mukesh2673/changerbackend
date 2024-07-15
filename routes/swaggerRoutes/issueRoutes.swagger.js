@@ -130,6 +130,11 @@
  *             address:
  *               type: string
  *               example: West Bridge London, United Kingdom
+ *             location:
+ *              type: object
+ *              example: 
+ *                       type: Point
+ *                       coordinates : [80.9462, 12.83]
  *             image:
  *              type: string
  *              example: thumbnail/1717285896269.png

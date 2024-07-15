@@ -6,12 +6,13 @@ const {
   deleteAlgolia,
   findObjectById,
 } = require("../libs/algolia");
-
+const {issueListingPipeLine} =require("../constants/commonAggregations")
+const mongoose = require("mongoose");
 const issueRecords = async (id) => {
   try {
-    const issueId = id;
-    let records = await Issue.find({ _id: issueId });
-    return records;
+    let pipeLine=issueListingPipeLine
+    pipeLine.unshift({ $match: { _id: mongoose.Types.ObjectId(id) }});
+    return await Issue.aggregate(pipeLine);
   } catch (err) {
     console.log("err", err);
   }
@@ -19,8 +20,8 @@ const issueRecords = async (id) => {
 
 exports.updateIssueInAlgolia = async (id) => {
   try {
-    let issueRecord = await issueRecords(id);
-    const issues = issueRecord[0];
+    let records = await issueRecords(id);
+    const issues = records[0];
     const algoliaObjectId = issues?.algolia;
     let searchAlgo = [];
     if (algoliaObjectId) {
@@ -35,12 +36,8 @@ exports.updateIssueInAlgolia = async (id) => {
         objectID: issueAlgoId,
         location: issues?.location,
         description: issues?.description,
-        views: issues?.views,
-        notification: issues?.notification,
-        campaign: issues?.campaign,
         advocate: issues?.advocate,
         votes: issues?.votes,
-        messages: issues?.messages,
         hashtags: issues?.hashtags,
         joined: issues?.joined,
         issueState: issues?.issueState,
@@ -50,8 +47,6 @@ exports.updateIssueInAlgolia = async (id) => {
         cause: issues?.cause,
         address: issues?.address,
         createdAt: issues?.createdAt,
-        updatedAt: issues?.updatedAt,
-        video: issues?.video,
       };
       await updateAlgolia(algoliaObject, "issues");
       if (!algoliaObjectId) {
@@ -59,7 +54,13 @@ exports.updateIssueInAlgolia = async (id) => {
       }
       return true;
     }else {
-      let obj = await saveAlgolia(issueRecord, "issues");
+      let geoCoordinate=records[0]?.location?.coordinates
+      records[0]['_geoloc']={
+        "lat": geoCoordinate[1],
+        "lng": geoCoordinate[0]
+      }
+      delete records[0]?.location 
+      let obj = await saveAlgolia(records, "issues");
       let objectID = obj.objectIDs[0];
       await Issue.updateOne({ _id: id }, { algolia: objectID });
     }
@@ -88,8 +89,16 @@ exports.deleteIssueInAlgolia = async (id) =>{
 exports.addIssueInAlgolia = async (id) => {
     try {
       let records = await issueRecords(id);
-      const issues = records[0];
-      await saveAlgolia(issues, "issues");
+      let geoCoordinate=records[0]?.location?.coordinates
+      records[0]['_geoloc']={
+        "lat": geoCoordinate[1],
+        "lng": geoCoordinate[0]
+      }
+      delete records[0]?.location
+      delete   records[0]?.algolia
+      let obj=await saveAlgolia(records, "issues");
+      let objectID = obj.objectIDs[0];
+      await Issue.updateOne({ _id: id }, { algolia: objectID });
       return true;
     } catch (err) {
       return false;

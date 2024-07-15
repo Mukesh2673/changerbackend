@@ -1,5 +1,5 @@
-const { Video,Comment,User,Issue } = require("../models");
-const { ObjectId } = require("mongodb");
+const { Video} = require("../models");
+const mongoose = require("mongoose");
 const {
   searchAlgolia,
   updateAlgolia,
@@ -7,60 +7,22 @@ const {
   deleteAlgolia,
   findObjectById,
 } = require("../libs/algolia");
+const {impactListingPipeLine} =require("../constants/commonAggregations")
 
 const videosRecords = async (id) => {
-    return await Video.find({ _id: new ObjectId(id) })
-      .sort({ createdAt: "desc" })
-      .populate([
-        {
-          path: "comments",
-          populate: [
-            {
-              path: "sender",
-              model: "User",
-            },
-            {
-              path: "likes",
-              model: "commentsLikes",
-            },
-            {
-              path: "replies",
-              populate: [
-                {
-                  path: "sender", // Assuming "sender" is the field referencing the user who posted the reply
-                  model: "User",
-                },
-                {
-                  path: "likes",
-                  model: "commentsLikes",
-                },
-              ],
+  try{
+    let pipeLine=impactListingPipeLine
+    pipeLine.unshift({ $match: { _id: mongoose.Types.ObjectId(id) }});
+    return await Video.aggregate(pipeLine);
+  }
+  catch(err)
+  {
+    console.log("err",err)
+  }
   
-              model: "RepliesComments",
-            },
-          ],
-  
-          model: Comment,
-        },
-  
-        {
-          path: "issue",
-          populate: [
-            {
-              path: "user",
-              model: User,
-            },
-            {
-              path: "joined",
-              model: User,
-            },
-          ],
-          model: Issue,
-        },
-      ]);
 };
 
-exports.updateVideosInAlgolia = async (id) => {
+exports.updateVideosInAlgolia = async (id) => { 
   try {
     let videoRecord = await videosRecords(id);
     const videos = videoRecord[0];
@@ -77,19 +39,15 @@ exports.updateVideosInAlgolia = async (id) => {
       const algoliaObject = {
         objectID: videoAlgoId,
         location: videos.location,
-        likes: videos.likes,
-        comments: videos?.comments,
         hashtags: videos?.hashtags,
         user: videos?.user,
+        campaign: videos?.campaign,
+        issue: videos?.issue,
         description: videos?.description,
         video_url: videos?.video_url,
         video_id: videos?.video_id,
-        encoding_id: videos?.encoding_id,
-        encoding_status: videos?.encoding_status,
         thumbnail_url: videos?.thumbnail_url,
-        type: videos?.type,
         createdAt: videos?.createdAt,
-        updatedAt: videos?.updatedAt,
       };
       await updateAlgolia(algoliaObject, "videos");
       if (!algoliaObjectId) {
@@ -98,6 +56,12 @@ exports.updateVideosInAlgolia = async (id) => {
       return true;
     } else {
       let records = await videosRecords(id);
+      let geoCoordinate=records[0]?.location?.coordinates
+      records[0]['_geoloc']={
+        "lat": geoCoordinate[1],
+        "lng": geoCoordinate[0]
+      }
+      delete records[0]?.location 
       let obj = await saveAlgolia(records, "videos");
       let objectID = obj.objectIDs[0];
       await Video.updateOne({ _id: id }, { algolia: objectID });
@@ -127,8 +91,15 @@ exports.deleteVideosInAlgolia = async (id) =>{
 exports.addVideoInAlgolia = async (id) => {
   try {
     let records = await videosRecords(id);
-    const videos = records[0];
-    await saveAlgolia(videos, "videos");
+    let geoCoordinate=records[0]?.location?.coordinates
+    records[0]['_geoloc']={
+      "lat": geoCoordinate[1],
+      "lng": geoCoordinate[0]
+    }
+    delete records[0]?.location
+    let obj = await saveAlgolia(records, "videos");
+    let objectID = obj.objectIDs[0];
+    await Video.updateOne({ _id: id }, { algolia: objectID });
     return true;
   } catch (err) {
     return false;
