@@ -915,6 +915,26 @@
  */
 
 
+/**
+ * @swagger
+ * /cognitoUser:
+ *   get:
+ *     summary: Get cognito User details by access token
+ *     tags:
+ *       - Cognito
+ *     parameters:
+ *       - name: Authorization
+ *         in: header
+ *         description: Add refresh token to access token
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Cognito User records retrieved successfully.
+ *       500:
+ *         description: Internal server error
+ */
+
 
 
 

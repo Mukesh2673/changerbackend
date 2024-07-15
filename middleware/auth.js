@@ -26,7 +26,16 @@ const   validateToken = async (req, res, next) => {
     let decoded=await validateCognitoToken(accessToken)
     req.body.decoded=decoded;
     const user = await User.findOne({cognitoUsername:decoded.username});
-    if (
+    if (!user)
+    {
+      let respData = {
+        success: false,
+        message: "User Not Found to this Token",
+        status: 400
+      };
+      return res.status(400).json(respData);
+    }
+     if (
       (!decoded || decoded.token_use !== 'access' || decoded.iss !== cognitoIssuer) ||
       !user
     ) {
@@ -79,4 +88,50 @@ const accessToken = async (req, res, next) => {
   }
 };
 
-module.exports = { validateToken, accessToken };
+const cognitoUserDetails=async (req, res, next)=>{
+  try {
+
+    if (!req.headers.authorization) {
+      const respData = {
+        status: 403,
+        success: false,
+        message: "No Authorization Token",
+      };
+  
+      return res.status(403).json(respData);
+    }
+    const accessToken = req.headers.authorization.replace("Bearer ", "");
+    let decoded=await validateCognitoToken(accessToken)
+    if (
+      (!decoded || decoded.token_use !== 'access' || decoded.iss !== cognitoIssuer)) 
+      {
+      let respData = {
+        success: false,
+        message: "Invalid Access Token",
+        status: 401
+      };
+      return res.status(401).json(respData);
+     } 
+    
+    //const user = await User.findOne({cognitoUsername:decoded.username});
+    let respData = {
+      success: false,
+      message: "Cognito User records retrieved successfully",
+      data: decoded,
+      status: 200
+    };
+    return res.status(401).json(respData);;
+  } catch (error) {
+    console.log(error);
+    let respData = {
+      success: false,
+      message: "Invalid Access Token",
+      error:error.name,
+      status:401
+    };
+    return res.status(401).json(respData);
+  }
+};
+
+
+module.exports = { validateToken, accessToken, cognitoUserDetails };

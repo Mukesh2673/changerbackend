@@ -1,6 +1,6 @@
 const { param, validationResult } = require("express-validator");
 const validateAdvocateId = [
-    param('id')
+    param('campaignId')
     .notEmpty()
     .withMessage('Campaign ID is required')
     .isMongoId()

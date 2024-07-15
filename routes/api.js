@@ -2,7 +2,7 @@ var express = require("express");
 var router = express.Router();
 const cron = require('node-cron');
 const upload = require('../libs/multerConfig')
-const { validateToken, accessToken} = require("../middleware/auth");
+const { validateToken, accessToken,cognitoUserDetails} = require("../middleware/auth");
 const { validation }=require('../middleware/validations');
 const userController = require("../controllers/userController");
 const campaignController = require("../controllers/campaignController");
@@ -21,6 +21,7 @@ router.post("/signin", validation.validateSigninRequest, authController.signin)
 router.post("/signup", validation.validateSignupRequest, authController.signup)
 router.post("/signupConfirm", validation.validateSignupConfirmRequest, authController.signupConfirm)
 router.get("/accessToken" ,accessToken)
+router.get("/cognitoUser", cognitoUserDetails)
 
 // USER ROUTES
 router.get("/users", userController.users)
