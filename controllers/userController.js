@@ -80,7 +80,7 @@ exports.notification = async (req, res) => {
       status: 200,
       data: categorizedNotifications,
       success: true,
-      message: "Notifications",
+      message:  res.__("NOTIFICATION_RETERIVED")
     });
   } catch (err) {
     console.log("value of err irs", err);
@@ -617,7 +617,7 @@ exports.getUser = async (req, res) => {
       },
     ];
     const user = await User.aggregate(pipeLine);
-    return res.json({message : "User  records retrieved successfully.", data: user, status: 200});
+    return res.json({message : res.__("USER_RECORDS_RETERIVED"), data: user, status: 200});
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -639,11 +639,11 @@ exports.getUserByCognito = async (req, res) => {
     if (existingUser) {
       return res
         .status(200)
-        .json({ message: "username-exists", user: existingUser, status: 403 });
+        .json({ message: res.__("USER_RECORDS_RETERIVED"), user: existingUser, status:200 });
     } else {
       return res
-        .status(200)
-        .json({ message: "username not exist", status: 200 });
+        .status(400)
+        .json({ message: res.__("USER_NOT_FOUND"), status: 400 });
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -667,7 +667,7 @@ exports.saveUserRecords = async (req, res) => {
      updateUsersInAlgolia(userId) 
      return res.json({
         status: 200,
-        message: "User records details saved successfully",
+        message:  res.__("USER_SAVED"),
         data: userRecords,
         success: false,
       });
@@ -685,7 +685,7 @@ exports.saveUserRecords = async (req, res) => {
       await addUserInAlgolia(userId);
       return res.json({
         status: 200,
-        message: "User records details saved successfully",
+        message: res.__("USER_SAVED"),
         data: savedUser,
         success: false,
       });
@@ -694,7 +694,7 @@ exports.saveUserRecords = async (req, res) => {
   }
   catch(err)
   {
-   return res.json({ status: 500, message: "Internal Server Error", success: false });
+   return res.json({ status: 500, message: res.__("SERVER_ERROR"), success: false });
   }
 
 }
@@ -711,12 +711,12 @@ exports.cause = async (req, res) => {
           $push: { cause: cause }
         });
         updateUsersInAlgolia(user);
-        return res.status(200).json({ message: "Cause added to profile successfully." });
+        return res.status(200).json({ message: res.__("CAUSE_ADD_TO_PROFILE") });
       } else {
-        return res.status(400).json({ message: "Cause already exists in the profile." });
+        return res.status(400).json({ message: res.__('CAUSE_ALREADY_EXIST_TO_PROFILE')});
       }
     } else {
-      return res.status(403).json({ message: "Username does not exist." });
+      return res.status(403).json({ message: res.__("USER_NOT_FOUND")});
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -732,13 +732,13 @@ exports.delete = async (req, res) => {
     {
       return res.json({
         status: 400,
-        message: "Invalid Congnito Id",
+        message: res.__("INVALID_COGNITO"),
         success: false,
       });
     }
     await User.deleteOne({ cognitoUsername: cognitoId });
     await deleteAlgolia(user);
-    return res.json({ status: 200, message: "User Account Deleted Successfully.", success: true});
+    return res.json({ status: 200, message:  res.__("USER_DELETED"), success: true});
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -751,7 +751,7 @@ exports.followUser = async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(fuid)) {
          return res.status(400).json({
             status: 400,
-            error: "Invalid User ID format",
+            error: res.__("INVALID_USER_ID_FORMAT"),
             success: false,
             });
          }
@@ -759,7 +759,7 @@ exports.followUser = async (req, res) => {
     if (!currentUser || currentUser.length < 1) {
       return res.json({
         status: 401,
-        message: "invalid Login User",
+        message: res.__("INVALID_USER"),
         success: false,
       });
     }
@@ -767,7 +767,7 @@ exports.followUser = async (req, res) => {
     if (!followUser || followUser.length < 1) {
       return res.json({
         status: 401,
-        message: "invalid following User",
+        message: res.__("INVALID_FOLLOWING_USER"),
         success: false,
       });
     }
@@ -777,7 +777,7 @@ exports.followUser = async (req, res) => {
     ) {
       return res.json({
         status: 400,
-        message: "User already followed",
+        message: res.__("ALREADY_FOLLOWED"),
         success: false,
       });
     }
@@ -815,7 +815,7 @@ exports.followUser = async (req, res) => {
     sendMessage("follow", followMessage, fuid);
     return res.json({
       status: 200,
-      message: "User followed sucessfully!",
+      message: res.__("USER_FOLLOWED_SUCCESSFULLY"),
       success: true,
       data: followers,
     });
@@ -836,7 +836,7 @@ exports.unFollowUser = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(fuid)) {
       return res.status(400).json({
          status: 400,
-         error: "Invalid User ID format",
+         error: 	 res.__("INVALID_USER_ID_FORMAT"),
          success: false,
          });
     }
@@ -844,7 +844,7 @@ exports.unFollowUser = async (req, res) => {
     if (!currentUser || currentUser.length < 1) {
       return res.json({
         status: 401,
-        message: "invalid Login User",
+        message: res.__("INVALID_USER"),
         success: false,
       });
     }
@@ -852,7 +852,7 @@ exports.unFollowUser = async (req, res) => {
     if (!followUser || followUser.length < 1) {
       return res.json({
         status: 401,
-        message: "invalid following User",
+        message: res.__("INVALID_FOLLOWING_USER"),
         success: false,
       });
     }
@@ -862,7 +862,7 @@ exports.unFollowUser = async (req, res) => {
     ){
       return res.json({
         status: 400,
-        message: "User not followed",
+        message: res.__("USER_NOT_FOLLOWED"),
         success: false,
       });
     }
@@ -889,7 +889,7 @@ exports.unFollowUser = async (req, res) => {
     ]);
     return res.json({
       status: 200,
-      message: "user unfollow sucessfully",
+      message: res.__("USER_UNFOLLOW_SUCCESSFULLY"),
       success: true,
       data: followers,
     });
@@ -909,10 +909,10 @@ exports.editProfile = async (req, res) => {
     const updateUser = await User.findOneAndUpdate({ _id: id }, req.body,{new:true});
     await updateUsersInAlgolia(id);
     if (!updateUser) {
-      return res.json({ status: 404, message: "Invalid User", success: false });
+      return res.json({ status: 404, message: res.__("INVALID_USER"), success: false });
     }
 
-    return res.status(200).json({status : 200, message:'User profile updated successfully.', data: updateUser});
+    return res.status(200).json({status : 200, message:res.__("USER_PROFILE_UPDATED"), data: updateUser});
   } catch (e) {
     return res.status(404).json({status : 404, message: e.message });
   }
@@ -929,7 +929,7 @@ exports.removeProfileImage = async (req, res) => {
     );
     await updateUsersInAlgolia(id);
     if (!updateUser) {
-      return res.json({ status: 404, message: "Invalid User", success: false });
+      return res.json({ status: 404, message: res.__("INVALID_USER"), success: false });
     }
     if(user.profileImage)
     {
@@ -939,7 +939,7 @@ exports.removeProfileImage = async (req, res) => {
     }
     return res.json({
       status: 200,
-      message: "Profile image removed successfully",
+      message: res.__("USER_PROFILE_REMOVED"),
       user: updateUser,
       success: true,
     });
@@ -959,7 +959,7 @@ exports.privacy = async (req, res) => {
     await updateUsersInAlgolia(user);
     return res.json({
       status: 200,
-      message: "Privacy updated to the profile successfully.",
+      message:  res.__("PRIVACY_UPDATED"),
       user: updateUser,
       success: true,
     });
@@ -967,7 +967,7 @@ exports.privacy = async (req, res) => {
     console.log('err',err)
     return res.json({
       status: 500,
-      message: "Something Went wrong",
+      message: res.__("SERVER_ERROR"),
       success: false,
     });
   }
@@ -984,7 +984,7 @@ exports.language = async (req, res) => {
     await updateUsersInAlgolia(user);
     return res.json({
       status: 200,
-      message: "Language updated to the profile successfully.",
+      message: res.__("LANGUAGE_UPDATED"),
       user: updateUser,
       success: true,
     });
@@ -992,7 +992,7 @@ exports.language = async (req, res) => {
     console.log('err', error)
     return res.json({
       status: 500,
-      message: "Something Went wrong",
+      message:  res.__("SERVER_ERROR"),
       success: false,
     });
   }
@@ -1007,14 +1007,14 @@ exports.report = async (req, res) => {
     const savedReports = await report.save();
     return res.json({
       status: 200,
-      message: "Report added Successfully",
+      message:  res.__("REPORT_ADDED"),
       success: false,
       data: savedReports,
     });
   } catch (err) {
     return res.json({
       status: 500,
-      message: "Something Went wrong",
+      message: res.__("SERVER_ERROR"),
       success: false,
     });
   }
@@ -1027,16 +1027,10 @@ exports.message = async (req, res) => {
     records.sender=user
     const message = new Message(records);
     const savedMessage = await message.save();
-    // let messageId = savedMessage._id;
-    // // await User.findByIdAndUpdate(
-    //   { _id: records.profile },
-    //   { $push: { messages: messageId } },
-    //   { new: true }
-    // );
     sendMessage("message", message, records.profile);
     return res.json({
       status: 200,
-      message: "Message sent successfully!",
+      message:  res.__("MESSAGE_SENT"),
       success: false,
       data: savedMessage,
     });
@@ -1044,7 +1038,7 @@ exports.message = async (req, res) => {
     console.log("error is", err);
     return res.json({
       status: 500,
-      message: "Something went wrong!",
+      message: res.__("SERVER_ERROR"),
       success: false,
     });
   }
@@ -1073,7 +1067,7 @@ exports.getMessages = async (req, res) => {
     ]);
     return res.json({
       status: 200,
-      message: "messages records",
+      message:  res.__("MESSAGE_RECORDS_SUCCESS"),
       success: true,
       data: records,
     });
@@ -1166,14 +1160,14 @@ exports.messages = async (req, res) => {
 
     return res.json({
       status: 200,
-      message: "Message records",
-      success: true,
+      message: res.__("MESSAGE_RECORDS_SUCCESS"),
+      success:  true,
       data: records,
     });
   } catch (error) {
     return res.status(500).json({
       status: 500,
-      message: "An error occurred",
+      message: error,
       success: false,
       error: error.message,
     });
@@ -1188,13 +1182,13 @@ exports.createAdmin = async (req, res) => {
     updateUsersInAlgolia(user) 
     return res.json({
       status: 200,
-      message: "Your profile role has been successfully changed to admin.",
+      message:  res.__("PROFILE_ROLE_CHANGE"),
       success: true,
     });
   } catch (error) {
     return res.status(500).json({
       status: 500,
-      message: "An error occurred",
+      message: error.message,
       success: false,
       error: error.message,
     });
@@ -1215,7 +1209,7 @@ exports.uploadProfile = async (req, res) => {
     const thumbnail = await uploadImage(req.file, "profile");
     let data = `${thumbnail.Bucket}/${thumbnail.key}`;
     let updateRecord=await User.findByIdAndUpdate(user, { profileImage: data }, { new: true });
-    return res.status(200).json({ message: "Profile image uploaded successfully", image: data,user:updateRecord });
+    return res.status(200).json({ message: res.__("PROFILE_UPLOADED"), image: data,user:updateRecord });
   } catch (error) {
     console.log('err',error)
     return res.status(500).json({ message: error.message, status: 500 });

@@ -12,7 +12,13 @@ const apiRoutes = require("./routes/api");
 const { ws } = require("./libs/webSocket");
 const {swaggerDocs} = require('./libs/swagger')
 const swaggerUi = require('swagger-ui-express');
-
+const { I18n } = require('i18n')
+const i18n= new I18n({
+  locales: ['english', 'arabic', 'french',  'chinese'],
+  directory: path.join(__dirname, 'translation'),
+  defaultLocale: 'english'
+})
+app.use(i18n.init);
 
 const PORT = process.env.PORT || 3001;
 ws.on('connection', function connection(ws) {

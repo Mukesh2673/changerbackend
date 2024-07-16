@@ -43,10 +43,10 @@ exports.showCampaigns = async (req, res) => {
     if(campaign.length > 0)
     {
       const totalRecords = await Campaign.countDocuments();
-      return res.json({ message: "Campaign  records retrieved successfully.",data: campaign,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
+      return res.json({ message: res.__("CAMPAIGN_RECORDS_MESSAGE"), data: campaign,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
     }
     else{
-      return res.status(404).json({ message: "Campaign not found.",status:200 });
+      return res.status(404).json({ message:res.__("CAMPAIGN_NOT_FOUND"),status:200 });
 
     }
 
@@ -65,9 +65,9 @@ exports.showCampaign = async (req, res) => {
     pipeLine.push({$project: { hashtags: 0 , algolia: 0, updatedAt: 0, _v: 0 } });
     const campaign = await Campaign.aggregate(pipeLine);
     if (campaign.length > 0) {
-      return res.json(campaign);
+      return res.json({ message: res.__("CAMPAIGN_RECORDS_MESSAGE"), data: campaign, status: 200});
     } else {
-      return res.status(404).json({ message: "Campaign not found." });
+      return res.status(404).json({ message:res.__("CAMPAIGN_NOT_FOUND"), status:400,success: false });
     }
   } catch (error) {
     console.error("Error in showCampaign:", error);
@@ -90,9 +90,9 @@ exports.trendingCampaigns = async (req, res) => {
     const campaign = await Campaign.aggregate(pipeline);
     if (campaign.length > 0) {
       const totalRecords = await Campaign.countDocuments();
-      return res.json({ message: "Trending campaign  records retrieved successfully.",data: campaign,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
+      return res.json({ message: res.__("TRENDING_CAMPAIGN_RECORDS_MESSAGE"),data: campaign,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
     } else {
-      return res.status(404).json({ message: "Campaign not found.",status:200 });
+      return res.status(404).json({ message:  res.__("CAMPAIGN_NOT_FOUND") ,status:200 });
     }
   } catch (error) {
     console.error("Error in showCampaign:", error);
@@ -175,11 +175,11 @@ exports.campaignForUser = async (req, res) => {
     const campignRecords=campaign[0].paginatedResults
     if(campignRecords.length>0)
     {
-      return res.json({ message: "Campaign  records retrieved successfully.",data: campignRecords,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
+      return res.json({ message:  res.__("CAMPAIGN_RECORDS_MESSAGE"),data: campignRecords,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
 
     }
     else{
-      return res.json({ message: "Campaign  Not Found",data: campignRecords,  totalPage: Math.ceil(totalRecords / pageSize), status: 400});
+      return res.json({ message:res.__("CAMPAIGN_NOT_FOUND"),data: campignRecords,  totalPage: Math.ceil(totalRecords / pageSize), status: 400});
 
     }
   } catch (error) {
@@ -202,7 +202,7 @@ exports.create = async (req, res) => {
     if (!auth) {
       return res.json({
         status: 401,
-        message: "invalid User",
+        message:  res.__("INVALID_USER"),
         success: false,
       });
     }
@@ -243,7 +243,7 @@ exports.create = async (req, res) => {
       if (!issue) {
         return res.status(400).json({
           status: 400,
-          error: "Invalid issue ID format",
+          error: res.__("INVALID__ISSUE_ID_FORMAT"),
           success: false,
         });
       }
@@ -361,7 +361,7 @@ exports.create = async (req, res) => {
     await notification.save();
     return res.json({
       status: 200,
-      message: "Campaign added successfully!",
+      message:  res.__("CAMPAIGN_ADDED_MESSAGE"),
       success: true,
       data: records,
     });
@@ -379,7 +379,7 @@ exports.donate = async (req, res) => {
     // Find the donation action added within campaign phase
     const campaignDonation = await donation.findById(donationId);
     if (!campaignDonation) {
-      return res.status(404).json({ message: "Campaign donation not found" });
+      return res.status(404).json({ message:  res.__("DONATION_NOT_FOUND") });
     }
     if(campaignDonation.karmaPoint)
     {
@@ -397,7 +397,7 @@ exports.donate = async (req, res) => {
     if (!campaignPhase) {
       return res
         .status(404)
-        .json({ message: "Donation is  not exist on phase" });
+        .json({ message:  res.__("DONATION_PHASE_NOT_FOUND") });
     }
 
     // check is campaign phase exist in campaign
@@ -408,13 +408,13 @@ exports.donate = async (req, res) => {
     if (!campaign) {
       return res
         .status(404)
-        .json({ message: "Donation and phase not exist in campaign" });
+        .json({ message: res.__("DONATION_CAMPAIGN_NOT_FOUND")});
     }
 
     // Find the user and update karma points
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: res.__("INVALID_USER") });
     }
 
     const stripeToken = req.body.source;
@@ -477,16 +477,16 @@ exports.donate = async (req, res) => {
       await updateCampaignInAlgolia(campaign._id);
       return res.status(200).json({
         status: 200,
-        message: "Amount Donated to campaign SuccessFully",
+        message:  res.__("DONATED_MESSAGE"),
         receiptUrl:  charge.receipt_url,
         success: true,
       });
     } else {
-      return res.status(400).json({ message: "Payment failed" });
+      return res.status(400).json({ message: res.__("DONATION_FAILED") });
     }
   } catch (err) {
     if (err.type === "StripeCardError") {
-      return res.status(401).json({ message: "Card error" });
+      return res.status(401).json({ message: res.__("CARD_ERROR") });
     }
     return res.status(500).json({ message: err.message });
   }
@@ -550,10 +550,10 @@ exports.volunteeringForUser = async (req, res) => {
     const records=volunteeringRecords[0].paginatedResults
     if(records.length>0)
     {
-      return res.json({ message: "Campaign  records retrieved successfully.",data: records,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
+      return res.json({ message: res.__("CAMPAIGN_RECORDS_MESSAGE"), data: records,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
     }
     else{
-      return res.json({ message: "Campaign  Not Found",data: records,  totalPage: Math.ceil(totalRecords / pageSize), status: 400});
+      return res.json({ message:  res.__("CAMPAIGN_NOT_FOUND"),data: records,  totalPage: Math.ceil(totalRecords / pageSize), status: 400});
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -573,14 +573,14 @@ exports.postMessages = async (req, res) => {
     sendMessage("campaignMessage", message, records.profile);
     return res.json({
       status: 200,
-      message: "Message sent successfully.",
+      message: res.__("CAMPAIGN_MESSAGE_SENT"),
       success: false,
       data: savedMessage,
     });
   } catch (err) {
     return res.json({
       status: 500,
-      message: "Internal server error",
+      message: res.__("SERVER_ERROR"),
       success: false,
     });
   }
@@ -592,7 +592,7 @@ exports.getMessages = async (req, res) => {
     const pid = req.user;
     const campaign = await Campaign.findById(req.params.id);
     if (!campaign) {
-      return res.status(404).json({ message: "Campaign not found." });
+      return res.status(404).json({ message: res.__("INVALID_CAMPAIGN") });
     }
     const uid = campaign.user;
     let records = await Message.find({
@@ -616,7 +616,7 @@ exports.getMessages = async (req, res) => {
     ]);
     return res.json({
       status: 200,
-      message: "Message records retrieved successfully.",
+      message:  res.__("MESSAGE_RECORDS_SUCCESS"),
       success: true,
       data: records,
     });
@@ -635,7 +635,7 @@ exports.signPetitions = async (req, res) => {
     if (!petitionExists) {
       return res.status(404).json({
         status: 404,
-        message: "Petition Not Exist",
+        message: res.__("PETITION_NOT_EXIST"),
         success: false,
       });
     }
@@ -648,7 +648,7 @@ exports.signPetitions = async (req, res) => {
     if (alreadySigned) {
       return res.status(400).json({
         status: 400,
-        message: "Petition already Signed",
+        message: res.__("PETITION_SIGNED"),
         success: false,
       });
     }
@@ -664,13 +664,13 @@ exports.signPetitions = async (req, res) => {
     // Return success response
     return res.status(200).json({
       status: 200,
-      message: "Petition Signed successfully",
+      message:  res.__("PETITION_SIGNED_MESSAGE"),
       success: true,
     });
   } catch (error) {
     return res.status(500).json({
       status: 500,
-      message: "Internal Server Error",
+      message: res.__("SERVER_ERROR"),
       success: false,
     });
   }
@@ -685,7 +685,7 @@ exports.campaignImpactVideos = async (req, res) => {
     //check is campaign exist or not
     const campaignDetails = await Campaign.findById(campaignId);
     if (!campaignDetails) {
-      return res.status(404).json({ message: "Campaign not found." });
+      return res.status(404).json({ message: res.__("SERVER_ERROR") });
     }
 
     const existingParticipation = await Volunteers.findOne({
@@ -696,7 +696,7 @@ exports.campaignImpactVideos = async (req, res) => {
       return res
         .status(404)
         .json({
-          message: "You are not participating in this campaign.",
+          message: res.__("NOT_PARTICIPATED_CAMPAIGN"),
           status: 404,
           success: false,
         });
@@ -704,7 +704,7 @@ exports.campaignImpactVideos = async (req, res) => {
     //get user Details
     const currentUser = await User.findById(user);
     if (!currentUser) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(404).json({ message: res.__("INVALID_USER") });
     }
     const tags = await generateTags(body.description);
     // Upload video thumbnail
@@ -754,13 +754,13 @@ exports.campaignImpactVideos = async (req, res) => {
     );
     return res.status(200).json({
       status: 200,
-      message: "Campaign impact video added successfully.",
+      message:  res.__("CAMPAIGN_IMPACT_SUCCESS"),
       success: true,
     });
   } catch (err) {
     return res.status(500).json({
       status: 500,
-      message: "An error occurred while adding the campaign impact video.",
+      message:  res.__("CAMPAIGN_IMPACT_ERROR"),
       error: err.message,
       success: false,
     });
@@ -900,13 +900,13 @@ exports.volunteers = async (req, res) => {
     const userParticipations = await Volunteers.aggregate([...pipeline]);
     if(userParticipations.length==0)
     {
-      return res.status(200).json({status: 200,message: "No Volunteers records found", data: userParticipations, success: false});
+      return res.status(200).json({status: 200,message:  res.__("NO_VOLUNTEERS"), data: userParticipations, success: false});
 
     }
-    return res.status(200).json({status: 200,message: "Volunteers records retrieved successfully.", data: userParticipations, success: true});
+    return res.status(200).json({status: 200,message:  res.__("VOLUNTEERS_RECORDS_MESSAGE"), data: userParticipations, success: true});
   } catch (error) {
     console.error("Error retrieving participation and volunteers:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error:res.__("VOLUNTEERS_RECORDS_MESSAGE") });
   }
 };
 
@@ -920,7 +920,7 @@ exports.report = async (req, res) => {
     const savedReports = await report.save();
     return res.json({
       status: 200,
-      message: "Report added Successfully",
+      message: res.__("REPORT_ADDED"),
       success: false,
       data: savedReports,
     });
@@ -928,7 +928,7 @@ exports.report = async (req, res) => {
     console.log("erris",err)
     return res.json({
       status: 500,
-      message: "Something Went wrong",
+      message:  res.__("SERVER_ERROR"),
       success: false,
     });
   }
@@ -953,12 +953,12 @@ exports.applyForVolunteers = async (req, res) => {
     });
 
     if (!campaign) {
-      return res.status(404).json({status:404, message: "Campaign not found." });
+      return res.status(404).json({status:404, message: res.__("INVALID_CAMPAIGN")});
     }
     const {phases}=campaign
     if(!phases.includes(phaseId))
     {
-      return res.status(404).json({ message: "Invalid campaign: campaign does not correspond to the participation",status:400,success:false });
+      return res.status(404).json({ message: res.__("PARTICIPATION_INVALID_CAMPAIGN"),status:400,success:false });
 
     }
     // Check if the user is already volunteers
@@ -971,12 +971,12 @@ exports.applyForVolunteers = async (req, res) => {
     if (existingVolunteers) {
       return res
         .status(422)
-        .json({ message: "You are already Volunteers in this campaign." });
+        .json({ message: res.__("EXISTING_VOLUNTEERS_MESSAGE")});
     }
     // Update Karma Points for the user's profile
     const currentUser = await User.findById(user._id);
     if (!currentUser) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(404).json({ message:  res.__("INVALID_USER") });
     }
 
     // Create a new participation record
@@ -1000,7 +1000,7 @@ exports.applyForVolunteers = async (req, res) => {
     sendMessage("campaignVolunteering", volunteerMessage, campaign.user._id);
     return res.status(200).json({
       status: 200,
-      message: "Successfully participated  to volunteers in the campaign.",
+      message:  res.__("PARTICIPATED_CAMPAIGN"),
       success: true,
       data: savedVolunteer,
     });
@@ -1018,11 +1018,11 @@ exports.approveVolunteers= async (req, res)=>{
   const campaign = await Campaign.find({_id: campaignId,user: user});
   //check is campainId Valid or Not
   if (campaign.length==0){
-    return res.status(404).json({ message: "You are Not Authorize to this campaign" });
+    return res.status(404).json({ message:  res.__("NOT_AUTHORIZE_CAMPAIGN") });
     }
   const volunteer = await Volunteers.findById(volunteerId);
   if (!volunteer) {
-    return res.status(404).json({ message: "Invalid participation applied ID" });
+    return res.status(404).json({ message:  res.__("INVALID_PARTICIPATION") });
   }
   if (volunteer.approved === false) {
   volunteer.approved = true;
@@ -1074,17 +1074,17 @@ exports.approveVolunteers= async (req, res)=>{
     volunteerMessage,
     user
     );
-  return res.status(200).json({ message: "Volunteer approved successfully", status:200, success: true });
+  return res.status(200).json({ message:  res.__("VOLUNTEER_APPROVED_MESSAGE"), status:200, success: true });
 } else {
 
-  return res.status(400).json({ message: "Volunteer is already approved" , status:400, success: false});
+  return res.status(400).json({ message: res.__("VOLUNTEER_ALREADY_APPROVED") , status:400, success: false});
 }    
   }
   catch(err)
   {
     return res.status(500).json({
       status: 500,
-      message: "Internal server Error",
+      message:  res.__("SERVER_ERROR"),
       error: err.message,
       success: false,
     });
@@ -1120,7 +1120,7 @@ exports.volunteerParticipationHistory=async (req, res)=>{
     {
       return res.json({
         status: 200,
-        message: "Participation records retrieved successfully.",
+        message:  res.__("PARTICIPATION_RECORDS_MESSAGE"),
         success: true,
         data: volunteer,
       });  
@@ -1128,7 +1128,7 @@ exports.volunteerParticipationHistory=async (req, res)=>{
     else{
       return res.json({
         status: 400,
-        message: "Participation records Not found",
+        message:  res.__("PARTICIPATION_RECORDS_NOT_FOUND"),
         success: false,
         data: volunteer,
       });   
@@ -1156,7 +1156,7 @@ exports.shareCampaign = async(req, res)=>{
       if (exist) {
         return res.json({
           status: 200,
-          message: "Campaign shared successfully.",
+          message:  res.__("CAMPAIGN_SHARED"),
           success: true,
         });
       } else {
@@ -1169,7 +1169,7 @@ exports.shareCampaign = async(req, res)=>{
         await updateCampaignInAlgolia(campaignId)     
         return res.json({
           status: 200,
-          message: "Campaign shared successfully.",
+          message:res.__("CAMPAIGN_SHARED"),
           success: true,
           data: campaign,
         });
@@ -1177,7 +1177,7 @@ exports.shareCampaign = async(req, res)=>{
     } else {
       return res.json({
         status: 500,
-        message: "invalid issue",
+        message: res.__("INVALID_ISSUE"),
         success: false,
       });
     }
@@ -1185,7 +1185,7 @@ exports.shareCampaign = async(req, res)=>{
     console.log('uerrror',err)
     return res.json({
       status: 500,
-      message: "some thing went wrong",
+      message: res.__("SERVER_ERROR"),
       success: false,
     });
   }

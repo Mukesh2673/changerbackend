@@ -7,11 +7,11 @@ exports.add = async (req, res) => {
 
     if (issueId) {
       const issue = await Issue.findById(issueId);
-      if (!issue) return res.status(400).json({ message: "Invalid issue", success: false });
+      if (!issue) return res.status(400).json({ message: res.__("INVALID_ISSUE"), success: false });
 
       const existingBookmark = await BookMarks.findOne({ issue: issueId, user });
       if (existingBookmark) {
-        return res.status(400).json({ message: "Issue already bookmarked", success: true });
+        return res.status(400).json({ message: res.__("ISSUE_ALREADY_BOOKMARED"), success: true });
       }
 
       bookMarks.issue = issueId;
@@ -19,18 +19,18 @@ exports.add = async (req, res) => {
 
     if (campaignId) {
       const campaign = await Campaign.findById(campaignId);
-      if (!campaign) return res.status(400).json({ message: "Invalid campaign", success: false });
+      if (!campaign) return res.status(400).json({ message: res.__("INVALID_CAMPAIGN"), success: false });
 
       const existingBookmark = await BookMarks.findOne({ campaign: campaignId, user });
       if (existingBookmark) {
-        return res.status(400).json({ message: "Campaign already bookmarked", success: true });
+        return res.status(400).json({ message: res.__("CAMPAING_ALREADY_BOOKMARKED"), success: true });
       }
 
       bookMarks.campaign = campaignId;
     }
 
     await new BookMarks(bookMarks).save();
-    res.status(200).json({ message: "Bookmarks added successfully", success: true });
+    res.status(200).json({ message:  res.__("BOOKMARK_ADDED"), success: true });
 
   } catch (error) {
     res.status(500).json({ message: error.message, status: 500 });
@@ -46,13 +46,13 @@ exports.delete = async (req, res) => {
       await BookMarks.findByIdAndRemove({ _id: bookMarkId, user: user });
       return res.json({
         status: 200,
-        message: "Book Mark removed successfully",
+        message: res.__("BOOKMARK_REMOVED"),
         success: true,
       });
     }else {
       return res.json({
         status: 500,
-        message: "Invalid Book Mark Id",
+        message: res.__("INVALID_BOOKMARK"),
         success: false,
       });
     }

@@ -23,7 +23,7 @@ exports.skills = async (req, res) => {
       skills: records,
       totalPage: Math.ceil(totalRecords / pageSize),
       success: true,
-      message: records.length>0?'Skill records retrieve successfully':'Skill records not Found'
+      message: records.length>0?res.__("SEARCH_RECORD_RETERIVED"):res.__("SKILL_RECORD_NOT_FOUND")
     });
   } catch (err) {
     console.log("err", err);
@@ -39,7 +39,7 @@ exports.removeUserSkill = async (req, res) => {
     if (skillRecords.length === 0) {
       return res.json({
         status: 400,
-        message: "Skill not exist",
+        message: res.__("SKILL_RECORD_NOT_FOUND"),
         success: false,
       });
     }
@@ -52,13 +52,13 @@ exports.removeUserSkill = async (req, res) => {
       );
       return res.json({
         status: 200,
-        message: "Skill Removed Successfully",
+        message:  res.__("SKILL_REMOVED"),
         success: true,
       });
     } else {
       return res.json({
         status: 400,
-        message: "You have not added this skill",
+        message: res.__("SKILL_NOT_ADDED"),
         success: false,
       });
     }
@@ -78,14 +78,14 @@ exports.addUserSkill= async (req, res, userId, skillId)=>{
   if (skillRecords.length === 0) {
     return res.json({
       status: 400,
-      message: "Skill not exist",
+      message: res.__("SKILL_RECORD_NOT_FOUND"),
       success: false,
     });
   }
   if (user.skills.includes(skillId)) {
     return res.json({
       status: 400,
-      message: "You have Already this skill",
+      message: res.__("SKILL_ALREADY_SAVED"),
       success: false,
     });
   } else {
@@ -96,7 +96,7 @@ exports.addUserSkill= async (req, res, userId, skillId)=>{
     );
     return res.json({
       status: 200,
-      message: "Skill added Successfully",
+      message:  res.__("SKILL_ADDED"),
       success: true,
     });
   }
@@ -111,7 +111,7 @@ exports.add = async (req, res) => {
     {
       return res.json({
         status: 500,
-        message: "One of the data fields allows either a skill name or a skill ID.",
+        message: res.__("SKILL_ID_OR_NAME_REQUIRED"),
         success: false,
       });
     }
@@ -150,7 +150,7 @@ exports.add = async (req, res) => {
     console.log('error',err)
     return res.json({
       status: 500,
-      message: "Internal server error",
+      message:  res.__("SERVER_ERROR"),
       success: false,
       error: err,
     });
@@ -164,7 +164,7 @@ exports.verifySkill= async (req, res)=>{
   {
     return res.json({
       status: 401,
-      message: "You do not have the required admin privileges to perform this action",
+      message: res.__("UNAUTHORIZE_TO_VERIFY_SKILL"),
       success: false,
     }) 
   }
@@ -174,7 +174,7 @@ exports.verifySkill= async (req, res)=>{
   {
     return res.json({
       status: 200,
-      message: "Skill Not found",
+      message: res.__("SKILL_NOT_FOUND"),
       success: false,
     })  
   }
@@ -182,7 +182,7 @@ exports.verifySkill= async (req, res)=>{
   {
     return res.json({
       status: 200,
-      message: "Skill already Verified",
+      message: res.__("SKILL_ALREADY_VERIFIED"),
       success: false,
     }) 
   }
@@ -194,7 +194,7 @@ exports.verifySkill= async (req, res)=>{
       ); 
       return res.json({
         status: 200,
-        message: "Skill Verified Successfully",
+        message: res.__("SKILL_VERIFIED"),
         success: true,
       })
   }  

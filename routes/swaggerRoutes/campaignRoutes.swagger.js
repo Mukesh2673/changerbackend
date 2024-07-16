@@ -5,6 +5,12 @@
  *     summary: Get all campaigns
  *     tags:
  *       - Campaigns
+ *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *     responses:
  *       200:
  *         description: Campaigns records retrieved successfully
@@ -22,6 +28,11 @@
  *     tags:
  *       - Campaigns
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: campaignId
  *         in: path
  *         description: ID of the campaign to fetch

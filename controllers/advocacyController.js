@@ -29,12 +29,12 @@ exports.add = async (req, res) => {
 
     if (advocacy.issue) {
       const issue = await Issue.findById(advocacy.issue);
-      if (!issue) throw new Error("Invalid issue");
+      if (!issue) throw new Error( res.__("INVALID_ISSUE"));
     }
 
     if (advocacy.campaign) {
       const campaign = await Campaign.findById(advocacy.campaign);
-      if (!campaign) throw new Error("Invalid campaign");
+      if (!campaign) throw new Error(res.__("INVALID_CAMPAIGN"));
     }
 
     const video = await new Video(videoData).save();
@@ -49,7 +49,7 @@ exports.add = async (req, res) => {
       await Campaign.findByIdAndUpdate(advocacy.campaign, { $push: { advocate: advocate._id } }, { new: true });
       await updateCampaignInAlgolia(advocacy.campaign)
     }
-    res.json({ status: 200, message: "Advocate added successfully", success: true });
+    res.json({ status: 200, message: res.__("ADVOCATED_ADDED"), success: true });
   } catch (error) {
     res.status(500).json({ message: error.message, status: 500 });
   }
@@ -86,13 +86,13 @@ exports.delete = async (req, res) => {
 
       return res.json({
         status: 200,
-        message: "Advocate deleted successfully",
+        message: res.__("ADVOCATED_DELETED"),
         success: true,
       });
     } else {
       return res.json({
         status: 500,
-        message: "Invalid advocate",
+        message: res.__("INVALID_ADVOCATE"),
         success: false,
       });
     }
@@ -117,7 +117,7 @@ exports.get = async (req, res) => {
       status: 200,
       success: true,
       data: advocate,
-      message: "Advocate records retrieved successfully." 
+      message:  res.__("ADVOCATED_RECORDS_MESSAGES") 
     });
     } 
     catch (error) {

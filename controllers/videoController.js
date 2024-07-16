@@ -96,7 +96,8 @@ exports.getVideos = async (req, res) => {
     }
     pipeLine=[...pipeLine,{ $skip: (page - 1) * pageSize },{ $limit: pageSize }]
     const result = await Video.aggregate(pipeLine)
-    return res.json(result);
+    const totalRecords = await Video.countDocuments();
+    return res.json({ datas: result,  totalPage: Math.ceil(totalRecords / pageSize), status: 200,totalRecords:totalRecords, pageSize:pageSize});
   } catch (error) {
     console.log("err is", error);
     return res.json([]);
@@ -160,10 +161,10 @@ exports.show = async (req, res) => {
     const video = await Video.findById(req.params.id);
 
     if (!!video) {
-      return res.json({message:"Video records retrieved successfully.", data: video, status: 200 });
+      return res.json({message:res.__("VIDEO_RECORD_RETERIVED"), data: video, status: 200 });
     }
 
-    return res.status(404).json({ message: "Video not found." });
+    return res.status(404).json({ message: res.__("VIDEO_NOT_FOUND") });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -276,7 +277,7 @@ exports.delete = async (req, res) => {
   try {
     await Video.deleteOne({ _id: req.params.id });
     await deleteVideosInAlgolia(req.params.id)
-    return res.json({ success: true ,message: "The video has been deleted successfully.", status:200 });
+    return res.json({ success: true ,message: res.__("VIDEO_DELETED"), status:200 });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -298,7 +299,7 @@ exports.thumbnail = async (req, res) => {
         deleteFile("uploads/");
         deleteFile("thumbnail");
         return res.json({
-          success: "Video thumbnail generated",
+          success:  res.__("THUMBNAIL_GENERATED"),
           base64: base64,
           status: 200,
         });
@@ -318,7 +319,7 @@ exports.upload = async (req, res) => {
     const thumbnail = await uploadVideoThumbnail(req.file);
     const uploadStatus = await upload(req.file);
     uploadStatus.thumbnailKey = thumbnail.key;
-    return res.status(200).json({ message: "Video uploaded Sucessfully", data: uploadStatus, status: 200 });
+    return res.status(200).json({ message:  res.__("VIDEO_UPLOADED"), data: uploadStatus, status: 200 });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }
@@ -328,7 +329,7 @@ exports.uploadImages = async (req, res) => {
   try {
     const thumbnail = await uploadImage(req.file, "thumbnail");
     let data = `${thumbnail.Bucket}/${thumbnail.key}`;
-    return res.status(200).json({ message: "uploaded", image: data });
+    return res.status(200).json({ message: res.__("IMAGE_UPLOADED"), image: data });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }
@@ -336,11 +337,9 @@ exports.uploadImages = async (req, res) => {
 
 exports.uploadProfile = async (req, res) => {
   try {
-    const user=req.user
-    console.log('user records')
     const thumbnail = await uploadImage(req.file, "profile");
     let data = `${thumbnail.Bucket}/${thumbnail.key}`;
-    return res.status(200).json({ message: "Profile image uploaded successfully", image: data });
+    return res.status(200).json({ message: res.__("PROFILE_UPLOADED"), image: data });
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
   }
@@ -390,7 +389,7 @@ exports.commentVideo = async (req, res) => {
     const newRecords = await exports.videosData(records.video);
      return res.json({
       status: 200,
-      message: "Comment added successfully.",
+      message:  res.__("COMMENT_TO_VIDEO"),
       success: false,
       data: newRecords,
     });
@@ -398,7 +397,7 @@ exports.commentVideo = async (req, res) => {
     console.log("erero ", err);
     return res.json({
       status: 500,
-      message: "Something went wrong",
+      message: err.message,
       success: false,
     });
   }
@@ -417,7 +416,7 @@ exports.replyCommentVideo = async (req, res) => {
     {
       return res.json({
         status: 400,
-        message: "Invalid Comment Id",
+        message: res.__("INVALID_COMMENT_ID"),
         success: false,
       });
     }
@@ -446,7 +445,7 @@ exports.replyCommentVideo = async (req, res) => {
     sendMessage("repliesComment", notificationMessage, uid);
     return res.json({
       status: 200,
-      message: "Comment reply successfully",
+      message: res.__("COMMENT_REPLY_ADD"),
       success: false,
       data: newRecords,
     });
@@ -454,7 +453,7 @@ exports.replyCommentVideo = async (req, res) => {
     console.log("erero ", err);
     return res.json({
       status: 500,
-      message: "Something went wrong",
+      message: err.message,
       success: false,
     });
   }
@@ -472,7 +471,7 @@ exports.commentLikes = async (req, res) => {
     {
       return res.json({
         status: 400,
-        message: "Invalid Comment Id",
+        message: res.__("INVALID_COMMENT_ID"),
         success: false,
       });
     }
@@ -493,7 +492,7 @@ exports.commentLikes = async (req, res) => {
       );
       //delete like
       await CommentsLikes.deleteOne({ _id: isLiked[0]._id });
-      responseMessage = "Comment unliked Successfully";
+      responseMessage =  res.__("COMMENT_UNLIKE")
     } else {
       const likes = new CommentsLikes(records);
       const savedLike = await likes.save();
@@ -506,7 +505,7 @@ exports.commentLikes = async (req, res) => {
         },
         { new: true }
       );
-      responseMessage = "Comment liked successfully";
+      responseMessage =  res.__("COMMENT_LIKE")
       const sender = await User.findById({ _id: records.user });
       const likeMessage = `${sender.first_name} ${sender.last_name} likes  your comments`;
       const notification = new Notification({
@@ -549,7 +548,7 @@ exports.replyCommentLikes = async (req, res) => {
     {
       return res.json({
         status: 400,
-        message: "Invalid  reply Comment Id",
+        message: res.__("INVALID_REPLY_COMMENT_ID"),
         success: false,
       });
     }
@@ -571,7 +570,7 @@ exports.replyCommentLikes = async (req, res) => {
       );
       //delete like
       await CommentsLikes.deleteOne({ _id: isLiked[0]._id });
-      responseMessage = "UnLiked Comment";
+      responseMessage = res.__("COMMENT_UNLIKE")
     } else {
       const likes = new CommentsLikes(records);
       const savedLike = await likes.save();
@@ -584,7 +583,7 @@ exports.replyCommentLikes = async (req, res) => {
         },
         { new: true }
       );
-      responseMessage = "Liked Comment";
+      responseMessage = res.__("COMMENT_LIKE")
       const sender = await User.findById({ _id: records.user });
       const likeMessage = `${sender.first_name} ${sender.last_name} likes  your comments`;
       const notification = new Notification({
@@ -655,7 +654,7 @@ exports.friendsImpact = async (req, res) => {
     {
       return res.status(200).json({
         status: 200,
-        message: "Friends' impact videos retrieved successfully",
+        message: 	 res.__("FRIENDS_IMPACT_RETERIVED"),
         success: true,
         data: videoRecords,
         totalPage: Math.ceil(totalRecords / pageSize)
@@ -664,7 +663,7 @@ exports.friendsImpact = async (req, res) => {
     else{
       return res.status(400).json({
         status: 400,
-        message: "Records not found",
+        message: res.__("IMPACT_RECORD_NOT_FOUND"),
         success: false,
         data: videoRecords,
         data: videoRecords,
@@ -689,12 +688,12 @@ exports.addViews = async (req, res)=>{
     const video= await Video.findById(vid)
     if(!video)
     {
-      return res.status(400).json({message: "Invalid video Id.", status: 400, success: false})
+      return res.status(400).json({message: res.__("INVALID_VIDEO_ID"), status: 400, success: false})
     }
     let count =++video.views;
     const update=await Video.updateOne({ _id: vid }, { views: count });
     await updateVideosInAlgolia(vid)
-    return res.status(200).json({ success: true,  message: "Video watch count has been updated.", data: update});
+    return res.status(200).json({ success: true,  message:res.__("VIDEO_WATCH_COUNT"), data: update});
   }
   catch(err)
   {

@@ -13,7 +13,7 @@ exports.search = async (req, res) => {
     {
       return res
       .status(400)
-      .json({ message: "Invalid search key are required", status: 400 });
+      .json({ message: res.__("SEARCH_INVALID_KEY"), status: 400 });
     }
     if (hashtags){
       filter.hashtags =`#${hashtags}`;
@@ -66,7 +66,7 @@ exports.search = async (req, res) => {
           impact: videos,
           users: users,
         },
-        message:'Records retrieved View successfully.'
+        message: res.__("SEARCH_RECORD_RETERIVED")
       });
     }
     let records = await searchAlgolia(filter);
@@ -75,9 +75,9 @@ exports.search = async (req, res) => {
       let hashtagsArray=records.map((item)=>item.hashtags)
       let flattenedHashtags = hashtagsArray.flat().filter(tag => tag !== undefined);
       let uniqueHashtags = Array.from(new Set(flattenedHashtags));
-      return res.status(200).json({ message: "records", data: uniqueHashtags });
+      return res.status(200).json({ message: res.__("SEARCH_RECORD_RETERIVED"), data: uniqueHashtags });
     }
-    return res.status(200).json({ message: "records", data: records });
+    return res.status(200).json({ message: res.__("SEARCH_RECORD_RETERIVED"), data: records });
   } catch (error) {
     console.log("errr",error)
     return res.status(500).json({ message: error.message, status: 500 });
@@ -103,7 +103,7 @@ exports.searchKeyword = async (req, res) => {
     ]);
     const totalPages = Math.ceil(totalRecords / pageSize);
     return res.status(200).json({
-      message: "Records retrieved successfully",
+      message:res.__("SEARCH_RECORD_RETERIVED"),
       data: records,
       pagination: {
         totalRecords,

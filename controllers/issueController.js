@@ -123,7 +123,7 @@ exports.create = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(data.user)) {
       return res.status(400).json({
         status: 400,
-        error: "Invalid User ID format",
+        error: res.__("INVALID_USER_ID_FORMAT"),
         success: false,
       });
     }
@@ -131,7 +131,7 @@ exports.create = async (req, res, next) => {
     if (!auth) {
       return res.json({
         status: 401,
-        message: "invalid User",
+        message: res.__("INVALID_USER"),
         success: false,
       });
     }
@@ -204,7 +204,7 @@ exports.create = async (req, res, next) => {
     await notification.save();
     return res.json({
       status: 200,
-      message: "Issue added successfully",
+      message: res.__("ISSUE_ADDED"),
       success: true,
     });
   } catch (err) {
@@ -317,7 +317,7 @@ exports.generate = async (req, res, next) => {
     const response = chatCompletion.choices[0].message.content;
     return res.json({
       status: 200,
-      message: "Prompt generated successfully",
+      message: res.__("PROMPT_GENERATED"),
       success: true,
       text: response,
     });
@@ -335,7 +335,7 @@ exports.upvotes = async (req, res, next) => {
     if (!auth) {
       return res.json({
         status: 401,
-        message: "invalid User",
+        message: res.__("INVALID_USER"),
         success: false,
         voted: false,
       });
@@ -397,7 +397,7 @@ exports.upvotes = async (req, res, next) => {
       sendMessage("discussion", message, issue.user);
       return res.json({
         status: 200,
-        message: "Issue voted successfully",
+        message: res.__("ISSUE_VOTED"),
         success: true,
         voted: true,
         data: issue,
@@ -460,10 +460,10 @@ exports.issueForUser = async (req, res) => {
     const records=issueRecords[0].paginatedResults
     if(records.length>0)
     {
-      return res.json({ message: "Issue  records retrieved successfully.",data: records,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
+      return res.json({ message:res.__("ISSUE_RECORDS_RETRIEVED") ,data: records,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
     }
     else{
-      return res.json({ message: "Issue  Not Found",data: records,  totalPage: Math.ceil(totalRecords / pageSize), status: 400});
+      return res.json({ message: res.__("ISSUEN_NOT_FOUND"), data: records,  totalPage: Math.ceil(totalRecords / pageSize), status: 400});
     }
   } catch (err) {
     console.log("errr is", err);
@@ -485,7 +485,7 @@ exports.joinIssue = async (req, res) => {
     if (!auth) {
       return res.json({
         status: 401,
-        message: "invalid User",
+        message:res.__("INVALID_USER"),
         success: false,
       });
     }
@@ -495,7 +495,7 @@ exports.joinIssue = async (req, res) => {
       if (exist) {
         return res.json({
           status: 400,
-          message: "Issue already Joined",
+          message: res.__("ISSUE_ALREADY_JOINED"),
           success: true,
         });
       }
@@ -539,13 +539,13 @@ exports.joinIssue = async (req, res) => {
     sendMessage("karmaPoint", message, auth._id);
      return res.json({
       status: 200,
-      message: "Issue joined successfully",
+      message: res.__("ISSUE_JOINED"),
       success: true,
     });
   } else {
     return res.json({
       status: 401,
-      message: "invalid Issue",
+      message: res.__("INVALID_ISSUE"),
       success: false,
     });
   }
@@ -560,7 +560,7 @@ exports.leaveIssue = async (req, res) => {
     if (!auth) {
       return res.json({
         status: 401,
-        message: "Invalid User",
+        message: res.__("INVALID_USER"),
         success: false,
       });
     }
@@ -598,27 +598,27 @@ exports.leaveIssue = async (req, res) => {
         await updateIssueInAlgolia(issueId)
         return res.json({
           status: 200,
-          message: "Issue Leave successfully",
+          message:  res.__("ISSUE_LEAVE"),
           success: true,
         });
       } else {
         return res.json({
           status: 401,
-          message: "Issue Not Joined",
+          message: res.__("ISSUE_NOT_JOINED"),
           success: false,
         });
       }
     } else {
       return res.json({
         status: 401,
-        message: "Issue Not exist",
+        message: res.__("ISSUEN_NOT_FOUND"),
         success: false,
       });
     }
   } else {
     return res.json({
       status: 401,
-      message: "Invalid Issue",
+      message: res.__("INVALID_ISSUE"),
       success: false,
     });
   }
@@ -666,7 +666,7 @@ exports.issueDetails = async (req, res) => {
     ]);
     return res.json({
       status: 200,
-      message: "Issue Details Record retrieved successfully",
+      message:  res.__("ISSUE_DETAILS"),
       success: true,
       data: records,
     });
@@ -726,21 +726,21 @@ exports.update = async (req, res) => {
       await updateIssueInAlgolia(issueId)
       return res.json({
         status: 200,
-        message: "Issue updated successfully",
+        message: res.__("ISSUE_UPDATED"),
         success: true,
         data: records,
       });
     } else {
       return res.json({
         status: 500,
-        message: "Invalid Issue",
+        message:res.__("INVALID_ISSUE"),
         success: false,
       });
     }
   } catch (err) {
     return res.json({
       status: 500,
-      message: "Internal server error",
+      message: res.__("SERVER_ERROR"),
       success: false,
     });
   }
@@ -756,13 +756,13 @@ exports.deleteIssue = async (req, res) => {
      await deleteIssueInAlgolia(issueId)
       return res.json({
         status: 200,
-        message: "Issue deleted successfully",
+        message: res.__("ISSUE_DELETED"),
         success: true,
       });
     } else {
       return res.json({
         status: 500,
-        message: "Invalid issue: you are not authorized to delete this issue",
+        message: res.__("UNAUTHORIZE_ISSUE"),
         success: false,
       });
     }
@@ -770,7 +770,7 @@ exports.deleteIssue = async (req, res) => {
     console.log('err irD',err)
     return res.json({
       status: 500,
-      message: "Internal server error",
+      message:  res.__("SERVER_ERROR"),
       success: false,
     });
   }
@@ -786,7 +786,7 @@ exports.messages = async (req, res) => {
     {
       return res.json({
         status: 400,
-        message: "Invalid Issue id",
+        message: res.__("INVALID_ISSUE"),
         success: false,
       });
     }
@@ -802,14 +802,14 @@ exports.messages = async (req, res) => {
     await updateIssueInAlgolia(records.issues)
     return res.json({
       status: 200,
-      message: "Message sent successfully",
+      message: res.__("ISSUE_MESSAGE_SENT"),
       success: false,
       data: savedMessage,
     });
   } catch (err) {
     return res.json({
       status: 500,
-      message: "Internal Server Error",
+      message: res.__("SERVER_ERROR"),
       success: false,
     });
   }
@@ -825,7 +825,7 @@ exports.report = async (req, res) => {
     {
       return res.json({
         status: 400,
-        message: "Invalid Issue id",
+        message:  res.__("INVALID_ISSUE"),
         success: false,
       });
     }
@@ -833,14 +833,14 @@ exports.report = async (req, res) => {
     const savedReports = await report.save();
     return res.json({
       status: 200,
-      message: "Report added Successfully",
+      message: res.__("REPORT_ADDED"),
       success: false,
       data: savedReports,
     });
   } catch (err) {
     return res.json({
       status: 500,
-      message: "Something Went wrong",
+      message: res.__("SERVER_ERROR"),
       success: false,
     });
   }
@@ -858,7 +858,7 @@ exports.share = async (req, res) => {
       if (exist) {
         return res.json({
           status: 200,
-          message: "shared",
+          message: res.__("ISSUE_SHARED"),
           success: true,
         });
       } else {
@@ -871,7 +871,7 @@ exports.share = async (req, res) => {
         await updateIssueInAlgolia(issueId)     
         return res.json({
           status: 200,
-          message: "Issue shared successfully",
+          message: res.__("ISSUE_SHARED"),
           success: true,
           data: issue,
         });
@@ -879,7 +879,7 @@ exports.share = async (req, res) => {
     } else {
       return res.json({
         status: 500,
-        message: "invalid issue",
+        message: res.__("INVALID_ISSUE"),
         success: false,
       });
     }
@@ -887,7 +887,7 @@ exports.share = async (req, res) => {
     console.log('uerrror',err)
     return res.json({
       status: 500,
-      message: "some thing went wrong",
+      message:  res.__("SERVER_ERROR"),
       success: false,
     });
   }
@@ -900,14 +900,14 @@ exports.views = async (req, res) => {
     const issueId = req.params.id;
     const issue = await Issue.findById(issueId);
     if (!issue) {
-      return res.status(404).json({ message: "Issue not found", success: false });
+      return res.status(404).json({ message: res.__("ISSUEN_NOT_FOUND"), success: false });
     }
     if (issue.views.includes(userId)) {
-      return res.status(400).json({ message: "User has already viewed this issue", success: false });
+      return res.status(400).json({ message:  res.__("ISSUE_ALREADY_VIEWED"), success: false });
     }
     issue.views.push(userId);
     await issue.save();
-    res.status(200).json({ message: "Issue View  successfully", success: true });
+    res.status(200).json({ message:  res.__("ISSUE_VIEW"), success: true });
   }
   catch(err)
   {

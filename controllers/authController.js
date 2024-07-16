@@ -20,7 +20,7 @@ const signup = async (req, res) => {
 
     res.status(200).send({
       success: true,
-      message: `Confirmation Code has been sent to ${email}`,
+      message: `${res.__("CONFIRMATION_CODE")} ${email}`,
       user: cognitoUser,
     });
   } catch (error) {
@@ -46,7 +46,7 @@ const signupConfirm = async (req, res) => {
     });
     res.status(200).send({
       success: true,
-      message: 'User email confirmed successfully',
+      message: res.__("EMAIL_CONFIRMED"),
       user: {
         user_confirmed: true,
       },
@@ -75,7 +75,7 @@ const signin = async (req, res) => {
     });
     res.status(200).send({
       success: true,
-      message: 'User logined successfully',
+      message:  res.__("USER_LOGIN"),
       user: cognitoUser,
     });
   } catch (error) {

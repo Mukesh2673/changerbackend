@@ -17,7 +17,7 @@ const   validateToken = async (req, res, next) => {
       const respData = {
         status: 403,
         success: false,
-        message: "No Authorization Token",
+        message:  res.__("NO_AUTHORIZATION"),
       };
   
       return res.status(403).json(respData);
@@ -30,7 +30,7 @@ const   validateToken = async (req, res, next) => {
     {
       let respData = {
         success: false,
-        message: "User Not Found to this Token",
+        message: res.__("USER_NOT_FOUND_IN_TOKEN"),
         status: 400
       };
       return res.status(400).json(respData);
@@ -41,7 +41,7 @@ const   validateToken = async (req, res, next) => {
     ) {
       let respData = {
         success: false,
-        message: "Invalid Access Token",
+        message: res.__("INVALID_ACCESS_TOKEN"),
         status: 401
       };
       return res.status(401).json(respData);
@@ -52,7 +52,7 @@ const   validateToken = async (req, res, next) => {
     console.log(error);
     let respData = {
       success: false,
-      message: "Invalid Access Token",
+      message:  res.__("INVALID_ACCESS_TOKEN"),
       error:error.name,
       status:401
     };
@@ -73,14 +73,14 @@ const accessToken = async (req, res, next) => {
     const response = await cognitoISP.initiateAuth(params).promise();
     if (response && response.AuthenticationResult) {
       res.status(200).json({
-        message:'Access token has been retrieved successfully',
+        message: res.__("ACTION_TOKEN_RETERIVED"),
         accessToken: response.AuthenticationResult.AccessToken,
         idToken: response.AuthenticationResult.IdToken,
         refreshToken: response.AuthenticationResult.RefreshToken || refreshToken, // Use the old refresh token if a new one isn't provided
         sucess:true
       });
       } else {
-      res.status(400).json({ error: 'Invalid token response', success: false });
+      res.status(400).json({ error:  res.__("INVALID_ACCESS_TOKEN"), success: false });
     }
   } catch (error) {
     console.error('Error refreshing tokens:', error);
@@ -95,7 +95,7 @@ const cognitoUserDetails=async (req, res, next)=>{
       const respData = {
         status: 403,
         success: false,
-        message: "No Authorization Token",
+        message: res.__("NO_AUTHORIZATION"),
       };
   
       return res.status(403).json(respData);
@@ -107,7 +107,7 @@ const cognitoUserDetails=async (req, res, next)=>{
       {
       let respData = {
         success: false,
-        message: "Invalid Access Token",
+        message: res.__("INVALID_ACCESS_TOKEN"),
         status: 401
       };
       return res.status(401).json(respData);
@@ -116,7 +116,7 @@ const cognitoUserDetails=async (req, res, next)=>{
     //const user = await User.findOne({cognitoUsername:decoded.username});
     let respData = {
       success: false,
-      message: "Cognito User records retrieved successfully",
+      message: res.__("COGNITO_USER_RECORDS_RETRIEVED"),
       data: decoded,
       status: 200
     };
@@ -125,7 +125,7 @@ const cognitoUserDetails=async (req, res, next)=>{
     console.log(error);
     let respData = {
       success: false,
-      message: "Invalid Access Token",
+      message: res.__("INVALID_ACCESS_TOKEN"),
       error:error.name,
       status:401
     };

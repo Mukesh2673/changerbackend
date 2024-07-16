@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const mongoosePaginate = require("mongoose-paginate-v2");
 const Schema = mongoose.Schema;
 
 const videoSchema = new Schema(
@@ -26,7 +25,5 @@ const videoSchema = new Schema(
   }
 );
 
-videoSchema.plugin(mongoosePaginate);
-videoSchema.plugin(require("mongoose-autopopulate"));
 videoSchema.index({ location: "2dsphere" });
 module.exports = mongoose.model("Video", videoSchema);

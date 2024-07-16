@@ -9,7 +9,7 @@ const update = async (model, data, type) => {
     if (!mongoose.Types.ObjectId.isValid(data._id)) {
       return {
         status: 400,
-        error: "Invalid  ID format",
+        error:  res.__("INVALID_ID_FORMAT"),
         success: false,
       };
     }
@@ -50,7 +50,7 @@ const update = async (model, data, type) => {
     await updateAlgolia(updateObject, type);
     obj = {
       status: 200,
-      message: "Hashtags added successfully!",
+      message:  res.__("HASHTAGS_ADDED"),
       success: true,
       data: records,
     };
@@ -88,7 +88,7 @@ exports.add = async (req, res) => {
       }
       return res.status(400).json(response);
     } else {
-      return res.status(400).json({ message: "invalid request type" });
+      return res.status(400).json({ message: res.__("INVALID_REQUEST_TYPE") });
     }
   } catch (error) {
     return res.status(500).json({ message: error.message, status: 500 });
