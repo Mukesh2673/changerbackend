@@ -6,6 +6,11 @@
  *     tags:
  *       - Cognito
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: body
  *         in: body
  *         description: Sign in User Account By Email Address and Password
@@ -35,6 +40,11 @@
  *     tags: 
  *       - Cognito
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: body
  *         in: body
  *         description: Sign up a new user account with email and password
@@ -88,6 +98,11 @@
  *     tags:
  *       - Cognito
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: body
  *         in: body
  *         description: Confirm user signup with email and confirmation code
@@ -144,6 +159,11 @@
  *     tags:
  *       - Users
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -210,6 +230,12 @@
  *     summary: Retrieve a list of all users.
  *     tags:
  *       - Users
+ *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *     responses:
  *       200:
  *         description: A list of users
@@ -229,6 +255,11 @@
  *     tags:
  *       - Users
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: id
  *         in: path
  *         description: ID of the user to retrieve
@@ -253,6 +284,11 @@
  *     tags:
  *       - Onboarding
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: body
  *         in: body
  *         description: Save User details  Records
@@ -293,6 +329,11 @@
  *     tags:
  *       - Users
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token 
@@ -322,6 +363,11 @@
  *     tags:
  *       - Users
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token 
@@ -351,6 +397,11 @@
  *     tags:
  *       - Profile
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token   
@@ -395,6 +446,11 @@
  *     tags:
  *       - Onboarding
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token   
@@ -429,6 +485,11 @@
  *     tags:
  *       - Users
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: cuid
  *         in: path
  *         description: Cognito username of the user to retrieve
@@ -458,6 +519,11 @@
  *     tags:
  *       - Settings
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token     
@@ -483,6 +549,11 @@
  *     tags:
  *       - Settings
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token        
@@ -508,6 +579,11 @@
  *     tags:
  *       - Settings
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -534,6 +610,11 @@
  *     tags:
  *       - Users
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -593,6 +674,11 @@
  *     tags:
  *       - Profile
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -628,6 +714,11 @@
  *     tags:
  *       - Users
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - in: path
  *         name: id
  *         description: User ID to fetch notifications
@@ -678,6 +769,11 @@
  *     tags:
  *       - Profile
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -705,6 +801,11 @@
  *     tags:
  *       - Users
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -759,6 +860,11 @@
  *     tags:
  *       - Users
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -795,6 +901,11 @@
  *     tags:
  *       - Users
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Bearer token for authorization
@@ -816,6 +927,11 @@
  *     tags:
  *       - Users
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Bearer token for authorization
@@ -891,6 +1007,11 @@
  *     tags:
  *       - Cognito
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Add refresh token to access token
@@ -923,6 +1044,11 @@
  *     tags:
  *       - Cognito
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Add refresh token to access token
@@ -934,12 +1060,5 @@
  *       500:
  *         description: Internal server error
  */
-
-
-
-
-
-
-
 
 module.exports = {}; 

@@ -4,18 +4,18 @@ const validateBookMarks = [
     [
       body("issue")
         .notEmpty()
-        .withMessage("Either issue, or campaign must be provided")
+        .withMessage((value,{ req}) =>req.__("BOOKMARKS_REQUIRED_MESSAGE"))
         .bail()
         .isMongoId()
-        .withMessage("Issue must be a valid MongoDB ID"),
+        .withMessage((value,{ req}) =>req.__("INVALID_ISSUE_ID_FORMAT")),
       body("campaign")
         .notEmpty()
-        .withMessage("Either issue, or campaign must be provided")
+        .withMessage((value,{ req}) =>req.__("BOOKMARKS_REQUIRED_MESSAGE"))
         .bail()
         .isMongoId()
-        .withMessage("Issue must be a valid MongoDB ID"),
+        .withMessage((value,{ req}) =>req.__("CAMPAIGN_ID_MUST_BE_VALID")),
     ],
-    "At least one of issue, or campaign must be provided"
+    ({ req }) => req.__("BOOKMARKS_AT_LEAST_ONE_REQUIRED")
   ),
   (req, res, next) => {
     const errors = validationResult(req);
@@ -49,7 +49,7 @@ const validateBookMarks = [
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: "Validation error",
+        message: res.__("VALIDATION_ERROR"),
         errors: errors.array(),
       });
     }

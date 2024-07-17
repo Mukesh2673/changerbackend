@@ -6,6 +6,11 @@
  *     tags:
  *       - Search
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: lat
  *         in: query
  *         description: Add the latitude to find records located in the given location.
@@ -54,6 +59,11 @@
  *     tags:
  *       - Search
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: page
  *         in: query
  *         description: Add Number of Page.

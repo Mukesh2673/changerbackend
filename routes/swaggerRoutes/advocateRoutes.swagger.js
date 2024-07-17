@@ -6,6 +6,11 @@
  *     tags:
  *       - Advocate
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -48,6 +53,11 @@
  *     tags:
  *       - Advocate
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: fal
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -76,6 +86,11 @@
  *     tags:
  *       - Advocate
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token

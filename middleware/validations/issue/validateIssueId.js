@@ -2,15 +2,14 @@ const { param, validationResult } = require("express-validator");
 const validateIssueId = [
     param('id')
     .notEmpty()
-    .withMessage('Issue ID is required')
     .isMongoId()
-    .withMessage('Issue ID must be a valid MongoDB ID'),
+    .withMessage((value,{ req}) =>req.__("INVALID_ISSUE_ID_FORMAT")),
       (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
           success: false,
-          message: "Validation error",
+          message: res.__("VALIDATION_ERROR"),
           errors: errors.array(),
         });
       }

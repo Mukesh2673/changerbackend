@@ -3,21 +3,21 @@ const { body, validationResult }=require('express-validator');
 const validateSigninRequest = [
   body('email')
     .notEmpty()
-    .withMessage('Email is required')
+    .withMessage((value,{ req}) =>req.__("EMAIL_REQUIRED"))
     .isEmail()
-    .withMessage('Invalid email format'),
+    .withMessage((value,{ req}) =>req.__("INVALID_EMAIL_FORMAT")),
   body('password')
     .notEmpty()
-    .withMessage('Password is required')
+    .withMessage((value,{ req}) =>req.__("PASSWORD_REQUIRED"))
     .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long'),
+    .withMessage((value,{ req}) =>req.__("PASSWORD_MUST_BE_8_CHAR")),
 
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: 'Validation error',
+        message: res.__("VALIDATION_ERROR"),
         errors: errors.array(),
       });
     }

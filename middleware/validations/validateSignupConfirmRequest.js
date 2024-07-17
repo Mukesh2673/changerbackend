@@ -3,21 +3,21 @@ const { body, validationResult }=require('express-validator');
 const validateSignupConfirmRequest = [
   body('email')
     .notEmpty()
-    .withMessage('Email is required')
+    .withMessage((value,{ req}) =>req.__("EMAIL_REQUIRED"))
     .isEmail()
-    .withMessage('Invalid email format'),
+    .withMessage((value,{ req}) =>req.__("INVALID_EMAIL_FORMAT")),
   body('code')
     .notEmpty()
-    .withMessage('Code is required')
+    .withMessage((value,{ req}) =>req.__("CODE_IS_REQUIRED"))
     .isLength({ min: 6, max: 6 })
-    .withMessage('Code must be at least 6 characters long'),
+    .withMessage((value,{ req}) =>req.__("CODE_IS_REQUIRED")),
 
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: 'Validation error',
+        message: res.__("VALIDATION_ERROR"),
         errors: errors.array(),
       });
     }

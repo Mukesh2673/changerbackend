@@ -8,7 +8,7 @@
  *     parameters:
  *       - name: Accept-Language
  *         in: header
- *         enum: [ "english", "arabic","french", "chinese"]
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
  *         description: Select Language  to get response Messages in selected language  
  *         required: false 
  *     responses:
@@ -30,7 +30,7 @@
  *     parameters:
  *       - name: Accept-Language
  *         in: header
- *         enum: [ "english", "arabic","french", "chinese"]
+ *         enum: [ "english", "arabic","french", "chinese","german"]
  *         description: Select Language  to get response Messages in selected language  
  *         required: false 
  *       - name: campaignId
@@ -59,6 +59,11 @@
  *     tags:
  *       - Campaigns
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: page
  *         in: query
  *         description: Add Number of Page.
@@ -84,6 +89,11 @@
  *     tags:
  *       - Campaigns
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false  
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -116,6 +126,11 @@
  *     tags:
  *       - Campaigns
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token        
@@ -155,7 +170,12 @@
  *     parameters:
  *       - name: Authorization
  *         in: header
- *         description: Authorization Token        
+ *         description: Authorization Token  
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false       
  *       - name: campaignId
  *         in: path
  *         description: Campaign ID you want to volunteer for
@@ -183,6 +203,11 @@
  *     tags:
  *       - Volunteering
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -219,7 +244,12 @@
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
- *         required: true 
+ *         required: true
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: body
  *         in: body
  *         description: Add campaign
@@ -345,6 +375,11 @@
  *     tags:
  *       - Campaigns
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token  
@@ -390,6 +425,11 @@
  *         in: path
  *         description: Get the Message of users in a perticular campaign by campaign Id 
  *         required: true
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false  
  *     responses:
  *       200:
  *         description: Message records retrieved successfully.
@@ -432,6 +472,11 @@
  *     tags:
  *       - Volunteering
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token        
@@ -497,6 +542,11 @@
  *     tags:
  *       - Volunteering
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token        
@@ -525,6 +575,11 @@
  *     tags:
  *       - Campaigns
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -569,6 +624,11 @@
  *     tags:
  *       - Campaigns
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -613,6 +673,11 @@
  *     tags:
  *       - Donation
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -657,7 +722,12 @@
  *     summary: Get the participation history of User
  *     tags:
  *       - Volunteering
- *     parameters:
+ *     parameters: 
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -685,6 +755,11 @@
  *     tags:
  *       - Campaigns
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token

@@ -3,36 +3,34 @@ const validateSignedPetitions = [
   body("petition")
     .notEmpty()
     .withMessage(
-      "petition is required"
-    ),
+      (value,{ req}) =>req.__("PETITION_REQUIRED")),
   body("address")
     .notEmpty()
     .withMessage(
-      "address is required"
-    ),  
+      (value,{ req}) =>req.__("ADDRESS_REQUIRED")),
   body("location")
     .notEmpty()
-    .withMessage("Location is required")
+    .withMessage( ({ req}) =>req.__("LOCATION_REQUIRED"))
     .custom((location) => {
       if (
         typeof location !== "object" ||
         !location.hasOwnProperty("type") ||
         !location.hasOwnProperty("coordinates")
       ) {
-        throw new Error("Invalid location format");
+        throw new Error( value,({ req}) =>req.__("INVALID_LOCATION_FORMAT"));
       }
       if (location.type !== "Point") {
-        throw new Error("Invalid location type");
+        throw new Error(value,({ req}) =>req.__("INVALID_LOCATION_TYPE"));
       }
       if (
         !Array.isArray(location.coordinates) ||
         location.coordinates.length !== 2
       ) {
-        throw new Error("Invalid coordinates format");
+        throw new Error(value,({ req}) =>req.__("INVALID_COORDINATEDS_FORMAT"));
       }
       const [longitude, latitude] = location.coordinates;
       if (typeof longitude !== "number" || typeof latitude !== "number") {
-        throw new Error("Coordinates must be numbers");
+        throw new Error(value,({ req}) =>req.__("CORDINATE_MUST_NUMBER"));
       }
       return true;
     }),
@@ -41,7 +39,7 @@ const validateSignedPetitions = [
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: "Validation error",
+        message:  res.__("VALIDATION_ERROR"),
         errors: errors.array(),
       });
     }

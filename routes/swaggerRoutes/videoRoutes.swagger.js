@@ -5,6 +5,12 @@
  *     summary: Get All Videos
  *     tags:
  *       - Videos 
+ *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *     responses:
  *       200:
  *         description: Video records retrieved successfully.
@@ -20,6 +26,11 @@
  *     tags:
  *       - Videos
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: id
  *         in: path
  *         description: ID of the video to fetch
@@ -43,6 +54,11 @@
  *     tags:
  *       - Videos
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: id
  *         in: path
  *         description: ID of the video to Delete
@@ -66,6 +82,11 @@
  *     tags:
  *       - Videos
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token    
@@ -92,6 +113,11 @@
  *     tags:
  *       - Videos
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token    
@@ -130,6 +156,11 @@
  *     tags:
  *       - Videos
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token    
@@ -160,6 +191,11 @@
  *     tags:
  *       - Videos
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token    
@@ -194,6 +230,11 @@
  *     tags:
  *       - Videos
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token    
@@ -237,6 +278,11 @@
  *     tags:
  *       - Videos
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token  
@@ -269,6 +315,11 @@
  *     tags:
  *       - Videos
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -296,6 +347,11 @@
  *     tags:
  *       - Videos
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: id
  *         in: path
  *         description: ID of the video to watch 

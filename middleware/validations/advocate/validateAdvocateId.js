@@ -1,16 +1,18 @@
-const { param, validationResult } = require("express-validator");
+const { param, validationResult,req,res } = require("express-validator");
 const validateCampaignId = [
     param('id')
     .notEmpty()
-    .withMessage('Advocate ID is required')
+    .withMessage((value, { req }) =>req.__("ADVOCATE_ID_REQUIRE"))
     .isMongoId()
-    .withMessage('Advocate ID must be a valid MongoDB ID'),
+    .withMessage((value, { req }) =>req.__("ADVOCATE_ID_REQUIRE")),
+
+    // .withMessage((res)=>res.__("ADVOCATE_VALID_MONGO_ID")),
       (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
           success: false,
-          message: "Validation error",
+          message: res.__("VALIDATION_ERROR"),
           errors: errors.array(),
         });
       }

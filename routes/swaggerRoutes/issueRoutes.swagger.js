@@ -6,6 +6,11 @@
  *     tags:
  *       - Issues
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: page
  *         in: query
  *         description: Add Number of Page.
@@ -63,6 +68,11 @@
  *     tags:
  *       - Issues
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: idea
  *         in: body
  *         description: Add Idea to Generate relevent Issue
@@ -104,6 +114,11 @@
  *     tags:
  *       - Issues
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -168,6 +183,11 @@
  *     tags:
  *       - Issues
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: body
  *         in: body
  *         description: Location data and optional cause filter
@@ -275,6 +295,11 @@
  *     tags:
  *       - Issues
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -297,6 +322,11 @@
  *     tags:
  *       - Issues
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -324,6 +354,11 @@
  *     tags:
  *       - Issues
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -348,6 +383,11 @@
  *     tags:
  *       - Issues
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -372,6 +412,11 @@
  *     tags:
  *       - Issues
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: id
  *         in: path
  *         description: Get issue by  id 
@@ -391,6 +436,11 @@
  *     tags:
  *       - Issues
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false  
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -434,6 +484,11 @@
  *     tags:
  *       - Issues
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -457,6 +512,11 @@
  *     tags:
  *       - Issues
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -493,6 +553,11 @@
  *     tags:
  *       - Issues
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -533,6 +598,11 @@
  *     tags:
  *       - Issues
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
@@ -557,6 +627,11 @@
  *     tags:
  *       - Issues
  *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false  
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token

@@ -108,7 +108,7 @@ exports.get = async (req, res) => {
     let advocate=[]
     if(advocateId)
     {
-      advocate = await Advocate.findOne({ _id: advocateId, user: user  });
+      advocate = await Advocate.find({ _id: advocateId, user: user  });
     }
     else{
       advocate = await Advocate.find({user: user});
@@ -117,7 +117,7 @@ exports.get = async (req, res) => {
       status: 200,
       success: true,
       data: advocate,
-      message:  res.__("ADVOCATED_RECORDS_MESSAGES") 
+      message:  advocate?.length>0 ? res.__("ADVOCATED_RECORDS_MESSAGE"):res.__("ADVOCATE_NOT_FOUND") 
     });
     } 
     catch (error) {

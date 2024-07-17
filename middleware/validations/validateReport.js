@@ -4,37 +4,37 @@ const validateReport = [
     [
       body("issue")
         .notEmpty()
-        .withMessage("Either issue, campaign, or profile must be provided")
+        .withMessage((value,{ req}) =>req.__("REPORT_REQUIRED_MESSAGE"))
         .bail()
         .isMongoId()
-        .withMessage("Issue must be a valid MongoDB ID"),
+        .withMessage((value,{ req}) =>req.__("INVALID_ISSUE_ID_FORMAT")),
       body("campaign")
         .notEmpty()
-        .withMessage("Either issue, campaign, or profile must be provided")
+        .withMessage((value,{ req}) =>req.__("REPORT_REQUIRED_MESSAGE"))
         .bail()
         .isMongoId()
-        .withMessage("Campaign must be a valid MongoDB ID"),
+        .withMessage((value,{ req}) =>req.__("CAMPAIGN_ID_MUST_BE_VALID")),
       body("profile")
         .notEmpty()
-        .withMessage("Either issue, campaign, or profile must be provided")
+        .withMessage((value,{ req}) =>req.__("REPORT_REQUIRED_MESSAGE"))
         .bail()
         .isMongoId()
-        .withMessage("Profile must be a valid MongoDB ID"),
+        .withMessage((value,{ req}) =>req.__("INVALID_USER_ID_FORMAT")),
     ],
-    "At least one of issue, profile, campaign must be provided"
+    (value,{ req }) => req.__("REPORT_AT_LEAST_ONE_REQUIRED")
   ),
   body("details")
     .notEmpty()
-    .withMessage("Details are required")
+    .withMessage((value,{ req}) =>req.__("DETAILS_REQUIRED"))
     .bail()
     .isString()
-    .withMessage("Details must be a string"),
+    .withMessage((value,{ req}) =>req.__("DETAILS_MUST_STRING")),
   body("reportSubject")
     .notEmpty()
-    .withMessage("Report subject are required")
+    .withMessage((value,{ req}) =>req.__("REPORT_SUBJECT_REQUIRED"))
     .bail()
     .isString()
-    .withMessage("Report subject must be a string"),
+    .withMessage((value,{ req}) =>req.__("REPORT_SUBJECT_MUST_BE_STRING")),
   (req, res, next) => {
     const errors = validationResult(req);
     const { profile, campaign, issue } = req.body;
@@ -79,7 +79,7 @@ const validateReport = [
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: "Validation error",
+        message: res.__("VALIDATION_ERROR"),
         errors: errors.array(),
       });
     }

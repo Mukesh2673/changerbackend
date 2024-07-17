@@ -1,15 +1,15 @@
 const { body, validationResult, oneOf } = require("express-validator");
 
 const validateAdvocate = [
-  body("description").notEmpty().withMessage("Description is required"),
-  body("title").notEmpty().withMessage("Title is required"),
-  body("video").custom((value, { req }) => {
+  body("description").notEmpty().withMessage(({ req}) =>req.__("DESCRIPTION_REQUIRED")),
+  body("title").notEmpty().withMessage(({ req}) =>req.__("TITLE_REQUIRED")),
+  body("video").custom(({value, req }) => {
     if (!req.file) {
-      throw new Error("Video file is required");
+      throw new Error((value,{req})=>req.__("ADVOCATE_ID_REQUIRE"));
     }
     const validMimeTypes = ["video/mp4", "video/avi", "video/mkv", "video/mov"];
     if (!validMimeTypes.includes(req.file.mimetype)) {
-      throw new Error("Invalid video file type");
+      throw new Error((value,{req})=>req.__("ADVOCATE_ID_REQUIRE"));
     }
     return true;
   }),
@@ -17,15 +17,15 @@ const validateAdvocate = [
     [
       body("issue")
         .notEmpty()
-        .withMessage("Issue is required if campaign and advocate user are not provided"),
+        .withMessage((value,{ req}) =>req.__("ADVOCATE_ISSUE_REQUIRED_MESSAGE")),
       body("campaign")
         .notEmpty()
-        .withMessage("Campaign is required if issue and advocateuser are not provided"),
+        .withMessage((value,{ req}) =>req.__("ADVOCATE_CAMPAIGN_REQUIRED_MESSAGE")),
       body("advocateUser")
         .notEmpty()
-        .withMessage("advocateUser is required if issue and campaign are not provided"),
+        .withMessage((value,{ req}) =>req.__("ADVOCATE_USER_REQUIRED_MESSAGE")),
     ],
-    "At least one of issue, campaign, or user must be provided"
+    (value,{ req }) => req.__("ADVOCATE_AT_LEAST_ONE_REQUIRED")
   ),
   // body("location")
   //   .notEmpty()
@@ -64,7 +64,7 @@ const validateAdvocate = [
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: "Validation error",
+        message: 	 res.__("VALIDATION_ERROR"),
         errors: errors.array(),
       });
     }

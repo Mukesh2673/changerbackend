@@ -14,7 +14,7 @@ const {swaggerDocs} = require('./libs/swagger')
 const swaggerUi = require('swagger-ui-express');
 const { I18n } = require('i18n')
 const i18n= new I18n({
-  locales: ['english', 'arabic', 'french',  'chinese'],
+  locales: ['english', 'arabic', 'french',  'chinese','german'],
   directory: path.join(__dirname, 'translation'),
   defaultLocale: 'english'
 })

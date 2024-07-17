@@ -1,232 +1,190 @@
 const { body, validationResult, oneOf } = require("express-validator");
+const i18n = require("i18n"); // Ensure i18n is properly configured and required
 
-const validateBooleanObject = (timeObject, fieldName) => {
+const validateBooleanObject = (timeObject, fieldName, req) => {
   if (!timeObject || typeof timeObject !== "object") {
-    throw new Error(`${fieldName} must be an object and required`);
+    let message=`${fieldName}_FIELD_MUST_BE_OBJECT` 
+    throw new Error(message);
   } else {
     if (typeof timeObject.status !== "boolean") {
-      throw new Error(`${fieldName} status must be a boolean`);
+      let message=`${fieldName}_FIELD_STATUS_MUST_BE_BOOLEAN` 
+      throw new Error(message);
     }
-    if (!timeObject.details || typeof timeObject.details !== "string") {
-      throw new Error(`${fieldName} details must be a string`);
+    if (!timeObject.details || typeof timeObject.details !== "string") {      
+      let message=`${fieldName}_FIELD_DETAILS_MUST_BE_STRING`
+      throw new Error(message);
     }
   }
 };
-
-const validateArrayField = (field, fieldName) => {
+const validateArrayField = (field, fieldName, req) => {
   if (!field || !Array.isArray(field) || field.length === 0) {
-    throw new Error(`${fieldName} must be a non-empty array`);
+   let message=`${fieldName}_FIELD_MUST_BE_NON_EMPTY_ARRAY` 
+    throw new Error(message);
   }
   field.forEach((item, index) => {
-    if (
-      !item.name ||
-      typeof item.name !== "string" ||
-      item.name.trim() === ""
-    ) {
-      throw new Error(
-        `${fieldName} name at ${index + 1} position must be a non-empty string`
-      );
+    if (!item.name || typeof item.name !== "string" || item.name.trim() === "") {
+      let message=`${fieldName}_FIELD_NAME_MUST_BE_NON_EMPTY_STRING`
+      throw new Error(message);
     }
   });
 };
 
-const validateDonationAction = (action) => {
+const validateDonationAction = (action, req) => {
   if (action.name === "donation") {
-    if (
-      !action.amount ||
-      typeof action.amount !== "number" ||
-      action.amount < 0
-    ) {
-      throw new Error("Donation amount must be a non-negative number");
+    if (!action.amount || typeof action.amount !== "number" || action.amount < 0) {
+      throw new Error(req.__("DONATION_AMOUNT_MUST_BE_NON_NEGATIVE"));
     }
     if (!action.description || typeof action.description !== "string") {
-      throw new Error("Donation description must be a string");
+      throw new Error(req.__("DONATION_DESCRIPTION_MUST_BE_STRING"));
     }
     if (!action.karmaUnit || typeof action.karmaUnit !== "number") {
-      throw new Error("karmaUnit must be a non-negative number");
+      throw new Error(req.__("KARMA_UNIT_MUST_BE_NON_NEGATIVE"));
     }
-    if (
-      !action.karmaPoint ||
-      typeof action.karmaPoint !== "number" ||
-      action.karmaPoint < 0
-    ) {
-      throw new Error("Donation KarmaPoint must be a non-negative number");
+    if (!action.karmaPoint || typeof action.karmaPoint !== "number" || action.karmaPoint < 0) {
+      throw new Error(req.__("DONATION_KARMA_POINT_MUST_BE_NON_NEGATIVE"));
     }
   }
   return true;
 };
 
-const validatePetitions = (action) => {
+const validatePetitions = (action, req) => {
   if (action.name === "petition") {
-    if (
-      !action.numberOfSignature ||
-      typeof action.numberOfSignature !== "number" ||
-      action.numberOfSignature < 0
-    ) {
-      throw new Error(
-        "Number of Signatures to petitions must be a non-negative number"
-      );
+    if (!action.numberOfSignature || typeof action.numberOfSignature !== "number" || action.numberOfSignature < 0) {
+      throw new Error(req.__("SIGNATURES_MUST_BE_NON_NEGATIVE"));
     }
     if (!action.neededSignaturesFor || typeof action.neededSignaturesFor !== "string") {
-      throw new Error("Description about Need of Signature must be a string");
+      throw new Error(req.__("NEEDED_SIGNATURES_DESCRIPTION_MUST_BE_STRING"));
     }
-    if (
-      !action.karmaPoint ||
-      typeof action.karmaPoint !== "number" ||
-      action.karmaPoint < 0
-    ) {
-      throw new Error(
-        "KarmaPoint earn by every Signatureust be a non-negative number"
-      );
+    if (!action.karmaPoint || typeof action.karmaPoint !== "number" || action.karmaPoint < 0) {
+      throw new Error(req.__("SIGNATURES_KARMA_POINT_MUST_BE_NON_NEGATIVE"));
     }
   }
   return true;
 };
 
-const validateParticipationAction = (action) => {
+const validateParticipationAction = (action, req) => {
   if (action.name === "participation") {
-    if (
-      !action.participant ||
-      typeof action.participant !== "number" ||
-      action.participant <= 0
-    ) {
-      throw new Error("The number of participants must be a positive number.");
+    if (!action.participant || typeof action.participant !== "number" || action.participant <= 0) {
+      throw new Error(req.__("PARTICIPANTS_MUST_BE_POSITIVE"));
     }
     if (!action.startDate || typeof action.startDate !== "string") {
-      throw new Error("The start date must be a valid string.");
+      throw new Error(req.__("START_DATE_MUST_BE_STRING"));
     }
-
-    if(
-      !action.numberOfDays ||
-      typeof action.numberOfDays !== "number" ||
-      action.numberOfDays < 0
-    ) {
-      throw new Error("Participant Number of Days must be a non-negative number");
+    if (!action.numberOfDays || typeof action.numberOfDays !== "number" || action.numberOfDays < 0) {
+      throw new Error(req.__("NUMBER_OF_DAYS_MUST_BE_NON_NEGATIVE"));
     }
-
     if (!action.roleTitle || typeof action.roleTitle !== "string") {
-      throw new Error("The role title must be a non-empty string.");
+      throw new Error(req.__("ROLE_TITLE_MUST_BE_NON_EMPTY_STRING"));
     }
     if (!action.description || typeof action.description !== "string") {
-      throw new Error(
-        "The description of the need for participants is required."
-      );
+      throw new Error(req.__("DESCRIPTION_REQUIRED"));
     }
     if (!action.address || typeof action.address !== "string") {
-      throw new Error("The Address must be a valid string.");
+      throw new Error(req.__("ADDRESS_MUST_BE_STRING"));
     }
     // Validate location
     if (!action.location || typeof action.location !== "object") {
-      throw new Error("Location must be an object and is required.");
+      throw new Error(req.__("LOCATION_MUST_BE_OBJECT"));
     }
     if (action.location.type !== "Point") {
-      throw new Error('Location type must be "Point".');
+      throw new Error(req.__("LOCATION_TYPE_MUST_BE_POINT"));
     }
-    if (
-      !Array.isArray(action.location.coordinates) ||
-      action.location.coordinates.length !== 2
-    ) {
-      throw new Error("Location coordinates must be an array of two numbers.");
+    if (!Array.isArray(action.location.coordinates) || action.location.coordinates.length !== 2) {
+      throw new Error(req.__("LOCATION_COORDINATES_MUST_BE_ARRAY"));
     }
     const [latitude, longitude] = action.location.coordinates;
     if (typeof latitude !== "number" || typeof longitude !== "number") {
-      throw new Error("Location coordinates must be numbers.");
+      throw new Error(req.__("LOCATION_COORDINATES_MUST_BE_NUMBERS"));
     }
     if (latitude < -90 || latitude > 90) {
-      throw new Error("Latitude must be between -90 and 90.");
+      throw new Error(req.__("LATITUDE_RANGE"));
     }
     if (longitude < -180 || longitude > 180) {
-      throw new Error("Longitude must be between -180 and 180.");
+      throw new Error(req.__("LONGITUDE_RANGE"));
     }
-    if (action.skills.length==0) {
-      throw new Error("Skills should be non empty array");
+    if (action.skills.length === 0) {
+      throw new Error(req.__("SKILLS_NON_EMPTY_ARRAY"));
     }
-    validateArrayField(action.requirements, "Requirements");
-    validateArrayField(action.provides, "Provide");
-    validateArrayField(action.responsibilities, "Responsibilities");
-    validateBooleanObject(action.partTime, "Participation partTime");
-    validateBooleanObject(action.fullTime, "Participation fullTime");
-    validateBooleanObject(action.onSite, "Participation onSite");
-    validateBooleanObject(action.remote, "Participation Remote");
+    validateArrayField(action.requirements, "REQUIREMENTS", req);
+    validateArrayField(action.provides, "PROVIDES", req);
+    validateArrayField(action.responsibilities, "RESPONSIBILITIES", req);
+    validateBooleanObject(action.partTime, "PART_TIME", req);
+    validateBooleanObject(action.fullTime, req.__("FULL_TIME"), req);
+    validateBooleanObject(action.onSite, "ON_SITE", req);
+    validateBooleanObject(action.remote, "REMOTE", req);
   }
   return true;
 };
 
 const validateRecords = [
   // Validate root level fields
-
   body("title")
     .notEmpty()
-    .withMessage("Title is required")
+    .withMessage((value, { req }) => req.__("TITLE_REQUIRED"))
     .isString()
-    .withMessage("Title must be a string"),
-
+    .withMessage((value, { req }) => req.__("TITLE_MUST_BE_STRING")),
   body("cause")
     .notEmpty()
-    .withMessage("Cause is required")
+    .withMessage((value, { req }) => req.__("CAUSE_REQUIRED"))
     .isString()
-    .withMessage("Cause must be a string"),
-
-  body("story").notEmpty().isString().withMessage("Story must be a string"),
-
+    .withMessage((value, { req }) => req.__("CAUSE_MUST_BE_STRING")),
+  body("story")
+    .notEmpty()
+    .withMessage((value, { req }) => req.__("STORY_MUST_BE_STRING")),
   body("image")
     .notEmpty()
-    .withMessage("Image URL is required")
+    .withMessage((value, { req }) => req.__("IMAGE_URL_REQUIRED"))
     .isString()
-    .withMessage("Invalid Image URL"),
-
-  body("video.videoUrl").notEmpty().withMessage("Video URL is required"),
-
-  body("video.type").notEmpty().withMessage("Video type is required"),
-
+    .withMessage((value, { req }) => req.__("INVALID_IMAGE_URL")),
+  body("video.videoUrl")
+    .notEmpty()
+    .withMessage((value, { req }) => req.__("VIDEO_URL_REQUIRED")),
+  body("video.type")
+    .notEmpty()
+    .withMessage((value, { req }) => req.__("VIDEO_TYPE_REQUIRED")),
   body("video.thumbnailUrl")
     .notEmpty()
-    .withMessage("Thumbnail URL is required"),
-
+    .withMessage((value, { req }) => req.__("THUMBNAIL_URL_REQUIRED")),
   // Validate phase array
   body("phase")
     .isArray({ min: 1 })
-    .withMessage("Phase must be a non-empty array"),
+    .withMessage((value, { req }) => req.__("PHASE_MUST_BE_NON_EMPTY_ARRAY")),
   body("phase.*.title")
     .notEmpty()
-    .withMessage("Phase title is required")
+    .withMessage((value, { req }) => req.__("PHASE_TITLE_REQUIRED"))
     .isString()
-    .withMessage("Phase title must be a string"),
-
+    .withMessage((value, { req }) => req.__("PHASE_TITLE_MUST_BE_STRING")),
   body("phase.*.action")
     .isArray({ min: 1 })
-    .withMessage("Action must be a non-empty array")
-    .custom((actions) => {
+    .withMessage((value, { req }) => req.__("ACTION_MUST_BE_NON_EMPTY_ARRAY"))
+    .custom((actions, { req }) => {
       const actionNames = actions.map((action) => action.name);
-
       if (actionNames.filter((name) => name === "donation").length > 1) {
-        throw new Error("Only one donation action is allowed per phase");
+        throw new Error(req.__("ONLY_ONE_DONATION_ACTION"));
       }
       if (actionNames.filter((name) => name === "petition").length > 1) {
-        throw new Error("Only one petition action is allowed per phase");
+        throw new Error(req.__("ONLY_ONE_PETITION_ACTION"));
       }
       return true;
     }),
-
-  body("phase.*.action.*").custom(async (action, { req }) => {
+  body("phase.*.action.*").custom((action, { req }) => {
     if (action.name === "donation") {
-      validateDonationAction(action);
+      validateDonationAction(action, req);
     } else if (action.name === "petition") {
-      validatePetitions(action);
+      validatePetitions(action, req);
     } else if (action.name === "participation") {
-      validateParticipationAction(action);
+      validateParticipationAction(action, req);
     }
     return true;
   }),
-
   // Validation result handler
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: "Validation error",
-        errors: errors.array(),
+        message: req.__("VALIDATION_ERROR"),
+        errors: errors.array().map((error) => req.__(error.msg)),
       });
     }
     next();

@@ -2,24 +2,24 @@ const { body,param, validationResult, oneOf } = require("express-validator");
 const validateDonation = [
     param('donationId')
     .notEmpty()
-    .withMessage('Donation ID is required')
+    .withMessage((value,{ req}) =>req.__("DONATION_ID_REQUIRED"))
     .isMongoId()
-    .withMessage('Donation ID must be a valid MongoDB ID'),
+    .withMessage((value,{ req}) =>req.__("DONATION_ID_MUST_BE_VALID")),
     body("amount")
       .notEmpty()
-      .withMessage('Amount are Required')
+      .withMessage((value,{ req}) =>req.__("AMOUNT_REQUIRED"))
       .isNumeric()
-      .withMessage(`Amount must be a number`),
+      .withMessage((value,{ req}) =>req.__("AMOUNT_MUST_BE_NUMBER")),
     body("source")
       .notEmpty()
-      .withMessage("Source token are required")
+      .withMessage((value,{ req}) =>req.__("SOURCE_TOKEN_REQUIRED"))
       .bail(),
     (req, res, next) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
           success: false,
-          message: "Validation error",
+          message: res.__("VALIDATION_ERROR"),
           errors: errors.array(),
         });
       }
