@@ -97,7 +97,7 @@ exports.getVideos = async (req, res) => {
     pipeLine=[...pipeLine,{ $skip: (page - 1) * pageSize },{ $limit: pageSize }]
     const result = await Video.aggregate(pipeLine)
     const totalRecords = await Video.countDocuments();
-    return res.json({ datas: result,  totalPage: Math.ceil(totalRecords / pageSize), status: 200,totalRecords:totalRecords, pageSize:pageSize});
+    return res.json({ data: result,  totalPage: Math.ceil(totalRecords / pageSize), status: 200,totalRecords:totalRecords, pageSize:pageSize});
   } catch (error) {
     console.log("err is", error);
     return res.json([]);
