@@ -1,5 +1,4 @@
-const { body, validationResult, oneOf } = require("express-validator");
-const i18n = require("i18n"); // Ensure i18n is properly configured and required
+const { body, validationResult } = require("express-validator");
 
 const validateBooleanObject = (timeObject, fieldName, req) => {
   if (!timeObject || typeof timeObject !== "object") {
@@ -92,7 +91,7 @@ const validateParticipationAction = (action, req) => {
     if (!Array.isArray(action.location.coordinates) || action.location.coordinates.length !== 2) {
       throw new Error(req.__("LOCATION_COORDINATES_MUST_BE_ARRAY"));
     }
-    const [latitude, longitude] = action.location.coordinates;
+    const [longitude,latitude] = action.location.coordinates;
     if (typeof latitude !== "number" || typeof longitude !== "number") {
       throw new Error(req.__("LOCATION_COORDINATES_MUST_BE_NUMBERS"));
     }
@@ -136,7 +135,8 @@ const validateRecords = [
     .withMessage((value, { req }) => req.__("IMAGE_URL_REQUIRED"))
     .isString()
     .withMessage((value, { req }) => req.__("INVALID_IMAGE_URL")),
-  body("video.videoUrl")
+   
+ body("video.videoUrl")
     .notEmpty()
     .withMessage((value, { req }) => req.__("VIDEO_URL_REQUIRED")),
   body("video.type")
@@ -176,6 +176,20 @@ const validateRecords = [
       validateParticipationAction(action, req);
     }
     return true;
+  }),
+  body("location").custom((action,{req})=>{
+    const [longitude,latitude] = action.coordinates;
+    console.log("coradsdfasdf",action)
+    if (typeof latitude !== "number" || typeof longitude !== "number") {
+      throw new Error(req.__("LOCATION_COORDINATES_MUST_BE_NUMBERS"));
+    }
+    if (latitude < -90 || latitude > 90) {
+      throw new Error(req.__("LATITUDE_RANGE"));
+    }
+    if (longitude < -180 || longitude > 180) {
+      throw new Error(req.__("LONGITUDE_RANGE"));
+    }
+    return true
   }),
   // Validation result handler
   (req, res, next) => {

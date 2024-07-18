@@ -1,5 +1,5 @@
 const { Skills, User } = require("../models");
-
+const {addSkillInAlgolia,updateSkillInAlgolia }= require("../algolia/skillAlgolia")
 exports.skills = async (req, res) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
@@ -15,10 +15,10 @@ exports.skills = async (req, res) => {
     else{
       searchQuery.verified=true
 
-    }  
+    }
     const records = await Skills.find(searchQuery).select('_id name verified appearances').skip(skip).limit(pageSize);
     const totalRecords = await Skills.countDocuments(searchQuery);
-    return res.json({
+     return res.json({
       status: records.length>0? 200: 400,
       skills: records,
       totalPage: Math.ceil(totalRecords / pageSize),
@@ -101,7 +101,7 @@ exports.addUserSkill= async (req, res, userId, skillId)=>{
     });
   }
 }
-
+//add new Skill
 exports.add = async (req, res) => {
   try {
     const user = req.user;
@@ -143,6 +143,7 @@ exports.add = async (req, res) => {
           users: [user],
         };
         const records = await new Skills(saveSkill).save();
+        await addSkillInAlgolia(records?._id)  
         await this.addUserSkill(req, res, user, records._id)
       }
  }   
@@ -192,6 +193,7 @@ exports.verifySkill= async (req, res)=>{
         { verified: true },
         { new: true }
       ); 
+     await updateSkillInAlgolia(skillId)
       return res.json({
         status: 200,
         message: res.__("SKILL_VERIFIED"),

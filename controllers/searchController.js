@@ -44,6 +44,7 @@ exports.search = async (req, res) => {
       "videos",
       "issues",
       "hashtags",
+      "skills"
     ];
     let documentType=recordType?.toLowerCase();
     //search from all collection when document type not define
@@ -76,6 +77,11 @@ exports.search = async (req, res) => {
       let flattenedHashtags = hashtagsArray.flat().filter(tag => tag !== undefined);
       let uniqueHashtags = Array.from(new Set(flattenedHashtags));
       return res.status(200).json({ message: res.__("SEARCH_RECORD_RETERIVED"), data: uniqueHashtags });
+    }
+    if(documentType == 'skills')
+    {
+    records = records.filter(item => item.verified).map(({ _id, name, verified }) => ({ _id, name, verified }));
+
     }
     return res.status(200).json({ message: res.__("SEARCH_RECORD_RETERIVED"), data: records });
   } catch (error) {

@@ -135,27 +135,16 @@ exports.create = async (req, res, next) => {
         success: false,
       });
     }
-    const karmaPoint = auth.karmaPoint + 100;
-    const user = await User.findByIdAndUpdate(
-      { _id: auth._id },
-      {
-        $set: {
-          karmaPoint: karmaPoint,
-        },
-      },
-      { new: true }
-    );
-    await updateUsersInAlgolia(auth._id)
+  
     const issue = new Issue({
       title: data.title,
       user: data.user,
       cause: data.cause,
       location: data.location,
       address: data.address,
-      joined: [user._id],
+      joined: [data.user],
     });
     const savedIssue = await issue.save();
-    await addIssueInAlgolia(savedIssue._id)
     let issueTags = savedIssue?.hashtags;
     var tagsArray = [];
     if (issueTags?.length > 0) {
@@ -180,8 +169,7 @@ exports.create = async (req, res, next) => {
     const savedVideo = await videos.save();
     
     const videoId = savedVideo._id;
-    await addVideoInAlgolia(videoId)
-
+  
     await Issue.findByIdAndUpdate(
       { _id: issueId },
       {
@@ -191,7 +179,24 @@ exports.create = async (req, res, next) => {
         },
       }
     );
-    await updateIssueInAlgolia(issueId)
+    const karmaPoint = auth.karmaPoint + 100;
+    const user = await User.findByIdAndUpdate(
+      { _id: auth._id },
+      {
+        $set: {
+          karmaPoint: karmaPoint,
+        },
+      },
+      { new: true }
+    );
+    await Promise.all([
+       updateUsersInAlgolia(auth._id),
+       addIssueInAlgolia(issueId),
+       addVideoInAlgolia(videoId)
+    ])
+ 
+
+   // await updateIssueInAlgolia(issueId)
     const message = `you received +100 karma for good intention of creating Problem of  ${savedIssue.title}`;
     const notification = new Notification({
       messages: message,
@@ -206,6 +211,7 @@ exports.create = async (req, res, next) => {
       status: 200,
       message: res.__("ISSUE_ADDED"),
       success: true,
+      data:savedIssue
     });
   } catch (err) {
     console.log("err is", err);

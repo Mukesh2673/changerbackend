@@ -40,7 +40,7 @@
  *         example: environment 
  *       - name: recordType
  *         in: query
- *         enum: [ "Campaigns", "Users","Impact", "Issues", "Hashtags"]
+ *         enum: [ "Campaigns", "Users","Impact", "Issues", "Hashtags", "Skills"]
  *         description: Add the records type
  *         required: false
  *     responses:

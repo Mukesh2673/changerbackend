@@ -353,7 +353,7 @@ const issueListingPipeLine=[
           ]
         }
       },
-      { $project: { _id: 0,title:1,cause:1, location:1,address:1,joined:1, issueState:1, hashtags: 1, votes:1 }}
+      { $project: { _id: 1,title:1,cause:1, location:1,address:1,joined:1, issueState:1, hashtags: 1, votes:1 }}
 ]
 
 //pipeline for card impact listing
@@ -403,7 +403,8 @@ const impactListingPipeLine=[
     hashtags: 1,
     createdAt: 1,
     algolia:1,
-    location:1
+    location:1,
+    _id:1
   }
   }
 ]
@@ -446,7 +447,9 @@ const userListingPipeLine=[
       createdAt: 1,
       cause:1,
       hashtags:1,
-      location:1
+      location:1,
+      algolia:1,
+
     },
   },
 ]

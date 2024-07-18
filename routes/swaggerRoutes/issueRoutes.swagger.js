@@ -122,6 +122,8 @@
  *       - name: Authorization
  *         in: header
  *         description: Authorization Token
+ *         required: false 
+
  *       - name: body
  *         in: body
  *         description: Add Issue 
