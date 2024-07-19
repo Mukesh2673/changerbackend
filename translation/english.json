@@ -230,5 +230,6 @@
 	"BOOKMARKS_AT_LEAST_ONE_REQUIRED": "At least one of issue, or campaign must be provided",
 	"SEARCH_RECORD_RETERIVED": "Search records retrieved successfully.",
 	"FULL_TIME": "FULL_TIME",
-	"Invalid value": "Invalid value"
+	"Invalid value": "Invalid value",
+	"FRIENDS_IMPACT_RETERIVED": "FRIENDS_IMPACT_RETERIVED"
 }

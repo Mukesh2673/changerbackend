@@ -78,7 +78,7 @@ exports.addCampaignInAlgolia = async (id) => {
     await Campaign.updateOne({ _id: id }, { algolia: objectID });
     return true;
   } catch (err) {
-    console.log('err isafdasf',err)
+    console.log('err',err)
     return false;
   }
 };

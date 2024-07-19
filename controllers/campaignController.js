@@ -25,7 +25,7 @@ const { addVideoInAlgolia } = require("../algolia/videoAlgolia");
 const { updateUsersInAlgolia } = require("../algolia/userAlgolia");
 const { updateIssueInAlgolia } = require("../algolia/issueAlgolia");
 const { addCampaignInAlgolia, updateCampaignInAlgolia} = require("../algolia/campaignAlgolia");
-const {campaigncommonPipeline, campignIdDonationPipeline, campignIdPetitionPipeline} =require("../constants/commonAggregations")
+const {campaigncommonPipeline, campignIdDonationPipeline, campignIdPetitionPipeline,campaignListingPipeline} =require("../constants/commonAggregations")
 
 //get all Campaign
 exports.showCampaigns = async (req, res) => {
@@ -79,7 +79,7 @@ exports.showCampaign = async (req, res) => {
 exports.trendingCampaigns = async (req, res) => {
   try {
     const { page = 1, pageSize = 10 } = req.query; 
-    const pipeline=[...campaigncommonPipeline,
+    const pipeline=[...campaignListingPipeline,
       {
         $project: { hashtags: 0 , algolia: 0, updatedAt: 0, _v: 0 } 
       },
@@ -90,7 +90,14 @@ exports.trendingCampaigns = async (req, res) => {
     const campaign = await Campaign.aggregate(pipeline);
     if (campaign.length > 0) {
       const totalRecords = await Campaign.countDocuments();
-      return res.json({ message: res.__("TRENDING_CAMPAIGN_RECORDS_MESSAGE"),data: campaign,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
+      return res.json({ message: res.__("TRENDING_CAMPAIGN_RECORDS_MESSAGE"),
+      status: 200,
+      data: campaign,  
+      pageSize:parseInt(pageSize),
+      totalRecords:totalRecords,
+      totalPage: Math.ceil(totalRecords / pageSize),
+      success: true,
+    });
     } else {
       return res.status(404).json({ message:  res.__("CAMPAIGN_NOT_FOUND") ,status:200 });
     }
@@ -131,10 +138,10 @@ exports.campaignForUser = async (req, res) => {
     const signedPetitionsCampaignIds = signedPetitions.map(petition => petition.campaign.toString());
     const donationCampaignId=donatedCampaign.map(donation => donation.campaign.toString());
     const campaignParticipationId=[...new Set([...volunteersCampaignIDs,...signedPetitionsCampaignIds,...donationCampaignId])] 
-    let pipeLine=campaigncommonPipeline
+    let pipeLine=campaignListingPipeline
     if(cause.length>0)
     {
-      pipeLine=[...campaigncommonPipeline,
+      pipeLine=[...campaignListingPipeline,
         {
           $addFields: {
             sortKey: {
@@ -175,7 +182,14 @@ exports.campaignForUser = async (req, res) => {
     const campignRecords=campaign[0].paginatedResults
     if(campignRecords.length>0)
     {
-      return res.json({ message:  res.__("CAMPAIGN_RECORDS_MESSAGE"),data: campignRecords,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
+      return res.json({ message:  res.__("CAMPAIGN_RECORDS_MESSAGE"),
+      status: 200,
+      data: campignRecords,  
+      pageSize:parseInt(pageSize),
+      totalRecords:totalRecords,
+      totalPage: Math.ceil(totalRecords / pageSize),
+      success: true,
+    });
 
     }
     else{
@@ -511,7 +525,7 @@ exports.volunteeringForUser = async (req, res) => {
     const particiapationCampaignId=[...new Set([...signedPetitionsCampaignIds,...donationCampaignId])] 
     // Filter the campaigns by extract the volunteers ID from participation Id
     const recommendedCampaign = particiapationCampaignId.filter(element => !volunteeredCampaignIds.includes(element));
-    const pipeLine=campaigncommonPipeline
+    const pipeLine=campaignListingPipeline
     pipeLine.unshift({
       $match: { _id: { $nin: volunteeredCampaignIds.map(id => mongoose.Types.ObjectId(id)) } }
     },
@@ -550,7 +564,13 @@ exports.volunteeringForUser = async (req, res) => {
     const records=volunteeringRecords[0].paginatedResults
     if(records.length>0)
     {
-      return res.json({ message: res.__("CAMPAIGN_RECORDS_MESSAGE"), data: records,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
+      return res.json({ message: res.__("CAMPAIGN_RECORDS_MESSAGE"),
+      status: 200,
+       data: records,  
+       pageSize:parseInt(pageSize),
+       totalRecords:totalRecords,
+       totalPage: Math.ceil(totalRecords / pageSize),
+      });
     }
     else{
       return res.json({ message:  res.__("CAMPAIGN_NOT_FOUND"),data: records,  totalPage: Math.ceil(totalRecords / pageSize), status: 400});

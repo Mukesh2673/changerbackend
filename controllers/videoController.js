@@ -97,7 +97,7 @@ exports.getVideos = async (req, res) => {
     pipeLine=[...pipeLine,{ $skip: (page - 1) * pageSize },{ $limit: pageSize }]
     const result = await Video.aggregate(pipeLine)
     const totalRecords = await Video.countDocuments();
-    return res.json({ data: result,  totalPage: Math.ceil(totalRecords / pageSize), status: 200,totalRecords:totalRecords, pageSize:pageSize});
+    return res.json({ data: result,  totalPage: Math.ceil(totalRecords / pageSize), status: 200,totalRecords:totalRecords, pageSize: parseInt(pageSize, 10)});
   } catch (error) {
     console.log("err is", error);
     return res.json([]);
@@ -619,6 +619,7 @@ exports.friendsImpact = async (req, res) => {
   try {
     const { page = 1, pageSize = 10 } = req.query; 
     const userId = req.user; 
+    console.log("user iasdf",userId)
     const pipeline=[...videoCommonPipeline, 
       { $skip: (parseInt(page) - 1) * parseInt(pageSize) },
       { $limit: parseInt(pageSize) },
@@ -648,8 +649,8 @@ exports.friendsImpact = async (req, res) => {
         }
       }
     ]);
-    const totalRecords=result[0].totalCount[0].count
-    const videoRecords=result[0].paginatedResults
+    const totalRecords=result[0]?.totalCount[0]?.count
+    const videoRecords=result[0]?.paginatedResults
     if(videoRecords.length>0)
     {
       return res.status(200).json({
@@ -657,7 +658,9 @@ exports.friendsImpact = async (req, res) => {
         message: 	 res.__("FRIENDS_IMPACT_RETERIVED"),
         success: true,
         data: videoRecords,
-        totalPage: Math.ceil(totalRecords / pageSize)
+        totalPage: Math.ceil(totalRecords / pageSize),
+        pageSize:parseInt(pageSize),
+        totalRecords:totalRecords,
       });
     }
     else{

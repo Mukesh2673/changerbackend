@@ -11,7 +11,6 @@ const videoSchema = new Schema(
     likes:[{ type: Schema.Types.ObjectId, ref:"User", required:false}],
     comments:[{ type: Schema.Types.ObjectId, ref:"comments", required:false}],
     video_url: { type: String, required: true},
-    video_id: { type: String, required: false},
     type: { type: String, required: false},
     thumbnail_url: { type: String, required: false},
     location:{type: {type: String, default: "Point", enum: "Point",},coordinates: {type: [Number],default: [0, 0]}},

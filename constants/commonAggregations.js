@@ -366,7 +366,6 @@ const impactListingPipeLine=[
     as: "user",
     pipeline:[
       {$project: {first_name:1,last_name:1,profileImage:1, _id:0 }}
-
     ] 
   }
   },

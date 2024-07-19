@@ -23,18 +23,12 @@ exports.issueRecords = async (query) => {
   return records;
 };
 
+//Get all issue
 exports.index = async (req, res, next) => {
   try {
     const query = [];
-    const {cause ,lat,lng}=req.query
-    // Handle pagination
-    if (req.query.page && req.query.pageSize) {
-      const page = parseInt(req.query.page, 10);
-      const pageSize = parseInt(req.query.pageSize, 10);
-      const skip = (page - 1) * pageSize;
-      query.push({ $skip: skip });
-      query.push({ $limit: pageSize });
-    }
+    const {cause ,lat,lng,page,pageSize}=req.query
+
     if(lat && lng) {
       const coordinates = [parseFloat(lng), parseFloat(lng)];
       const distance = 1;
@@ -59,9 +53,9 @@ exports.index = async (req, res, next) => {
     }
     query.push({
       $lookup: {
-        from: "messages", // The name of the collection to join with
-        localField: "messages", // The field from the input documents
-        foreignField: "_id", // The field from the documents of the "from" collection
+        from: "messages", 
+        localField: "messages",
+        foreignField: "_id",
         as: "messages",
         pipeline: [
           {
@@ -70,6 +64,11 @@ exports.index = async (req, res, next) => {
               localField: "sender",
               foreignField: "_id",
               as: "sender",
+              pipeline:[
+                {
+                  $project: { _id: 1 , username: 1 ,first_name: 1, last_name: 1, profileImage: 1 } 
+                }  
+              ]
             },
           },
           {
@@ -77,13 +76,13 @@ exports.index = async (req, res, next) => {
           },
         ],
       },
-    });
-    query.push({
+     },
+    {
       $lookup: {
-        from: "users", // The name of the collection to join with
-        localField: "user", // The field from the input documents
-        foreignField: "_id", // The field from the documents of the "from" collection
-        as: "user", // The alias for the resulting array of joined documents
+        from: "users", 
+        localField: "user",
+        foreignField: "_id",
+        as: "user", 
         pipeline: [
           {
             $lookup: {
@@ -91,27 +90,55 @@ exports.index = async (req, res, next) => {
               localField: "messages",
               foreignField: "_id",
               as: "messages",
-            },
+              pipeline:[
+                {
+                  $project: { updatedAt: 0 , __v: 0 } 
+                }  
+              ]
+            } 
           },
+          {
+            $project: { _id: 1 , username: 1 ,first_name: 1, last_name: 1, profileImage: 1 } 
+
+          }
         ],
       },
-    });
-    query.push({
+    },
+    {
       $lookup: {
-        from: "users", // The name of the collection to join with
-        localField: "joined", // The field from the input documents
-        foreignField: "_id", // The field from the documents of the "from" collection
-        as: "joined", // The alias for the resulting array of joined documents
+        from: "users", 
+        localField: "joined",
+        foreignField: "_id", 
+        as: "joined", 
+        pipeline:[
+          {
+            $project: { _id: 1 , username: 1 ,first_name: 1, last_name: 1, profileImage: 1 } 
+          }  
+        ]
       },
     });
+    let issueQuery=query //query for total Records
+    // Handle pagination
+    if (page && pageSize) {
+      const page = parseInt(req.query.page, 10);
+      const pageSize = parseInt(req.query.pageSize, 10);
+      const skip = (page - 1) * pageSize;
+      query.push({ $skip: skip });
+      query.push({ $limit: pageSize });
+    }
     const issues = await Issue.aggregate(query);
+    const totalRecords = await Issue.countDocuments(issueQuery);
+
     return res.json({
       status: 200,
       data: issues,
+      pageSize:parseInt(pageSize),
+      totalRecords:totalRecords,
+      totalPage: Math.ceil(totalRecords / pageSize),
       success: true,
     });
   } catch (error) {
-    return res.json({ status: 400, data: [], success: false, message: error });
+    return res.json({ status: 400, data: [], success: false, message: error  });
   }
 };
 
@@ -436,9 +463,29 @@ exports.issueForUser = async (req, res) => {
           as: 'video',
           pipeline:[
             {
-              $project: { _id: 1 , video_url:1, thumbnail_url:1 } 
+              $project: { _id: 1 , video_url:1, thumbnail_url:1, views:1 } 
             }  
           ]
+        }
+      },
+      {
+        $lookup:{
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
+          pipeline:[
+            {$project: {first_name:1,last_name:1, profileImage:1, _id:0, username:1 }}
+          ] 
+        }
+      },
+      {
+        $project:{
+          user:1,
+          cause:1,
+          title:1,
+          description:1,
+          video:1        
         }
       },
       { $skip: (parseInt(page) - 1) * parseInt(pageSize) },
@@ -466,7 +513,7 @@ exports.issueForUser = async (req, res) => {
     const records=issueRecords[0].paginatedResults
     if(records.length>0)
     {
-      return res.json({ message:res.__("ISSUE_RECORDS_RETRIEVED") ,data: records,  totalPage: Math.ceil(totalRecords / pageSize), status: 200});
+      return res.json({ message:res.__("ISSUE_RECORDS_RETRIEVED"), data: records, totalPage: Math.ceil(totalRecords / pageSize), pageSize:parseInt(pageSize), totalRecords:totalRecords, status: 200});
     }
     else{
       return res.json({ message: res.__("ISSUEN_NOT_FOUND"), data: records,  totalPage: Math.ceil(totalRecords / pageSize), status: 400});
