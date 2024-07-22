@@ -219,14 +219,7 @@ const campaigncommonPipeline=[
           as: "impacts",
         },
       },
-      {
-        $lookup: {
-          from: "notifications",
-          localField: "updates",
-          foreignField: "_id",
-          as: "updates",
-        },
-      },    
+          
 ]
 // pipeline for card list campaign
 const campaignListingPipeline=[

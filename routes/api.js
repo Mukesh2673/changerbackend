@@ -2,7 +2,7 @@ var express = require("express");
 var router = express.Router();
 const cron = require('node-cron');
 const upload = require('../libs/multerConfig')
-const { validateToken, accessToken,cognitoUserDetails} = require("../middleware/auth");
+const { validateToken, accessToken,cognitoUserDetails,userInfoToken} = require("../middleware/auth");
 const { validation }=require('../middleware/validations');
 const userController = require("../controllers/userController");
 const campaignController = require("../controllers/campaignController");
@@ -30,7 +30,7 @@ router.get("/users/:id", userController.getUser);
 // router.get("/users/following/:cuid/:fuid", userController.getFollowingUser);
 router.post("/users/:id/follow", validateToken, userController.followUser);
 router.post("/users/:id/unfollow", validateToken, userController.unFollowUser);
-router.post("/users/update",validateToken,  userController.editProfile);
+router.post("/users/update",validateToken,  upload.single("Image"),userController.editProfile);
 router.get("/user/admin", validateToken, userController.createAdmin )
 router.get("/users/cognito/:cuid", userController.getUserByCognito)
 router.post("/user/report", validateToken, validation.validateReport, userController.report)
@@ -62,7 +62,7 @@ router.get("/user/messages", validateToken, userController.messages)
 
 // CAMPAIGN ROUTES
 router.post("/campaigns",validateToken, validation.ValidateCampaign, campaignController.create);
-router.post("/campaign/donation/:id/donate", validateToken, validation.validateDonation,campaignController.donate);
+router.post("/campaign/donation/:donationId/donate", validateToken, validation.validateDonation,campaignController.donate);
 router.post("/campaign/report",validateToken, validation.validateReport, campaignController.report)
 router.post("/campaign/:campaignId/message", validateToken, validation.validateCampaignMessages, campaignController.postMessages)
 router.post("/campaign/:campaignId/impactVideo", validateToken, upload.single("video"), validation.validateCampaignImpact, campaignController.campaignImpactVideos)
@@ -73,11 +73,12 @@ router.post("/campaign/:campaignId/share", validateToken, validation.validateCam
 router.get("/campaigns", campaignController.showCampaigns);
 router.get("/campaigns/trending", campaignController.trendingCampaigns )
 router.get("/campaigns/forUser", validateToken, campaignController.campaignForUser)
-router.get("/campaigns/:campaignId", validation.validateCampaignId, campaignController.showCampaign);
+router.get("/campaigns/:campaignId",userInfoToken, validation.validateCampaignId, campaignController.showCampaign);
 router.get("/campaign/:id/message", validateToken, validation.validateCampaignId,campaignController.getMessages)
 router.get("/campaign/volunteers", campaignController.volunteers)//get Volunteers based Location
 router.get("/campaign/volunteering/forUser", validateToken, campaignController.volunteeringForUser); //get campaing that you have voluteer
 router.get("/campaign/volunteering/participation/history", validateToken, campaignController.volunteerParticipationHistory)
+router.post("/campaign/:campaignId/update", validateToken,   upload.single("Image"), campaignController.postUpdate);
 
 // VIDEO ROUTES
 router.get("/video/:id", videoController.show);

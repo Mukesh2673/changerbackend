@@ -4,7 +4,7 @@ const {
   CampaignVolunteering,
   User,
   Donated,
-  Impact,
+  CampaignUpdate,
   Video,
   donation,
   petitions,
@@ -18,7 +18,7 @@ const {
 } = require("../models");
 const mongoose = require("mongoose");
 const { generateTags } = require("../controllers/hashtagController");
-const { upload, uploadVideoThumbnail } = require("../libs/fileUpload");
+const { upload, uploadVideoThumbnail,uploadImage } = require("../libs/fileUpload");
 const { sendMessage } = require("../libs/webSocket");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { addVideoInAlgolia } = require("../algolia/videoAlgolia");
@@ -26,7 +26,6 @@ const { updateUsersInAlgolia } = require("../algolia/userAlgolia");
 const { updateIssueInAlgolia } = require("../algolia/issueAlgolia");
 const { addCampaignInAlgolia, updateCampaignInAlgolia} = require("../algolia/campaignAlgolia");
 const {campaigncommonPipeline, campignIdDonationPipeline, campignIdPetitionPipeline,campaignListingPipeline} =require("../constants/commonAggregations")
-
 //get all Campaign
 exports.showCampaigns = async (req, res) => {
   try {
@@ -61,6 +60,49 @@ exports.showCampaign = async (req, res) => {
   try {
     const id= req.params.campaignId
     let pipeLine=campaigncommonPipeline
+    let user =req.user
+    const userParticipated = await exports.checkUserParticipation(id, user)
+    if(user && userParticipated)
+    {
+      pipeLine.push({
+        $lookup:{
+          from: "campaignUpdate",
+          localField:"_id",
+          foreignField: "campaign",
+          as: "updates",
+          pipeline:[
+            {
+              $project: { _id: 1 , title:1, body:1, createdAt:1,privacy:1 } 
+            }
+          ]
+        }
+      })
+    }
+    else{
+      pipeLine.push({
+        $lookup: {
+          from: "campaignUpdate",
+          let: { campaignId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$campaign", "$$campaignId"] },
+                    { $eq: ["$privacy", false] } // Filter to include only updates with privacy true
+                  ]
+                }
+              }
+            },
+            {
+              $project: { _id: 1 , title:1, body:1, createdAt:1,privacy:1 } 
+            }  
+          ],
+          as: "updates",
+        }
+      });
+      
+    }
     pipeLine.unshift({ $match: { _id: mongoose.Types.ObjectId(id) }});
     pipeLine.push({$project: { hashtags: 0 , algolia: 0, updatedAt: 0, _v: 0 } });
     const campaign = await Campaign.aggregate(pipeLine);
@@ -1210,3 +1252,71 @@ exports.shareCampaign = async(req, res)=>{
     });
   }
 } 
+
+//Post update to the campaign
+exports.postUpdate = async (req, res) => {
+  try {
+    const { body:updates, file: filedata, user } = req;
+    const {title,description, privacy}=updates
+    const userId = req.user;
+    const {campaignId}=req.params
+    let updateObj={
+      user:  user,
+      title: title,
+      description: description,
+      privacy: privacy,
+      campaign: campaignId
+    }
+
+  //check is user authorize to post update
+    const campaign=await Campaign.find({_id:campaignId,user:userId })
+    if(campaign.length==0)
+    {
+      return res.json({
+        status: 401,
+        message: res.__("UNAUTH_CAMPAIGN_UPDATE"),
+        success: false,
+      });
+    }
+    if(req.file)
+    {
+      const thumbnail = await uploadImage(req.file, "thumbnail");
+      let image = `${thumbnail.Bucket}/${thumbnail.key}`;
+      updateObj.image=image
+    }
+    const update = new CampaignUpdate(updateObj);
+     await update.save();
+    return res.json({
+      status: 200,
+      message: res.__("CAMPAIGN_UPDATE_POSTED"),
+      success: true,
+    });
+  } catch (err) {
+    console.log("erris",err)
+    return res.json({
+      status: 500,
+      message:  res.__("SERVER_ERROR"),
+      success: false,
+    });
+  }
+};
+
+//check user is particpated to the campaing or not by volunteering,donations,petitions
+exports.checkUserParticipation=async(campaignId, user)=>{
+  const campaign = await Campaign.findById(campaignId).select('phases').exec();
+  const phaseIds = campaign.phases;
+      // Retrieve phase details for all phases in parallel
+ const phases = await campaignPhases.find({ _id: { $in: phaseIds } }).exec();
+ // Extract IDs for different types of records from the phases
+ const donationIds = phases.map(phase => phase.donation);
+ const petitionIds = phases.map(phase => phase.petition);
+ const volunteeringIds= phases.flatMap(phase=> phase.volunteering)
+// Execute queries in parallel
+ const [donatedCampaign, appliedVolunteers,signedPetitions] = await Promise.all([
+  Donated.find({ user: user, campaignDonationId: { $in: donationIds } }).exec(),
+  Volunteers.find({ user: user, approved: true, volunteering: { $in: volunteeringIds } }).exec(),
+  SignedPetitions.find({ user: user, petition: { $in: petitionIds } }).exec()
+    ]);
+    const userParticipated = signedPetitions.length > 0 || appliedVolunteers.length > 0 || donatedCampaign.length > 0;
+    return userParticipated
+}

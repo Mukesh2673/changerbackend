@@ -227,5 +227,12 @@
     "CODE_IS_REQUIRED": "Le code est requis",
     "CODE_CHAR_VALIDATION": "Le code doit comporter au moins 6 caractères",
     "BOOKMARKS_REQUIRED_MESSAGE": "L’un ou l’autre problème, campagne, doit être fourni",
-    "BOOKMARKS_AT_LEAST_ONE_REQUIRED": "Au moins un problème ou une campagne doit être fourni"
+    "BOOKMARKS_AT_LEAST_ONE_REQUIRED": "Au moins un problème ou une campagne doit être fourni",
+     "FULL_TIME": "Temps plein",
+     "Invalid value": "Valeur invalide",
+     "FRIENDS_IMPACT_RETERIVED": "Impact des amis récupéré avec succès",
+     "UNAUTH_CAMPAIGN_UPDATE": "Vous n'êtes pas autorisé à publier une mise à jour dans cette campagne",
+    "CAMPAIGN_UPDATE_POSTED": "Mise à jour de la campagne publiée avec succès"
+    
+    
   }

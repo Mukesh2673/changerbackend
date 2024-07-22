@@ -229,7 +229,10 @@
 	"BOOKMARKS_REQUIRED_MESSAGE": "Either issue, campaign, must be provided",
 	"BOOKMARKS_AT_LEAST_ONE_REQUIRED": "At least one of issue, or campaign must be provided",
 	"SEARCH_RECORD_RETERIVED": "Search records retrieved successfully.",
-	"FULL_TIME": "FULL_TIME",
+	"FULL_TIME": "Full Time",
 	"Invalid value": "Invalid value",
-	"FRIENDS_IMPACT_RETERIVED": "FRIENDS_IMPACT_RETERIVED"
+	"FRIENDS_IMPACT_RETERIVED": "Friends Impact retrieved successfully",
+	"UNAUTH_CAMPAIGN_UPDATE": "You are not authorized to post update in this campaign",
+	"CAMPAIGN_UPDATE_POSTED":"Campaign update Posted Successfully"
+
 }

@@ -22,5 +22,6 @@ module.exports = {
   petitions: require("./campaign/campaignPetition"),
   Skills: require("./skills/skill"),
   College: require("./colleges"),
+  CampaignUpdate: require("./campaign/campaignUpdate"),
   SearchKeyWord: require("./search/search")
 };

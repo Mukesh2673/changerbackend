@@ -227,5 +227,11 @@
 	"CODE_IS_REQUIRED": "الكود مطلوب",
 	"CODE_CHAR_VALIDATION": "يجب أن يتكون الرمز من 6 أحرف على الأقل",
 	"BOOKMARKS_REQUIRED_MESSAGE": "يجب توفير أي من الإصدارين، أي الحملة",
-	"BOOKMARKS_AT_LEAST_ONE_REQUIRED": "يجب توفير قضية أو حملة واحدة على الأقل"
-  }
+	"BOOKMARKS_AT_LEAST_ONE_REQUIRED": "يجب توفير قضية أو حملة واحدة على الأقل",
+	"FULL_TIME": "دوام كامل",
+	"Invalid value": "قيمة غير صالحة",
+	"FRIENDS_IMPACT_RETERIVED": "تم استرجاع تأثير الأصدقاء بنجاح",
+	"UNAUTH_CAMPAIGN_UPDATE": "أنت غير مخول لنشر تحديث في هذه الحملة",
+	"CAMPAIGN_UPDATE_POSTED": "تم نشر تحديث الحملة بنجاح"
+	
+}

@@ -228,6 +228,12 @@
 	"CODE_CHAR_VALIDATION": "代码长度必须至少为 6 个字符",
 	"BOOKMARKS_REQUIRED_MESSAGE": "必须提供任一期、活动",
 	"BOOKMARKS_AT_LEAST_ONE_REQUIRED": "必须提供至少一期或活动",
-	"FULL_TIME": "FULL_TIME",
-	"纬度必须介于 -90 到 90 之间": "纬度必须介于 -90 到 90 之间"
+	"纬度必须介于 -90 到 90 之间": "纬度必须介于 -90 到 90 之间",
+	"FULL_TIME": "全职",
+	 "Invalid value": "无效值",
+	 "FRIENDS_IMPACT_RETERIVED": "成功检索好友影响",
+	 "UNAUTH_CAMPAIGN_UPDATE": "您无权在此活动中发布更新",
+	 "CAMPAIGN_UPDATE_POSTED": "活动更新发布成功"
+	
+	
 }

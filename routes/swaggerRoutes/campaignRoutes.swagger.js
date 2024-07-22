@@ -33,6 +33,10 @@
  *         enum: [ "english", "arabic","french", "chinese","german"]
  *         description: Select Language  to get response Messages in selected language  
  *         required: false 
+ *       - name: Authorization
+ *         in: header
+ *         description: Add authorization Token to get private updates
+ *         required: false
  *       - name: campaignId
  *         in: path
  *         description: ID of the campaign to fetch
@@ -772,6 +776,58 @@
  *         description: Campaign shared successfully
  *       403:
  *         description: Correct  Authorization Token Required!
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /campaign/{campaignId}/update:
+ *   post:
+ *     summary: Add impact to the campaign by uploading a video.
+ *     tags:
+ *       - Campaigns
+ *     parameters:
+ *       - name: Accept-Language
+ *         in: header
+ *         enum: [ "english", "arabic","french", "chinese", "german"]
+ *         description: Select Language  to get response Messages in selected language  
+ *         required: false 
+ *       - name: Authorization
+ *         in: header
+ *         description: Authorization Token
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - name: campaignId
+ *         in: path
+ *         description: ID of the campaign to add impact videos to.
+ *         required: true
+ *       - name: title
+ *         in: formData
+ *         description:  Add title to the campaign Update  
+ *         required: true
+ *       - name: description
+ *         in: formData
+ *         description: Describe about the campaing Update
+ *         required: true
+ *       - name: privacy
+ *         in: formData
+ *         enum: [true, false]
+ *         type: boolean 
+ *         description: Add the privacy to the update
+ *         required: true 
+ *       - name: Image
+ *         in: formData
+ *         type: file 
+ *         description: Add Images to the update
+ *         required: false    
+ * 
+ *     responses:
+ *       200:
+ *         description: Campaign update added successfully.
+ *       403:
+ *         description: Correct Authorization Token Required!
  *       500:
  *         description: Internal server error
  */

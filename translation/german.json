@@ -227,5 +227,14 @@
     "CODE_IS_REQUIRED": "Code ist erforderlich",
     "CODE_CHAR_VALIDATION": "Der Code muss mindestens 6 Zeichen lang sein",
     "BOOKMARKS_REQUIRED_MESSAGE": "Beide Ausgaben bzw. Kampagnen müssen angegeben werden",
-    "BOOKMARKS_AT_LEAST_ONE_REQUIRED": "Es muss mindestens eine Ausgabe oder eine Kampagne angegeben werden"
-  }
+    "BOOKMARKS_AT_LEAST_ONE_REQUIRED": "Es muss mindestens eine Ausgabe oder eine Kampagne angegeben werden",
+    "FULL_TIME": "Vollzeit",
+    "Invalid value": "Ungültiger Wert",
+    "FRIENDS_IMPACT_RETERIVED": "Freundes-Einfluss erfolgreich abgerufen",
+    "UNAUTH_CAMPAIGN_UPDATE": "Sie sind nicht berechtigt, ein Update in dieser Kampagne zu posten",
+    "CAMPAIGN_UPDATE_POSTED": "Kampagnen-Update erfolgreich gepostet"
+    }
+    
+  
+  
+  

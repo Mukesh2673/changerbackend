@@ -10,7 +10,7 @@ const cognitoIssuer = `https://cognito-idp.us-east-2.amazonaws.com/us-east-2_Zgo
 const {validateCognitoToken}=require("./cognitoAuth")
 const { User} = require("../models");
 
-const   validateToken = async (req, res, next) => {
+const validateToken = async (req, res, next) => {
   try {
 
     if (!req.headers.authorization) {
@@ -133,5 +133,51 @@ const cognitoUserDetails=async (req, res, next)=>{
   }
 };
 
+//get user Info by not require token middleware
+const userInfoToken = async (req, res, next) => {
+  try {
+    if (!req.headers.authorization) {
+      console.log("ahiasdfasfd")
+      next();
+      return
 
-module.exports = { validateToken, accessToken, cognitoUserDetails };
+    }
+    const accessToken = req.headers.authorization.replace("Bearer ", "");
+    let decoded=await validateCognitoToken(accessToken)
+    req.body.decoded=decoded;
+    const user = await User.findOne({cognitoUsername:decoded.username});
+    if (!user)
+    {
+      let respData = {
+        success: false,
+        message: res.__("USER_NOT_FOUND_IN_TOKEN"),
+        status: 400
+      };
+      return res.status(400).json(respData);
+    }
+     if (
+      (!decoded || decoded.token_use !== 'access' || decoded.iss !== cognitoIssuer) ||
+      !user
+    ) {
+      let respData = {
+        success: false,
+        message: res.__("INVALID_ACCESS_TOKEN"),
+        status: 401
+      };
+      return res.status(401).json(respData);
+    }
+    req.user=user._id
+    next();
+  } catch (error) {
+    console.log(error);
+    let respData = {
+      success: false,
+      message:  res.__("INVALID_ACCESS_TOKEN"),
+      error:error.name,
+      status:401
+    };
+    return res.status(401).json(respData);
+  }
+};
+
+module.exports = { validateToken, accessToken, cognitoUserDetails, userInfoToken };
